@@ -19,6 +19,15 @@ class LanguageSupport:
             self.texts = self._get_english_texts()
         else:
             self.texts = self._get_chinese_texts()
+        
+        # 设置语言特定的格式化函数
+        self.format_functions = {
+            "position_format": self._get_position_format,
+            "hero_marker": self._get_hero_marker,
+            "event_text": self._get_event_text,
+            "skill_brackets": self._get_skill_brackets,
+            "equipment_name": self._get_equipment_name
+        }
     
     def _get_chinese_texts(self):
         """获取中文文本"""
@@ -360,7 +369,65 @@ class LanguageSupport:
             "treatment_success": "治疗后，你的血量完全恢复了！",
             "elder_advice_title": "长老建议",
             "elder_desc": "长老：'年轻的英雄，让我给你一些建议吧。'",
-            "restart_prompt": "是否重新开始游戏"
+            "restart_prompt": "是否重新开始游戏",
+            # 训练假人名称
+            "training_dummy": "训练假人",
+            # 长老建议
+            "elder_advice_1": "记住，药剂是救命的关键，不要吝啬使用！",
+            "elder_advice_2": "升级时要谨慎选择技能，不同的技能适合不同的战斗风格。",
+            "elder_advice_3": "高难度地图敌人更强，但奖励也更丰厚。",
+            "elder_advice_4": "不同的地图有不同的危险和机遇，选择适合自己的。",
+            "elder_advice_5": "装备可以大幅提升你的战斗力，尽可能收集更好的装备！",
+            "elder_advice_6": "Boss战每3回合会释放强力攻击，注意保持血量！",
+            # 怪物名称
+            "monster_goblin": "哥布林",
+            "monster_skeleton": "骷髅兵",
+            "monster_wolf": "野狼",
+            "monster_bandit": "强盗",
+            "monster_slime": "史莱姆",
+            "monster_pixie": "小妖精",
+            "monster_orc_warrior": "兽人战士",
+            "monster_bandit_leader": "强盗头目",
+            "monster_dark_mage": "黑暗法师",
+            "monster_elite_assassin": "精英刺客",
+            "monster_troll": "巨魔",
+            # Boss名称
+            "boss_lesser_demon_leader": "小恶魔首领",
+            "boss_cave_troll": "洞穴巨魔",
+            "boss_shadow_spider": "暗影蜘蛛",
+            "boss_dark_lord": "暗黑领主",
+            "boss_frost_queen": "冰霜女王",
+            "boss_fire_lizard": "火焰巨蜥",
+            "boss_ancient_dragon": "远古巨龙",
+            "boss_abyss_demon": "深渊恶魔",
+            "boss_death_knight": "死亡骑士",
+            "boss_chaos_wizard": "混沌巫师",
+            # 鬼魂名称
+            "ghost_wandering": "游荡的鬼魂",
+            "ghost_vengeful": "怨灵",
+            "ghost_soul_guardian": "灵魂守卫",
+            # 游戏消息
+            "ghost_no_exp_warning": "警告：击败鬼魂无法获得经验值！",
+            "ghost_dissipate_nothing": "鬼魂消散了，什么也没留下...",
+            "ghost_leave_equipment": "鬼魂留下了一个神秘的装备！",
+            "victory_full_restore": "胜利完全恢复了所有血量！",
+            # 技能名称
+            "lifesteal_skill_name": "吸血",
+            # 装备消息
+            "no_equipment_in_slot": "该位置没有装备！",
+            "found_equipment": "你发现了：",
+            "equipment_stats": "属性：",
+            "used_potion_event": "使用了药剂，恢复了",
+            "hp_points_event": "点血量",
+            "learned_skill_event": "学会了技能: ",
+            "found_equipment_event": "发现了 ",
+            "defeat_boss_event": "击败Boss",
+            "got_gold_from_ghost": "从鬼魂处获得了",
+            "got_gold_from_ghost_en": "Got ",
+            "skill_bracket_zh": "【",
+            "skill_bracket_zh_end": "】",
+            "skill_bracket_en": "[",
+            "skill_bracket_en_end": "]"
         }
     
     def _get_english_texts(self):
@@ -694,9 +761,124 @@ class LanguageSupport:
             "treatment_success": "After treatment, your health is fully restored!",
             "elder_advice_title": "Elder's Advice",
             "elder_desc": "Elder: 'Young hero, let me give you some advice.'",
-            "restart_prompt": "Do you want to restart the game"
+            "restart_prompt": "Do you want to restart the game",
+            # Training dummy name
+            "training_dummy": "Training Dummy",
+            # Elder advice
+            "elder_advice_1": "Remember, potions are lifesavers, don't hesitate to use them!",
+            "elder_advice_2": "Choose skills carefully when leveling up, different skills suit different combat styles.",
+            "elder_advice_3": "Higher difficulty maps have stronger enemies, but also better rewards.",
+            "elder_advice_4": "Different maps have different dangers and opportunities, choose what suits you.",
+            "elder_advice_5": "Equipment can greatly boost your combat power, collect best gear you can!",
+            "elder_advice_6": "Bosses use powerful attacks every 3 rounds, keep your health up!",
+            # Monster names
+            "monster_goblin": "Goblin",
+            "monster_skeleton": "Skeleton",
+            "monster_wolf": "Wolf",
+            "monster_bandit": "Bandit",
+            "monster_slime": "Slime",
+            "monster_pixie": "Pixie",
+            "monster_orc_warrior": "Orc Warrior",
+            "monster_bandit_leader": "Bandit Leader",
+            "monster_dark_mage": "Dark Mage",
+            "monster_elite_assassin": "Elite Assassin",
+            "monster_troll": "Troll",
+            # Boss names
+            "boss_lesser_demon_leader": "Lesser Demon Leader",
+            "boss_cave_troll": "Cave Troll",
+            "boss_shadow_spider": "Shadow Spider",
+            "boss_dark_lord": "Dark Lord",
+            "boss_frost_queen": "Frost Queen",
+            "boss_fire_lizard": "Fire Lizard",
+            "boss_ancient_dragon": "Ancient Dragon",
+            "boss_abyss_demon": "Abyss Demon",
+            "boss_death_knight": "Death Knight",
+            "boss_chaos_wizard": "Chaos Wizard",
+            # Ghost names
+            "ghost_wandering": "Wandering Ghost",
+            "ghost_vengeful": "Vengeful Spirit",
+            "ghost_soul_guardian": "Soul Guardian",
+            # Game messages
+            "ghost_no_exp_warning": "Warning: Defeating ghosts grants no experience!",
+            "ghost_dissipate_nothing": "The ghost dissipated, leaving nothing...",
+            "ghost_leave_equipment": "The ghost left a mysterious item!",
+            "victory_full_restore": "Victory completely restored all health!",
+            # Skill names
+            "lifesteal_skill_name": "Lifesteal",
+            # Equipment messages
+            "no_equipment_in_slot": "No equipment in that slot!",
+            "found_equipment": "You found: ",
+            "equipment_stats": "Stats: ",
+            "used_potion_event": "Used potion, restored ",
+            "hp_points_event": " HP",
+            "learned_skill_event": "Learned skill: ",
+            "found_equipment_event": "Found ",
+            "defeat_boss_event": "Defeated boss",
+            "got_gold_from_ghost": "Got ",
+            "got_gold_from_ghost_en": "Got ",
+            "skill_bracket_zh": "【",
+            "skill_bracket_zh_end": "】",
+            "skill_bracket_en": "[",
+            "skill_bracket_en_end": "]"
         }
     
     def get_text(self, key):
         """获取指定键的文本"""
         return self.texts.get(key, key)
+    
+    # 格式化函数集合
+    def _get_position_format(self, position, total):
+        """获取位置格式化的文本"""
+        if self.language == "zh":
+            return f"第{position}格 / 共{total}格"
+        else:
+            return f"{position} / {total}"
+    
+    def _get_hero_marker(self):
+        """获取英雄标记"""
+        return "英雄" if self.language == "zh" else "Hero"
+    
+    def _get_event_text(self, event_key, value=None):
+        """获取事件文本"""
+        if self.language == "zh":
+            return self.texts.get(event_key, event_key) + (str(value) if value is not None else "")
+        else:
+            # 英文事件文本的特定格式
+            event_map = {
+                "mine_trap": f"Stepped on mine, lost {value} HP",
+                "find_bun": f"Found magic bun, restored {value} HP",
+                "find_chest": f"Found treasure chest, gained {value} gold",
+                "find_potion": "Found health potion",
+                "safe_move": "Safe move, nothing happened",
+                "thorns_damage": f"Scratched by thorns, lost {value} HP",
+                "find_herbs": f"Found healing herbs, restored {value} HP",
+                "dehydration": f"Felt dehydrated, lost {value} HP",
+                "find_oasis": f"Found desert oasis, restored {value} HP",
+                "got_gold_from_ghost": f"Got {value} gold from the ghost",
+                "dungeon_trap": f"Triggered dungeon trap, lost {value} HP",
+                "mountain_hazard": f"Encountered avalanche/rockfall, lost {value} HP",
+                "find_gem": f"Found gems, gained {value} gold"
+            }
+            return event_map.get(event_key, self.texts.get(event_key, event_key))
+    
+    def _get_skill_brackets(self):
+        """获取技能括号"""
+        if self.language == "zh":
+            return (self.texts.get('skill_bracket_zh', '【'), 
+                   self.texts.get('skill_bracket_zh_end', '】'))
+        else:
+            return (self.texts.get('skill_bracket_en', '['), 
+                   self.texts.get('skill_bracket_en_end', ']'))
+    
+    def _get_equipment_name(self, equipment_db, item_type, rarity):
+        """获取装备名称"""
+        names = equipment_db[item_type][self.language][rarity]
+        import random
+        return random.choice(names)
+    
+    # 调用格式化函数的统一接口
+    def format_text(self, format_type, *args, **kwargs):
+        """格式化文本的统一接口"""
+        if format_type in self.format_functions:
+            return self.format_functions[format_type](*args, **kwargs)
+        return None

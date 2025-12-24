@@ -15,26 +15,32 @@ class EventSystem:
 
     def learn_skill(self, level_up=False):
         """学习技能"""
-        # 使用统一的多语言技能名称
-        all_skills = [
-            self.game.lang.get_text("fireball_skill"),
-            self.game.lang.get_text("healing_skill"),
-            self.game.lang.get_text("critical_skill"),
-            self.game.lang.get_text("lifesteal_skill"),
-            self.game.lang.get_text("dodge_skill")
-        ]
+        all_skills = {
+            "zh": ["火球术", "治疗术", "暴击", "吸血", "闪避"],
+            "en": ["Fireball", "Healing", "Critical", "Lifesteal", "Dodge"]
+        }
 
         # 获取还未学习的技能
-        available_skills = [s for s in all_skills if s not in self.game.hero_skills]
+        if self.game.language == "zh":
+            available_skills = [s for s in all_skills["zh"] if s not in self.game.hero_skills]
+        else:
+            available_skills = [s for s in all_skills["en"] if s not in self.game.hero_skills]
 
         if not available_skills:
-            print(f"\n{self.game.lang.get_text('all_skills_learned')}")
+            if self.game.language == "zh":
+                print("\n你已经学会了所有技能！")
+            else:
+                print("\nYou have already learned all skills!")
             return
 
         # 如果不是升级时学习，给玩家选择
         if not level_up:
             print()
-            print(f"{self.game.lang.get_text('mysterious_teacher')}")
+            if self.game.language == "zh":
+                print("你遇到了一位神秘的老师！他可以教你一个技能。")
+            else:
+                print("You met a mysterious teacher! He can teach you a skill.")
+            print()
             for i, skill in enumerate(available_skills):
                 print(f"{i+1}. {skill}")
 
@@ -45,10 +51,8 @@ class EventSystem:
                     if 0 <= skill_index < len(available_skills):
                         skill = available_skills[skill_index]
                         self.game.hero_skills.append(skill)
-                        # 使用统一的多语言格式化函数处理技能括号
-                        bracket_start, bracket_end = self.game.lang.format_text("skill_brackets")
-                        print(f"\n{self.game.lang.get_text('learn_skill_success')}{bracket_start}{skill}{bracket_end}!")
-                        self.game.events_encountered.append(f"{self.game.lang.get_text('learned_skill_event')}{skill}")
+                        print(f"\n{self.game.lang.get_text('level_up_reward')} {skill}!")
+                        self.game.events_encountered.append(f"学会了技能: {skill}")
                         break
                     else:
                         print(self.game.lang.get_text("invalid_choice"))
@@ -58,9 +62,7 @@ class EventSystem:
             # 升级时随机学习一个技能
             skill = random.choice(available_skills)
             self.game.hero_skills.append(skill)
-            # 使用统一的多语言格式化函数处理技能括号
-            bracket_start, bracket_end = self.game.lang.format_text("skill_brackets")
-            print(f"\n{self.game.lang.get_text('learn_skill_success')}{bracket_start}{skill}{bracket_end}!")
+            print(f"\n{self.game.lang.get_text('learn_success')} {skill}!")
 
     def merchant_event(self, gold_multiplier=1.0):
         """商人事件"""
@@ -195,5 +197,5 @@ class EventSystem:
         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
         self.game.hero_potions -= 1
         print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
-        self.game.events_encountered.append(f"{self.game.lang.get_text('used_potion_event')}{heal_amount}{self.game.lang.get_text('hp_points_event')}")
+        self.game.events_encountered.append(f"使用了药剂，恢复了{heal_amount}点血量")
         self.game.show_hero_info()

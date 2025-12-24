@@ -228,10 +228,9 @@ class HeroGame:
         print(f"💰  {self.lang.get_text('gold')}{self.lang.get_text('item_separator')}{self.hero_gold}")
         print(f"⭐  {self.lang.get_text('exp')}{self.lang.get_text('item_separator')}{self.hero_exp}")
         print(f"🧪  {self.lang.get_text('potions')}{self.lang.get_text('item_separator')}{self.hero_potions}")
-        if self.language == "zh":
-            print(f"📍  {self.lang.get_text('position')}{self.lang.get_text('item_separator')}第{self.hero_position+1}格 / 共{self.map_length}格")
-        else:
-            print(f"📍  {self.lang.get_text('position')}{self.lang.get_text('item_separator')}{self.hero_position+1} / {self.map_length}")
+        # 使用统一的多语言格式化函数处理位置显示
+        position_text = self.lang.format_text("position_format", self.hero_position+1, self.map_length)
+        print(f"📍  {self.lang.get_text('position')}{self.lang.get_text('item_separator')}{position_text}")
 
         # 显示装备信息
         weapon_name = self.equipment["weapon"]["name"] if self.equipment["weapon"] else self.lang.get_text("none")
@@ -250,7 +249,8 @@ class HeroGame:
     def draw_map(self):
         """绘制地图"""
         map_visual = ""
-        hero_marker = "英雄" if self.language == "zh" else "Hero"
+        # 使用统一的多语言格式化函数获取英雄标记
+        hero_marker = self.lang.format_text("hero_marker")
         for i in range(self.map_length):
             if i == self.hero_position:
                 map_visual += f"[{hero_marker}]"
@@ -377,13 +377,15 @@ class HeroGame:
                 actual_damage = max(1, int(damage * enemy_multiplier) - self.hero_defense)
                 self.hero_hp -= actual_damage
                 print(f"💥 {self.lang.get_text('mine_trap')}{actual_damage}{self.lang.get_text('actual_damage')}")
-                self.events_encountered.append(f"{self.lang.get_text('mine_trap')}{actual_damage}{self.lang.get_text('point_damage')}")
+                # 使用统一的多语言格式化函数处理地雷事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "mine_trap", actual_damage))
                 self.show_hero_info()
             elif event_num <= 6:  # 吃到包子
                 heal = random.randint(15, 30)
                 self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
                 print(f"🥢 {self.lang.get_text('find_bun')} {heal} {self.lang.get_text('point_hp')}")
-                self.events_encountered.append(f"{self.lang.get_text('find_bun')} {heal} {self.lang.get_text('point_hp')}")
+                # 使用统一的多语言格式化函数处理包子事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_bun", heal))
                 self.show_hero_info()
             elif event_num <= 9:  # 遇到怪物
                 print("👹 " + self.lang.get_text("encounter_monster"))
@@ -392,7 +394,8 @@ class HeroGame:
                 gold_found = int(random.randint(10, 30) * gold_multiplier)
                 self.hero_gold += gold_found
                 print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(f"{self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('gold_coins')}")
+                # 使用统一的多语言格式化函数处理宝箱事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
                 self.show_hero_info()
             elif event_num <= 13:  # 遇到商人
                 self.event_system.merchant_event(gold_multiplier)
@@ -401,7 +404,8 @@ class HeroGame:
             elif event_num <= 17:  # 发现药剂
                 self.hero_potions += 1
                 print("🧪 " + self.lang.get_text("find_potion"))
-                self.events_encountered.append(self.lang.get_text("find_potion"))
+                # 使用统一的多语言格式化函数处理药剂事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_potion"))
                 self.show_hero_info()
             elif event_num <= 19:  # 发现装备
                 self.equipment_system.find_equipment()
@@ -410,7 +414,8 @@ class HeroGame:
                 self.combat_system.boss_combat(enemy_multiplier)
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
-                self.events_encountered.append(self.lang.get_text("safe_move"))
+                # 使用统一的多语言格式化函数处理平安移动事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
 
         # 森林地图事件
         elif self.map_type == "forest":
@@ -419,13 +424,15 @@ class HeroGame:
                 actual_damage = max(1, int(damage * enemy_multiplier) - self.hero_defense // 2)
                 self.hero_hp -= actual_damage
                 print(f"🌿 {self.lang.get_text('thorns_damage')}{actual_damage}{self.lang.get_text('point_damage')}")
-                self.events_encountered.append(f"{self.lang.get_text('thorns_damage')}{actual_damage}{self.lang.get_text('point_damage')}")
+                # 使用统一的多语言格式化函数处理荆棘伤害事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "thorns_damage", actual_damage))
                 self.show_hero_info()
             elif event_num <= 6:
                 heal = random.randint(20, 35)
                 self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
                 print(f"🌱 {self.lang.get_text('find_herbs')}{heal}{self.lang.get_text('point_hp')}")
-                self.events_encountered.append(f"{self.lang.get_text('find_herbs')}{heal}{self.lang.get_text('point_hp')}")
+                # 使用统一的多语言格式化函数处理草药事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_herbs", heal))
                 self.show_hero_info()
             elif event_num <= 9:
                 print("🐺 " + self.lang.get_text("encounter_monster"))
@@ -434,7 +441,8 @@ class HeroGame:
                 gold_found = int(random.randint(15, 35) * gold_multiplier)
                 self.hero_gold += gold_found
                 print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(f"{self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('gold_coins')}")
+                # 使用统一的多语言格式化函数处理宝箱事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
                 self.show_hero_info()
             elif event_num <= 13:
                 self.event_system.merchant_event(gold_multiplier)
@@ -446,11 +454,13 @@ class HeroGame:
             elif event_num <= 19:
                 self.hero_potions += 1
                 print("🧪 " + self.lang.get_text("find_potion"))
-                self.events_encountered.append(self.lang.get_text("find_potion"))
+                # 使用统一的多语言格式化函数处理药剂事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_potion"))
                 self.show_hero_info()
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
-                self.events_encountered.append(self.lang.get_text("safe_move"))
+                # 使用统一的多语言格式化函数处理平安移动事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
 
         # 沙漠地图事件
         elif self.map_type == "desert":
@@ -459,13 +469,15 @@ class HeroGame:
                 actual_damage = max(1, int(damage * enemy_multiplier * 1.2))
                 self.hero_hp -= actual_damage
                 print(f"☀️ {self.lang.get_text('dehydration')}{actual_damage}{self.lang.get_text('point_damage')}")
-                self.events_encountered.append(f"{self.lang.get_text('dehydration')}{actual_damage}{self.lang.get_text('point_damage')}")
+                # 使用统一的多语言格式化函数处理脱水事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "dehydration", actual_damage))
                 self.show_hero_info()
             elif event_num <= 6:
                 heal = random.randint(25, 40)
                 self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
                 print(f"💧 {self.lang.get_text('find_oasis')}{heal}{self.lang.get_text('point_hp')}")
-                self.events_encountered.append(f"{self.lang.get_text('find_oasis')}{heal}{self.lang.get_text('point_hp')}")
+                # 使用统一的多语言格式化函数处理绿洲事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_oasis", heal))
                 self.show_hero_info()
             elif event_num <= 9:
                 print("🦂 " + self.lang.get_text("encounter_monster"))
@@ -474,7 +486,8 @@ class HeroGame:
                 gold_found = int(random.randint(20, 40) * gold_multiplier)
                 self.hero_gold += gold_found
                 print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(f"{self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('gold_coins')}")
+                # 使用统一的多语言格式化函数处理宝箱事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
                 self.show_hero_info()
             elif event_num <= 13:
                 self.event_system.merchant_event(gold_multiplier)
@@ -486,11 +499,13 @@ class HeroGame:
             elif event_num <= 19:
                 self.hero_potions += 1
                 print("🧪 " + self.lang.get_text("find_potion"))
-                self.events_encountered.append(self.lang.get_text("find_potion"))
+                # 使用统一的多语言格式化函数处理药剂事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_potion"))
                 self.show_hero_info()
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
-                self.events_encountered.append(self.lang.get_text("safe_move"))
+                # 使用统一的多语言格式化函数处理平安移动事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
 
         # 地牢地图事件
         elif self.map_type == "dungeon":
@@ -499,7 +514,8 @@ class HeroGame:
                 actual_damage = max(1, int(damage * enemy_multiplier * 1.3) - self.hero_defense // 2)
                 self.hero_hp -= actual_damage
                 print(f"🕳️ {self.lang.get_text('dungeon_trap')}{actual_damage}{self.lang.get_text('point_damage')}")
-                self.events_encountered.append(f"{self.lang.get_text('dungeon_trap')}{actual_damage}{self.lang.get_text('point_damage')}")
+                # 使用统一的多语言格式化函数处理地牢陷阱事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "dungeon_trap", actual_damage))
                 self.show_hero_info()
             elif event_num <= 5:
                 print("👻 " + self.lang.get_text("encounter_ghost"))
@@ -511,7 +527,8 @@ class HeroGame:
                 gold_found = int(random.randint(25, 50) * gold_multiplier)
                 self.hero_gold += gold_found
                 print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(f"{self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('gold_coins')}")
+                # 使用统一的多语言格式化函数处理宝箱事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
                 self.show_hero_info()
             elif event_num <= 13:
                 self.equipment_system.find_equipment()
@@ -522,7 +539,8 @@ class HeroGame:
                 self.combat_system.boss_combat(enemy_multiplier * 1.2)
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
-                self.events_encountered.append(self.lang.get_text("safe_move"))
+                # 使用统一的多语言格式化函数处理平安移动事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
 
         # 山脉地图事件
         elif self.map_type == "mountain":
@@ -531,13 +549,15 @@ class HeroGame:
                 actual_damage = max(1, int(damage * enemy_multiplier * 1.4) - self.hero_defense)
                 self.hero_hp -= actual_damage
                 print(f"🪨 {self.lang.get_text('mountain_hazard')}{actual_damage}{self.lang.get_text('point_damage')}")
-                self.events_encountered.append(f"{self.lang.get_text('mountain_hazard')}{actual_damage}{self.lang.get_text('point_damage')}")
+                # 使用统一的多语言格式化函数处理山体危险事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "mountain_hazard", actual_damage))
                 self.show_hero_info()
             elif event_num <= 6:
                 gold_found = int(random.randint(40, 80) * gold_multiplier)
                 self.hero_gold += gold_found
                 print(f"💎 {self.lang.get_text('find_gem')}{gold_found}{self.lang.get_text('gold_coins')}")
-                self.events_encountered.append(f"{self.lang.get_text('find_gem')}{gold_found}{self.lang.get_text('gold_coins')}")
+                # 使用统一的多语言格式化函数处理宝石事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "find_gem", gold_found))
                 self.show_hero_info()
             elif event_num <= 9:
                 print("🐲 " + self.lang.get_text("encounter_monster"))
@@ -551,7 +571,8 @@ class HeroGame:
                 self.event_system.mysterious_merchant(gold_multiplier)
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
-                self.events_encountered.append(self.lang.get_text("safe_move"))
+                # 使用统一的多语言格式化函数处理平安移动事件文本
+                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
 
     def update_attributes(self):
         """更新英雄属性（基础属性 + 装备加成）"""

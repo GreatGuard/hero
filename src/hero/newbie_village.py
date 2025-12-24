@@ -80,14 +80,9 @@ class NewbieVillage:
 
     def practice_combat(self):
         """练习战斗"""
-        if self.game.language == "zh":
-            opponent_name = "训练假人"
-            opponent_hp = 50
-            opponent_attack = 5
-        else:
-            opponent_name = "Training Dummy"
-            opponent_hp = 50
-            opponent_attack = 5
+        opponent_name = self.game.lang.get_text("training_dummy")
+        opponent_hp = 50
+        opponent_attack = 5
 
         print(f"\n{self.game.lang.get_text('practice_start')} {opponent_name}!")
         print(f"{opponent_name} - {self.game.lang.get_text('hp')}: {opponent_hp}, {self.game.lang.get_text('attack')}: {opponent_attack}")
@@ -196,10 +191,9 @@ class NewbieVillage:
 
         if self.game.hero_gold >= cost:
             choice = input(f"{self.game.lang.get_text('confirm_learn')}: ").strip()
-            if self.game.language == "zh":
-                confirm = choice in ["y", "Y", "yes", "是"]
-            else:
-                confirm = choice in ["y", "Y", "yes"]
+            # 使用统一的多语言确认选项
+            yes_options = self.game.lang.get_text("yes_options")
+            confirm = choice in yes_options
 
             if confirm:
                 self.game.hero_gold -= cost
@@ -271,10 +265,9 @@ class NewbieVillage:
 
             if self.game.hero_gold >= cost:
                 choice = input(f"{self.game.lang.get_text('confirm_treatment')}: ").strip()
-                if self.game.language == "zh":
-                    confirm = choice in ["y", "Y", "yes", "是"]
-                else:
-                    confirm = choice in ["y", "Y", "yes"]
+                # 使用统一的多语言确认选项
+                yes_options = self.game.lang.get_text("yes_options")
+                confirm = choice in yes_options
 
                 if confirm:
                     self.game.hero_gold -= cost
@@ -298,24 +291,15 @@ class NewbieVillage:
         print(f"{self.game.lang.get_text('elder_desc')}")
         print()
 
-        if self.game.language == "zh":
-            advices = [
-                "记住，药剂是救命的关键，不要吝啬使用！",
-                "升级时要谨慎选择技能，不同的技能适合不同的战斗风格。",
-                "高难度地图敌人更强，但奖励也更丰厚。",
-                "不同的地图有不同的危险和机遇，选择适合自己的。",
-                "装备可以大幅提升你的战斗力，尽可能收集更好的装备！",
-                "Boss战每3回合会释放强力攻击，注意保持血量！"
-            ]
-        else:
-            advices = [
-                "Remember, potions are lifesavers, don't hesitate to use them!",
-                "Choose skills carefully when leveling up, different skills suit different combat styles.",
-                "Higher difficulty maps have stronger enemies, but also better rewards.",
-                "Different maps have different dangers and opportunities, choose what suits you.",
-                "Equipment can greatly boost your combat power, collect the best gear you can!",
-                "Bosses use powerful attacks every 3 rounds, keep your health up!"
-            ]
+        # 使用统一的多语言建议列表
+        advices = [
+            self.game.lang.get_text("elder_advice_1"),
+            self.game.lang.get_text("elder_advice_2"),
+            self.game.lang.get_text("elder_advice_3"),
+            self.game.lang.get_text("elder_advice_4"),
+            self.game.lang.get_text("elder_advice_5"),
+            self.game.lang.get_text("elder_advice_6")
+        ]
 
         # 随机显示3条建议
         selected_advices = random.sample(advices, min(3, len(advices)))

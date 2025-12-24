@@ -40,33 +40,41 @@ class CombatSystem:
 
     def combat(self, enemy_multiplier=1.0):
         """普通战斗系统"""
-        if self.game.language == "zh":
-            monster_names = ["哥布林", "骷髅兵", "野狼", "强盗", "史莱姆"]
-        else:
-            monster_names = ["Goblin", "Skeleton", "Wolf", "Bandit", "Slime"]
+        # 基础怪物名称列表
+        monster_names = [
+            self.game.lang.get_text("monster_goblin"),
+            self.game.lang.get_text("monster_skeleton"),
+            self.game.lang.get_text("monster_wolf"),
+            self.game.lang.get_text("monster_bandit"),
+            self.game.lang.get_text("monster_slime")
+        ]
 
         # 根据英雄等级选择怪物名称和强度
         if self.game.hero_level <= 2:
-            if self.game.language == "zh":
-                monster_names = ["哥布林", "史莱姆", "小妖精"]
-            else:
-                monster_names = ["Goblin", "Slime", "Pixie"]
+            monster_names = [
+                self.game.lang.get_text("monster_goblin"),
+                self.game.lang.get_text("monster_slime"),
+                self.game.lang.get_text("monster_pixie")
+            ]
             hp_range = (20, 35)
             atk_range = (5, 12)
             def_range = (0, 3)
         elif self.game.hero_level <= 5:
-            if self.game.language == "zh":
-                monster_names = ["骷髅兵", "野狼", "兽人战士"]
-            else:
-                monster_names = ["Skeleton", "Wolf", "Orc Warrior"]
+            monster_names = [
+                self.game.lang.get_text("monster_skeleton"),
+                self.game.lang.get_text("monster_wolf"),
+                self.game.lang.get_text("monster_orc_warrior")
+            ]
             hp_range = (30, 50)
             atk_range = (10, 20)
             def_range = (2, 6)
         else:
-            if self.game.language == "zh":
-                monster_names = ["强盗头目", "黑暗法师", "精英刺客", "巨魔"]
-            else:
-                monster_names = ["Bandit Leader", "Dark Mage", "Elite Assassin", "Troll"]
+            monster_names = [
+                self.game.lang.get_text("monster_bandit_leader"),
+                self.game.lang.get_text("monster_dark_mage"),
+                self.game.lang.get_text("monster_elite_assassin"),
+                self.game.lang.get_text("monster_troll")
+            ]
             hp_range = (40, 70)
             atk_range = (15, 30)
             def_range = (5, 10)
@@ -167,30 +175,34 @@ class CombatSystem:
         """Boss战斗系统"""
         # 根据英雄等级选择Boss名称和强度
         if self.game.hero_level <= 3:
-            if self.game.language == "zh":
-                boss_names = ["小恶魔首领", "洞穴巨魔", "暗影蜘蛛"]
-            else:
-                boss_names = ["Lesser Demon Leader", "Cave Troll", "Shadow Spider"]
+            boss_names = [
+                self.game.lang.get_text("boss_lesser_demon_leader"),
+                self.game.lang.get_text("boss_cave_troll"),
+                self.game.lang.get_text("boss_shadow_spider")
+            ]
             hp_range = (60, 80)
             atk_range = (15, 30)
             def_range = (3, 7)
             exp_range = (40, 70)
             gold_range = (25, 50)
         elif self.game.hero_level <= 6:
-            if self.game.language == "zh":
-                boss_names = ["暗黑领主", "冰霜女王", "火焰巨蜥"]
-            else:
-                boss_names = ["Dark Lord", "Frost Queen", "Fire Lizard"]
+            boss_names = [
+                self.game.lang.get_text("boss_dark_lord"),
+                self.game.lang.get_text("boss_frost_queen"),
+                self.game.lang.get_text("boss_fire_lizard")
+            ]
             hp_range = (80, 120)
             atk_range = (25, 45)
             def_range = (6, 12)
             exp_range = (70, 120)
             gold_range = (50, 90)
         else:
-            if self.game.language == "zh":
-                boss_names = ["远古巨龙", "深渊恶魔", "死亡骑士", "混沌巫师"]
-            else:
-                boss_names = ["Ancient Dragon", "Abyss Demon", "Death Knight", "Chaos Wizard"]
+            boss_names = [
+                self.game.lang.get_text("boss_ancient_dragon"),
+                self.game.lang.get_text("boss_abyss_demon"),
+                self.game.lang.get_text("boss_death_knight"),
+                self.game.lang.get_text("boss_chaos_wizard")
+            ]
             hp_range = (100, 150)
             atk_range = (35, 65)
             def_range = (10, 18)
@@ -322,17 +334,14 @@ class CombatSystem:
 
                 self.check_level_up()
 
-                lifesteal_skill = "吸血" if self.game.language == "zh" else "Lifesteal"
+                lifesteal_skill = self.game.lang.get_text('lifesteal_skill_name')
                 if lifesteal_skill not in self.game.hero_skills:
                     self.game.hero_hp = self.game.hero_max_hp
-                    if self.game.language == "zh":
-                        print("胜利完全恢复了所有血量！")
-                    else:
-                        print("Victory completely restored all health!")
+                    print(self.game.lang.get_text("victory_full_restore"))
                 else:
                     print(self.game.lang.get_text("lifesteal_advantage"))
 
-                self.game.events_encountered.append(f"{self.game.lang.get_text('defeat_boss')}{boss_name}{self.game.lang.get_text('got_exp')}{exp_gain}")
+                self.game.events_encountered.append(f"{self.game.lang.get_text('defeat_boss_event')} {boss_name}, {self.game.lang.get_text('got_exp')} {exp_gain}")
                 input(f"\n{self.game.lang.get_text('continue_prompt')}")
                 break
 
@@ -362,10 +371,11 @@ class CombatSystem:
 
     def ghost_combat(self, enemy_multiplier=1.0):
         """鬼魂战斗（无经验奖励，有特殊掉落）"""
-        if self.game.language == "zh":
-            ghost_names = ["游荡的鬼魂", "怨灵", "灵魂守卫"]
-        else:
-            ghost_names = ["Wandering Ghost", "Vengeful Spirit", "Soul Guardian"]
+        ghost_names = [
+            self.game.lang.get_text("ghost_wandering"),
+            self.game.lang.get_text("ghost_vengeful"),
+            self.game.lang.get_text("ghost_soul_guardian")
+        ]
 
         ghost_name = random.choice(ghost_names)
 
@@ -375,10 +385,7 @@ class CombatSystem:
 
         print(f"\n👻 {self.game.lang.get_text('encounter_ghost')} {ghost_name}!")
         print(f"{ghost_name} - {self.game.lang.get_text('hp')}{self.game.lang.get_text('item_separator')}{ghost_hp}, {self.game.lang.get_text('attack')}{self.game.lang.get_text('item_separator')}{ghost_attack}, {self.game.lang.get_text('defense')}{self.game.lang.get_text('item_separator')}0")
-        if self.game.language == "zh":
-            print("警告：击败鬼魂无法获得经验值！")
-        else:
-            print("Warning: Defeating ghosts grants no experience!")
+        print(self.game.lang.get_text("ghost_no_exp_warning"))
         print(self.game.lang.get_text("battle_start"))
         time.sleep(1)
 
@@ -431,23 +438,19 @@ class CombatSystem:
                 # 鬼魂不提供经验值，但有概率掉落装备或宝石
                 drop_roll = random.randint(1, 10)
                 if drop_roll <= 3:
-                    if self.game.language == "zh":
-                        print("\n👻 鬼魂消散了，什么也没留下...")
-                    else:
-                        print("\n👻 The ghost dissipated, leaving nothing...")
+                    print(f"\n👻 {self.game.lang.get_text('ghost_dissipate_nothing')}")
                 elif drop_roll <= 6:
                     gold_found = random.randint(5, 15)
                     self.game.hero_gold += gold_found
                     print(f"\n👻 {self.game.lang.get_text('find_chest')} {gold_found} {self.game.lang.get_text('coins')}")
-                    self.game.events_encountered.append(f"从鬼魂处获得了{gold_found}金币")
+                    # 使用统一的多语言格式化函数处理鬼魂金币事件文本
+                    ghost_gold_event = self.game.lang.format_text("event_text", "got_gold_from_ghost", gold_found)
+                    self.game.events_encountered.append(ghost_gold_event)
                 else:
                     # 获得一个随机装备（可能是特殊的）
                     from equipment import EquipmentSystem
                     equip_system = EquipmentSystem(self.game)
-                    if self.game.language == "zh":
-                        print("\n👻 鬼魂留下了一个神秘的装备！")
-                    else:
-                        print("\n👻 The ghost left a mysterious item!")
+                    print(f"\n👻 {self.game.lang.get_text('ghost_leave_equipment')}")
                     equip_system.find_equipment()
 
                 input(f"\n{self.game.lang.get_text('continue_prompt')}")

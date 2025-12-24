@@ -80,22 +80,7 @@ class EquipmentSystem:
 
     def get_rarity_name(self, rarity):
         """获取稀有度名称"""
-        if self.game.language == "zh":
-            names = {
-                "common": "普通",
-                "uncommon": "优秀",
-                "rare": "稀有",
-                "epic": "史诗",
-                "legendary": "传说"
-            }
-        else:
-            names = {
-                "common": "Common",
-                "uncommon": "Uncommon",
-                "rare": "Rare",
-                "epic": "Epic",
-                "legendary": "Legendary"
-            }
+        # 直接使用多语言系统获取稀有度名称
         return self.game.lang.get_text(f"rarity_{rarity}")
 
     def create_random_equipment(self, item_type=None):
@@ -116,9 +101,8 @@ class EquipmentSystem:
         else:
             rarity = "legendary"
 
-        # 选择装备名称
-        names = self.equipment_database[item_type][self.game.language][rarity]
-        name = random.choice(names)
+        # 使用统一的多语言格式化函数获取装备名称
+        name = self.game.lang.format_text("equipment_name", self.equipment_database, item_type, rarity)
 
         # 根据稀有度和类型生成属性
         rarity_multiplier = {"common": 1, "uncommon": 1.5, "rare": 2, "epic": 3, "legendary": 5}
@@ -192,10 +176,7 @@ class EquipmentSystem:
     def unequip_item(self, item_type):
         """卸下装备"""
         if self.game.equipment[item_type] is None:
-            if self.game.language == "zh":
-                print(f"该位置没有装备！")
-            else:
-                print(f"No equipment in that slot!")
+            print(self.game.lang.get_text("no_equipment_in_slot"))
             return
 
         item = self.game.equipment[item_type]
@@ -357,12 +338,8 @@ class EquipmentSystem:
         if item["hp"] > 0:
             stats.append(f"❤️+{item['hp']}")
 
-        if self.game.language == "zh":
-            print(f"\n✨ 你发现了：{color}{item['name']} {reset_color}[{rarity_name}]")
-            print(f"   属性：{', '.join(stats)}")
-        else:
-            print(f"\n✨ You found: {color}{item['name']} {reset_color}[{rarity_name}]")
-            print(f"   Stats: {', '.join(stats)}")
+        print(f"\n✨ {self.game.lang.get_text('found_equipment')}{color}{item['name']} {reset_color}[{rarity_name}]")
+        print(f"   {self.game.lang.get_text('equipment_stats')}{', '.join(stats)}")
 
         self.game.inventory.append(item)
-        self.game.events_encountered.append(f"发现了 {item['name']}")
+        self.game.events_encountered.append(f"{self.game.lang.get_text('found_equipment_event')}{item['name']}")

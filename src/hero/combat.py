@@ -15,9 +15,6 @@ class CombatSystem:
 
     def get_combat_action(self):
         """获取玩家战斗动作"""
-        fireball_skill = "火球术" if self.game.language == "zh" else "Fireball"
-        healing_skill = "治疗术" if self.game.language == "zh" else "Healing"
-
         print(f"\n{self.game.lang.get_text('choose_action')}")
         print(f"1. {self.game.lang.get_text('normal_attack')}")
         if self.game.hero_potions > 0:
@@ -26,12 +23,14 @@ class CombatSystem:
             print(f"2. {self.game.lang.get_text('no_potion')}")
 
         # 只在学会火球术时显示选项
+        fireball_skill = self.game.lang.get_text('fireball_skill')
         if fireball_skill in self.game.hero_skills:
             print(f"3. {self.game.lang.get_text('cast_fireball')}")
         else:
             print(f"3. ({self.game.lang.get_text('locked')}) {self.game.lang.get_text('cast_fireball')}")
 
         # 只在学会治疗术时显示选项
+        healing_skill = self.game.lang.get_text('healing_skill')
         if healing_skill in self.game.hero_skills:
             print(f"4. {self.game.lang.get_text('healing_spell_short')}")
         else:
@@ -110,7 +109,7 @@ class CombatSystem:
                 self.game.hero_potions -= 1
                 print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
             elif action == "3":  # 使用火球术技能
-                fireball_skill = "火球术" if self.game.language == "zh" else "Fireball"
+                fireball_skill = self.game.lang.get_text('fireball_skill')
                 if fireball_skill in self.game.hero_skills:
                     hero_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.5))
                     monster_hp -= hero_damage
@@ -121,10 +120,10 @@ class CombatSystem:
                     monster_hp -= hero_damage
                     print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
             elif action == "4":  # 使用治疗术技能
-                healing_skill = "治疗术" if self.game.language == "zh" else "Healing"
+                healing_skill = self.game.lang.get_text('healing_skill')
                 if healing_skill in self.game.hero_skills:
                     if self.game.hero_hp >= self.game.hero_max_hp:
-                        print("✨ " + (self.game.lang.get_text("full_hp_no_heal") if self.game.language == "zh" else "Your HP is full, no need to heal!"))
+                        print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
                     else:
                         heal_amount = random.randint(25, 40)
                         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
@@ -229,27 +228,21 @@ class CombatSystem:
             if action == "1" or action == "":  # 普通攻击
                 base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
 
-                critical_skill = "暴击" if self.game.language == "zh" else "Critical"
+                critical_skill = self.game.lang.get_text('critical_skill')
                 if critical_skill in self.game.hero_skills and random.random() < 0.15:
                     hero_damage = base_damage * 2
-                    if self.game.language == "zh":
-                        print(f"💥 暴击！你对{boss_name}造成了{hero_damage}点伤害！")
-                    else:
-                        print(f"💥 Critical hit! You dealt {hero_damage} damage to {boss_name}!")
+                    print(f"💥 {self.game.lang.get_text('critical_hit')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
                 else:
                     hero_damage = base_damage
                     print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
                 boss_hp -= hero_damage
 
-                lifesteal_skill = "吸血" if self.game.language == "zh" else "Lifesteal"
+                lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
                 if lifesteal_skill in self.game.hero_skills:
                     heal = int(hero_damage * 0.3)
                     self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
-                    if self.game.language == "zh":
-                        print(f"🩸 吸血效果恢复了{heal}点血量！")
-                    else:
-                        print(f"🩸 Lifesteal restored {heal} health points!")
+                    print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
 
             elif action == "2" and self.game.hero_potions > 0:
                 heal_amount = random.randint(20, 40)
@@ -257,64 +250,52 @@ class CombatSystem:
                 self.game.hero_potions -= 1
                 print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
             elif action == "3":
-                fireball_skill = "火球术" if self.game.language == "zh" else "Fireball"
+                fireball_skill = self.game.lang.get_text('fireball_skill')
                 if fireball_skill not in self.game.hero_skills:
                     print(self.game.lang.get_text("invalid_action"))
                     hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
                     boss_hp -= hero_damage
                     print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
-                    lifesteal_skill = "吸血" if self.game.language == "zh" else "Lifesteal"
+                    lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
                     if lifesteal_skill in self.game.hero_skills:
                         heal = int(hero_damage * 0.3)
                         self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
-                        if self.game.language == "zh":
-                            print(f"🩸 吸血效果恢复了{heal}点血量！")
-                        else:
-                            print(f"🩸 Lifesteal restored {heal} health points!")
+                        print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
                     continue
                 base_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.8))
 
-                critical_skill = "暴击" if self.game.language == "zh" else "Critical"
+                critical_skill = self.game.lang.get_text('critical_skill')
                 if critical_skill in self.game.hero_skills and random.random() < 0.15:
                     hero_damage = int(base_damage * 1.5)
-                    if self.game.language == "zh":
-                        print(f"🔥💥 火球术暴击！你对{boss_name}造成了{hero_damage}点伤害！")
-                    else:
-                        print(f"🔥💥 Fireball critical! You dealt {hero_damage} damage to {boss_name}!")
+                    print(f"🔥💥 {self.game.lang.get_text('fireball_critical')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
                 else:
                     hero_damage = base_damage
                     print(f"🔥 {self.game.lang.get_text('fireball')} {boss_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
                 boss_hp -= hero_damage
 
-                lifesteal_skill = "吸血" if self.game.language == "zh" else "Lifesteal"
+                lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
                 if lifesteal_skill in self.game.hero_skills:
                     heal = int(hero_damage * 0.3)
                     self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
-                    if self.game.language == "zh":
-                        print(f"🩸 吸血效果恢复了{heal}点血量！")
-                    else:
-                        print(f"🩸 Lifesteal restored {heal} health points!")
+                    print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
             elif action == "4":
-                healing_skill = "治疗术" if self.game.language == "zh" else "Healing"
+                healing_skill = self.game.lang.get_text('healing_skill')
                 if healing_skill not in self.game.hero_skills:
                     print(self.game.lang.get_text("invalid_action"))
                     hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
                     boss_hp -= hero_damage
                     print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
-                    lifesteal_skill = "吸血" if self.game.language == "zh" else "Lifesteal"
+                    lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
                     if lifesteal_skill in self.game.hero_skills:
                         heal = int(hero_damage * 0.3)
                         self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
-                        if self.game.language == "zh":
-                            print(f"🩸 吸血效果恢复了{heal}点血量！")
-                        else:
-                            print(f"🩸 Lifesteal restored {heal} health points!")
+                        print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
                     continue
                 if self.game.hero_hp >= self.game.hero_max_hp:
-                    print("✨ " + (self.game.lang.get_text("full_hp_no_heal") if self.game.language == "zh" else "Your HP is full, no need to heal!"))
+                    print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
                 else:
                     heal_amount = random.randint(25, 40)
                     self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
@@ -325,14 +306,11 @@ class CombatSystem:
                 boss_hp -= hero_damage
                 print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
-                lifesteal_skill = "吸血" if self.game.language == "zh" else "Lifesteal"
+                lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
                 if lifesteal_skill in self.game.hero_skills:
                     heal = int(hero_damage * 0.3)
                     self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
-                    if self.game.language == "zh":
-                        print(f"🩸 吸血效果恢复了{heal}点血量！")
-                    else:
-                        print(f"🩸 Lifesteal restored {heal} health points!")
+                    print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
 
             if boss_hp <= 0:
                 self.game.monsters_defeated += 2
@@ -360,18 +338,15 @@ class CombatSystem:
 
             # Boss反击（更强）
             if combat_round % 3 == 0:
-                dodge_skill = "闪避" if self.game.language == "zh" else "Dodge"
+                dodge_skill = self.game.lang.get_text('dodge_skill')
                 if dodge_skill in self.game.hero_skills and random.random() < 0.2:
                     print(f"💨 {self.game.lang.get_text('dodge_attack')} {boss_name} {self.game.lang.get_text('dodge_success')}")
                 else:
                     boss_skill_damage = max(5, random.randint(boss_attack, int(boss_attack * 1.5)) - self.game.hero_defense)
                     self.game.hero_hp -= boss_skill_damage
-                    if self.game.language == "zh":
-                        print(f"💀 {boss_name}释放了强力攻击，对你造成了{boss_skill_damage}点伤害！")
-                    else:
-                        print(f"💀 {boss_name} used a powerful attack, dealing {boss_skill_damage} damage to you!")
+                    print(f"💀 {self.game.lang.get_text('boss_powerful_attack')} {boss_skill_damage}{self.game.lang.get_text('point_damage')}!")
             else:
-                dodge_skill = "闪避" if self.game.language == "zh" else "Dodge"
+                dodge_skill = self.game.lang.get_text('dodge_skill')
                 if dodge_skill in self.game.hero_skills and random.random() < 0.2:
                     print(f"💨 {self.game.lang.get_text('dodge_attack')}{boss_name}{self.game.lang.get_text('dodge_success')}")
                 else:
@@ -423,7 +398,7 @@ class CombatSystem:
                 self.game.hero_potions -= 1
                 print(f"🧪 {self.game.lang.get_text('poison')}{heal_amount}{self.game.lang.get_text('point_hp')}")
             elif action == "3":
-                fireball_skill = "火球术" if self.game.language == "zh" else "Fireball"
+                fireball_skill = self.game.lang.get_text('fireball_skill')
                 if fireball_skill in self.game.hero_skills:
                     hero_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.5))
                     ghost_hp -= hero_damage
@@ -433,10 +408,10 @@ class CombatSystem:
                     ghost_hp -= hero_damage
                     print(f"🗡️ {self.game.lang.get_text('you_attack')} {ghost_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
             elif action == "4":
-                healing_skill = "治疗术" if self.game.language == "zh" else "Healing"
+                healing_skill = self.game.lang.get_text('healing_skill')
                 if healing_skill in self.game.hero_skills:
                     if self.game.hero_hp >= self.game.hero_max_hp:
-                        print("✨ " + (self.game.lang.get_text("full_hp_no_heal") if self.game.language == "zh" else "Your HP is full, no need to heal!"))
+                        print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
                     else:
                         heal_amount = random.randint(25, 40)
                         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)

@@ -250,9 +250,10 @@ class HeroGame:
     def draw_map(self):
         """绘制地图"""
         map_visual = ""
+        hero_marker = "英雄" if self.language == "zh" else "Hero"
         for i in range(self.map_length):
             if i == self.hero_position:
-                map_visual += "[英雄]" if self.language == "zh" else "[Hero]"
+                map_visual += f"[{hero_marker}]"
             else:
                 map_visual += "[__]"
         print(f"\n{self.lang.get_text('map')}{self.lang.get_text('item_separator')}{map_visual}")
@@ -339,7 +340,7 @@ class HeroGame:
                     self.random_event()
                     return True
                 else:
-                    print(self.lang.get_text("already_at_end") if self.language == "zh" else "You've already reached the end!")
+                    print(self.lang.get_text("already_at_end"))
                     return False
             elif choice == "2":
                 self.show_hero_info()
@@ -573,10 +574,7 @@ class HeroGame:
         """重新开始游戏"""
         print()
         choice = input(self.lang.get_text("restart_prompt") + " (y/n): ").strip().lower()
-        if self.language == "zh":
-            confirm = choice in ["y", "Y", "yes", "是"]
-        else:
-            confirm = choice in ["y", "Y", "yes"]
+        confirm = choice in self.lang.get_text("yes_options")
 
         if confirm:
             # 重新初始化游戏

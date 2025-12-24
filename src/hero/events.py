@@ -27,20 +27,13 @@ class EventSystem:
             available_skills = [s for s in all_skills["en"] if s not in self.game.hero_skills]
 
         if not available_skills:
-            if self.game.language == "zh":
-                print("\n你已经学会了所有技能！")
-            else:
-                print("\nYou have already learned all skills!")
+            print(f"\n{self.game.lang.get_text('all_skills_learned')}")
             return
 
         # 如果不是升级时学习，给玩家选择
         if not level_up:
             print()
-            if self.game.language == "zh":
-                print("你遇到了一位神秘的老师！他可以教你一个技能。")
-            else:
-                print("You met a mysterious teacher! He can teach you a skill.")
-            print()
+            print(f"{self.game.lang.get_text('mysterious_teacher')}")
             for i, skill in enumerate(available_skills):
                 print(f"{i+1}. {skill}")
 

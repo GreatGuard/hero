@@ -108,7 +108,7 @@ class NewbieVillage:
                 print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
 
             elif action == "3":
-                fireball_skill = "火球术" if self.game.language == "zh" else "Fireball"
+                fireball_skill = self.game.lang.get_text('fireball_skill')
                 if fireball_skill in self.game.hero_skills:
                     damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.5))
                     opponent_hp -= damage
@@ -119,10 +119,10 @@ class NewbieVillage:
                     print(f"🗡️ {self.game.lang.get_text('you_attack')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
 
             elif action == "4":
-                healing_skill = "治疗术" if self.game.language == "zh" else "Healing"
+                healing_skill = self.game.lang.get_text('healing_skill')
                 if healing_skill in self.game.hero_skills:
                     if self.game.hero_hp >= self.game.hero_max_hp:
-                        print("✨ " + (self.game.lang.get_text("full_hp_no_heal") if self.game.language == "zh" else "Your HP is full, no need to heal!"))
+                        print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
                     else:
                         heal_amount = random.randint(25, 40)
                         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
@@ -160,9 +160,6 @@ class NewbieVillage:
 
     def get_combat_action(self):
         """获取战斗动作（简化版）"""
-        fireball_skill = "火球术" if self.game.language == "zh" else "Fireball"
-        healing_skill = "治疗术" if self.game.language == "zh" else "Healing"
-
         print(f"\n{self.game.lang.get_text('choose_action')}")
         print(f"1. {self.game.lang.get_text('normal_attack')}")
         if self.game.hero_potions > 0:
@@ -171,12 +168,14 @@ class NewbieVillage:
             print(f"2. {self.game.lang.get_text('no_potion')}")
 
         # 只在学会火球术时显示选项
+        fireball_skill = self.game.lang.get_text('fireball_skill')
         if fireball_skill in self.game.hero_skills:
             print(f"3. {self.game.lang.get_text('cast_fireball')}")
         else:
             print(f"3. ({self.game.lang.get_text('locked')}) {self.game.lang.get_text('cast_fireball')}")
 
         # 只在学会治疗术时显示选项
+        healing_skill = self.game.lang.get_text('healing_skill')
         if healing_skill in self.game.hero_skills:
             print(f"4. {self.game.lang.get_text('healing_spell_short')}")
         else:
@@ -190,11 +189,7 @@ class NewbieVillage:
         event_system = EventSystem(self.game)
 
         print()
-        if self.game.language == "zh":
-            print("训练师说：我可以教你一些有用的技能。")
-        else:
-            print("The trainer says: I can teach you some useful skills.")
-        print()
+        print(f"{self.game.lang.get_text('trainer_introduction')}")
 
         cost = 30
         print(f"{self.game.lang.get_text('learn_skill_cost')} {cost} {self.game.lang.get_text('gold')}")

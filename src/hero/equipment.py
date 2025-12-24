@@ -96,7 +96,7 @@ class EquipmentSystem:
                 "epic": "Epic",
                 "legendary": "Legendary"
             }
-        return names.get(rarity, "Common")
+        return self.game.lang.get_text(f"rarity_{rarity}")
 
     def create_random_equipment(self, item_type=None):
         """创建随机装备"""

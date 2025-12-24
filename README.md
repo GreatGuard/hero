@@ -47,6 +47,40 @@ hero/
 └── README.md            # 项目说明
 ```
 
+## 分支管理
+
+```bash
+git add .   # 添加所有文件
+git commit -m "提交说明" # 提交代码
+git log --oneline # 查看提交记录
+git status # 查看状态
+git push origin main  # 推送代码
+git checkout -b new-feature # 创建新分支
+git branch # 查看所有分支
+git merge main # 合并主分支
+git push origin new-feature # 推送新分支
+git checkout main # 切换到主分支
+git branch -d new-feature # 删除分支
+git push origin :new-feature # 删除远程分支
+git push origin --delete new-feature # 删除远程分支
+git pull origin main # 拉取代码
+git rebase main # 重置分支
+git push -f origin main # 强制推送代码
+git tag -a v1.0 -m "版本1.0" # 创建标签
+git push --tags # 推送标签
+git reset --hard HEAD~1 # 回退到上一个版本
+git reset --hard 版本号 # 回退到指定版本
+git cherry-pick <commit_id> #  cherry-pick指定提交
+git push origin --delete <branch_name> # 删除远程分支
+git rebase -i HEAD~5 # 批量重置
+git rebase -i <commit_id> # 批量重置
+git rebase --continue # 继续重置
+git rebase --abort # 取消重置
+git reflog expire --expire=now --all # 清理历史记录
+git reflog expire --expire=now --all --rewrite # 清理历史记录
+
+```
+
 ## 游戏玩法
 
 1. 创建英雄并命名

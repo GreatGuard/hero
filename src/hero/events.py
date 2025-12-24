@@ -51,7 +51,10 @@ class EventSystem:
                     if 0 <= skill_index < len(available_skills):
                         skill = available_skills[skill_index]
                         self.game.hero_skills.append(skill)
-                        print(f"\n{self.game.lang.get_text('level_up_reward')} {skill}!")
+                        if self.game.language == "zh":
+                            print(f"\n{self.game.lang.get_text('learn_skill_success')}【{skill}】!")
+                        else:
+                            print(f"\n{self.game.lang.get_text('learn_skill_success')} [{skill}]!")
                         self.game.events_encountered.append(f"学会了技能: {skill}")
                         break
                     else:
@@ -62,7 +65,10 @@ class EventSystem:
             # 升级时随机学习一个技能
             skill = random.choice(available_skills)
             self.game.hero_skills.append(skill)
-            print(f"\n{self.game.lang.get_text('level_up_reward')} {skill}!")
+            if self.game.language == "zh":
+                print(f"\n{self.game.lang.get_text('learn_skill_success')}【{skill}】!")
+            else:
+                print(f"\n{self.game.lang.get_text('learn_skill_success')} [{skill}]!")
 
     def merchant_event(self, gold_multiplier=1.0):
         """商人事件"""

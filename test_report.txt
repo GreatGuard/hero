@@ -3,105 +3,12 @@
 ======================================================================
 
 测试概要:
-  总测试数: 19
-  成功: 11
-  失败: 1
-  错误: 7
+  总测试数: 109
+  成功: 109
+  失败: 0
+  错误: 0
   跳过: 0
-  成功率: 57.9%
-
-失败详情:
-  - test_invalid_key_handling (test_language.TestLanguageSupport.test_invalid_key_handling): Traceback (most recent call last):
-  File [35m"C:\Users\keving.yang\source\repos\hero\tests\test_language.py"[0m, line [35m100[0m, in [35mtest_invalid_key_handling[0m
-    [31mself.assertIsInstance[0m[1;31m(invalid_format, str)[0m
-    [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^[0m
-[1;35mAssertionError[0m: [35mNone is not an instance of <class 'str'>[0m
-
-错误详情:
-  - integration.test_game_flow (unittest.loader._FailedTest.integration.test_game_flow): [1;35mImportError[0m: [35mFailed to import test module: integration.test_game_flow
-Traceback (most recent call last):
-  File "C:\Python314\Lib\unittest\loader.py", line 426, in _find_test_path
-    module = self._get_module_from_name(name)
-  File "C:\Python314\Lib\unittest\loader.py", line 367, in _get_module_from_name
-    __import__(name)
-    ~~~~~~~~~~^^^^^^
-  File "C:\Users\keving.yang\source\repos\hero\tests\integration\test_game_flow.py", line 15, in <module>
-    from hero.main import HeroGame
-  File "C:\Users\keving.yang\source\repos\hero\tests\integration\..\..\src\hero\main.py", line 13, in <module>
-    from language import LanguageSupport
-ModuleNotFoundError: No module named 'language'
-[0m
-  - test_combat (unittest.loader._FailedTest.test_combat): [1;35mImportError[0m: [35mFailed to import test module: test_combat
-Traceback (most recent call last):
-  File "C:\Python314\Lib\unittest\loader.py", line 426, in _find_test_path
-    module = self._get_module_from_name(name)
-  File "C:\Python314\Lib\unittest\loader.py", line 367, in _get_module_from_name
-    __import__(name)
-    ~~~~~~~~~~^^^^^^
-  File "C:\Users\keving.yang\source\repos\hero\tests\test_combat.py", line 15, in <module>
-    from hero.main import HeroGame
-  File "C:\Users\keving.yang\source\repos\hero\tests\integration\..\..\src\hero\main.py", line 13, in <module>
-    from language import LanguageSupport
-ModuleNotFoundError: No module named 'language'
-[0m
-  - test_equipment (unittest.loader._FailedTest.test_equipment): [1;35mImportError[0m: [35mFailed to import test module: test_equipment
-Traceback (most recent call last):
-  File "C:\Python314\Lib\unittest\loader.py", line 426, in _find_test_path
-    module = self._get_module_from_name(name)
-  File "C:\Python314\Lib\unittest\loader.py", line 367, in _get_module_from_name
-    __import__(name)
-    ~~~~~~~~~~^^^^^^
-  File "C:\Users\keving.yang\source\repos\hero\tests\test_equipment.py", line 15, in <module>
-    from hero.main import HeroGame
-  File "C:\Users\keving.yang\source\repos\hero\tests\integration\..\..\src\hero\main.py", line 13, in <module>
-    from language import LanguageSupport
-ModuleNotFoundError: No module named 'language'
-[0m
-  - test_events (unittest.loader._FailedTest.test_events): [1;35mImportError[0m: [35mFailed to import test module: test_events
-Traceback (most recent call last):
-  File "C:\Python314\Lib\unittest\loader.py", line 426, in _find_test_path
-    module = self._get_module_from_name(name)
-  File "C:\Python314\Lib\unittest\loader.py", line 367, in _get_module_from_name
-    __import__(name)
-    ~~~~~~~~~~^^^^^^
-  File "C:\Users\keving.yang\source\repos\hero\tests\test_events.py", line 15, in <module>
-    from hero.main import HeroGame
-  File "C:\Users\keving.yang\source\repos\hero\tests\integration\..\..\src\hero\main.py", line 13, in <module>
-    from language import LanguageSupport
-ModuleNotFoundError: No module named 'language'
-[0m
-  - test_format_functions (test_language.TestLanguageSupport.test_format_functions): Traceback (most recent call last):
-  File [35m"C:\Users\keving.yang\source\repos\hero\tests\test_language.py"[0m, line [35m85[0m, in [35mtest_format_functions[0m
-    skill_text = self.zh_lang.format_text("skill_brackets", "fireball")
-  File [35m"C:\Users\keving.yang\source\repos\hero\tests\integration\..\..\src\hero\language.py"[0m, line [35m883[0m, in [35mformat_text[0m
-    return [31mself.format_functions[format_type][0m[1;31m(*args, **kwargs)[0m
-           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
-[1;35mTypeError[0m: [35mLanguageSupport._get_skill_brackets() takes 1 positional argument but 2 were given[0m
-  - test_main (unittest.loader._FailedTest.test_main): [1;35mImportError[0m: [35mFailed to import test module: test_main
-Traceback (most recent call last):
-  File "C:\Python314\Lib\unittest\loader.py", line 426, in _find_test_path
-    module = self._get_module_from_name(name)
-  File "C:\Python314\Lib\unittest\loader.py", line 367, in _get_module_from_name
-    __import__(name)
-    ~~~~~~~~~~^^^^^^
-  File "C:\Users\keving.yang\source\repos\hero\tests\test_main.py", line 15, in <module>
-    from hero.main import HeroGame
-  File "C:\Users\keving.yang\source\repos\hero\tests\integration\..\..\src\hero\main.py", line 13, in <module>
-    from language import LanguageSupport
-ModuleNotFoundError: No module named 'language'
-[0m
-  - test_newbie_village (unittest.loader._FailedTest.test_newbie_village): [1;35mImportError[0m: [35mFailed to import test module: test_newbie_village
-Traceback (most recent call last):
-  File "C:\Python314\Lib\unittest\loader.py", line 426, in _find_test_path
-    module = self._get_module_from_name(name)
-  File "C:\Python314\Lib\unittest\loader.py", line 367, in _get_module_from_name
-    __import__(name)
-    ~~~~~~~~~~^^^^^^
-  File "C:\Users\keving.yang\source\repos\hero\tests\test_newbie_village.py", line 221
-    with patch('builtins.print'):
-    ^^^^
-IndentationError: expected an indented block after 'with' statement on line 220
-[0m
+  成功率: 100.0%
 
 ======================================================================
 测试完成

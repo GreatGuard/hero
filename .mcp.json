@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "jira": {
+      "type": "http",
+      "url": "https://efficiency-kf.cloud.kemai.cn/jira/mcp",
+      "headers": {
+        "user": "keving.yang"
+      }
+    }
+  }
+}

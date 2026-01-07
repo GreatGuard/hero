@@ -136,8 +136,8 @@ class NewbieVillage:
             if opponent_hp <= 0:
                 print(f"\n🎉 {self.game.lang.get_text('practice_victory')} {opponent_name}!")
                 print(f"{self.game.lang.get_text('practice_reward')}")
-                exp_gain = 20
-                gold_gain = 10
+                exp_gain = 20000
+                gold_gain = 10000
                 self.game.hero_exp += exp_gain
                 self.game.hero_gold += gold_gain
                 print(f"{self.game.lang.get_text('got_exp')} {exp_gain} {self.game.lang.get_text('exp_points')} {self.game.lang.get_text('gold_coins')} {gold_gain}!")

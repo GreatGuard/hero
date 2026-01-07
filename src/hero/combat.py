@@ -133,7 +133,7 @@ class CombatSystem:
                     if self.game.hero_hp >= self.game.hero_max_hp:
                         print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
                     else:
-                        heal_amount = random.randint(25, 40)
+                        heal_amount = random.randint(1000, 2000)
                         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                         print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
                 else:
@@ -309,7 +309,7 @@ class CombatSystem:
                 if self.game.hero_hp >= self.game.hero_max_hp:
                     print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
                 else:
-                    heal_amount = random.randint(25, 40)
+                    heal_amount = random.randint(1000, 2000)
                     self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                     print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
             else:

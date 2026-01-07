@@ -16,6 +16,8 @@ from combat import CombatSystem
 from equipment import EquipmentSystem
 from events import EventSystem
 from newbie_village import NewbieVillage
+from save_data import SaveData, SaveManager
+from statistics import GameStatistics
 
 
 class HeroGame:
@@ -70,6 +72,9 @@ class HeroGame:
         self.equipment_system = EquipmentSystem(self)
         self.event_system = EventSystem(self)
         self.newbie_village = NewbieVillage(self)
+
+        # 初始化统计系统
+        self.statistics = GameStatistics()
 
     def select_language(self):
         """选择游戏语言"""
@@ -261,19 +266,198 @@ class HeroGame:
     def start_game(self):
         """开始游戏"""
         self.show_welcome()
-        self.get_hero_name()
+        self.show_main_menu()
 
-        # 进入新手村
-        self.newbie_village.newbie_village()
+    def show_main_menu(self):
+        """显示主菜单"""
+        while True:
+            self.clear_screen()
+            print(self.lang.get_text("block_separator"))
+            print(f"          {self.lang.get_text('main_menu')}")
+            print(self.lang.get_text("block_separator"))
+            print()
+            print(f"1. {self.lang.get_text('new_game')}")
+            print(f"2. {self.lang.get_text('load_game')}")
+            print(f"3. {self.lang.get_text('view_statistics')}")
+            print(f"4. {self.lang.get_text('exit_game')}")
+            print()
+
+            choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
+
+            if choice == "" or choice == "1":
+                # 新游戏
+                self.get_hero_name()
+                self.select_map_and_difficulty()
+
+                # 进入新手村
+                self.newbie_village.newbie_village()
+
+                self.clear_screen()
+                print(self.lang.get_text("block_separator"))
+                print(f"          {self.lang.get_text('game_start')}, {self.hero_name}!")
+                print(self.lang.get_text("block_separator"))
+                time.sleep(1)
+
+                self.game_loop()
+                self.restart_game()
+                break
+
+            elif choice == "2":
+                # 加载存档
+                if self.load_game_menu():
+                    # 如果加载成功，进入游戏循环
+                    self.clear_screen()
+                    print(self.lang.get_text("block_separator"))
+                    print(f"          {self.lang.get_text('load_success')}, {self.hero_name}!")
+                    print(self.lang.get_text("block_separator"))
+                    time.sleep(1)
+
+                    self.game_loop()
+                    self.restart_game()
+                # 如果加载失败或取消，返回主菜单
+
+            elif choice == "3":
+                # 查看统计
+                self.show_statistics_menu()
+
+            elif choice == "4":
+                # 退出游戏
+                print("\n" + self.lang.get_text("goodbye"))
+                sys.exit(0)
+
+            else:
+                print(self.lang.get_text("invalid_choice"))
+                time.sleep(1)
+
+    def load_game_menu(self):
+        """
+        加载存档菜单
+
+        Returns:
+            bool: 是否成功加载存档
+        """
+        save_manager = SaveManager()
+
+        while True:
+            self.clear_screen()
+            print(self.lang.get_text("block_separator"))
+            print(f"          {self.lang.get_text('load_game')}")
+            print(self.lang.get_text("block_separator"))
+            print()
+
+            # 列出所有存档槽位
+            slots = save_manager.list_save_slots()
+
+            for slot_info in slots:
+                if slot_info.get("empty"):
+                    print(f"{slot_info['slot']}. {self.lang.get_text('save_slot_empty')} {slot_info['slot']} - {self.lang.get_text('empty_slot')}")
+                else:
+                    position_text = self.lang.format_text("position_format",
+                                                          slot_info['position'] + 1,
+                                                          slot_info['map_length'])
+                    print(f"{slot_info['slot']}. {self.lang.get_text('save_slot_info')}: {slot_info['hero_name']} | "
+                          f"{self.lang.get_text('save_slot_level')}: {slot_info['hero_level']} | "
+                          f"{self.lang.get_text('map_type')}: {self.lang.get_text('map_' + slot_info['map_type'])} | "
+                          f"{self.lang.get_text('difficulty')}: {self.lang.get_text('difficulty_' + slot_info['difficulty'])} | "
+                          f"{self.lang.get_text('save_slot_position')}: {position_text}")
+
+            print()
+            print(f"0. {self.lang.get_text('return_to_main')}")
+            print()
+
+            choice = input(f"{self.lang.get_text('enter_choice')}: ").strip()
+
+            if choice == "0":
+                return False
+
+            try:
+                slot_num = int(choice)
+                if 1 <= slot_num <= 5:
+                    # 尝试加载存档
+                    save_data = save_manager.load_game(slot_num)
+
+                    if save_data:
+                        # 从存档数据恢复游戏
+                        self.load_from_save_data(save_data)
+                        return True
+                    else:
+                        print(f"\n{self.lang.get_text('no_save_slot')}")
+                        input(f"{self.lang.get_text('continue_prompt')}")
+                else:
+                    print(self.lang.get_text("invalid_choice"))
+                    input(f"{self.lang.get_text('continue_prompt')}")
+            except ValueError:
+                print(self.lang.get_text("invalid_choice"))
+                input(f"{self.lang.get_text('continue_prompt')}")
+
+    def show_statistics_menu(self):
+        """显示统计菜单"""
+        # 这里显示当前会话的统计（因为没有正在进行的游戏）
+        # 创建一个临时统计对象用于演示
+        temp_stats = GameStatistics()
 
         self.clear_screen()
-        print(self.lang.get_text("block_separator"))
-        print(f"          {self.lang.get_text('game_start')}, {self.hero_name}!")
-        print(self.lang.get_text("block_separator"))
-        time.sleep(1)
+        print(temp_stats.format_summary(self.lang))
+        input(f"\n{self.lang.get_text('continue_prompt')}")
 
-        self.game_loop()
-        self.restart_game()
+    def save_game_menu(self):
+        """保存游戏菜单"""
+        save_manager = SaveManager()
+
+        while True:
+            self.clear_screen()
+            print(self.lang.get_text("block_separator"))
+            print(f"          {self.lang.get_text('save_game')}")
+            print(self.lang.get_text("block_separator"))
+            print()
+
+            # 列出所有存档槽位
+            slots = save_manager.list_save_slots()
+
+            for slot_info in slots:
+                if slot_info.get("empty"):
+                    print(f"{slot_info['slot']}. {self.lang.get_text('save_slot_empty')} {slot_info['slot']} - {self.lang.get_text('empty_slot')}")
+                else:
+                    position_text = self.lang.format_text("position_format",
+                                                          slot_info['position'] + 1,
+                                                          slot_info['map_length'])
+                    print(f"{slot_info['slot']}. {self.lang.get_text('save_slot_info')}: {slot_info['hero_name']} | "
+                          f"{self.lang.get_text('save_slot_level')}: {slot_info['hero_level']} | "
+                          f"{self.lang.get_text('save_slot_time')}: {slot_info['save_time']}")
+
+            print()
+            print(f"0. {self.lang.get_text('return_to_game')}")
+            print()
+
+            choice = input(f"{self.lang.get_text('enter_choice')}: ").strip()
+
+            if choice == "0":
+                return
+
+            try:
+                slot_num = int(choice)
+                if 1 <= slot_num <= 5:
+                    # 确认覆盖
+                    if not slots[slot_num - 1].get("empty"):
+                        confirm = input(f"{self.lang.get_text('overwrite_save')}? (y/n): ").strip().lower()
+                        if confirm not in self.lang.get_text("yes_options"):
+                            continue
+
+                    # 保存游戏
+                    save_data = self.get_save_data()
+                    if save_manager.save_game(save_data, slot_num):
+                        print(f"\n{self.lang.get_text('save_success')} {slot_num}!")
+                        input(f"{self.lang.get_text('continue_prompt')}")
+                        return
+                    else:
+                        print(f"\n{self.lang.get_text('save_failed')}")
+                        input(f"{self.lang.get_text('continue_prompt')}")
+                else:
+                    print(self.lang.get_text("invalid_choice"))
+                    input(f"{self.lang.get_text('continue_prompt')}")
+            except ValueError:
+                print(self.lang.get_text("invalid_choice"))
+                input(f"{self.lang.get_text('continue_prompt')}")
 
     def game_loop(self):
         """游戏主循环"""
@@ -330,6 +514,7 @@ class HeroGame:
             print(f"4. {self.lang.get_text('use_potion')}")
         print(f"5. {self.lang.get_text('shop')}")
         print(f"6. {self.lang.get_text('equipment_management')}")
+        print(f"7. {self.lang.get_text('save_and_exit')}")
 
         while True:
             choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
@@ -353,6 +538,8 @@ class HeroGame:
                 self.event_system.merchant_event()
             elif choice == "6":
                 self.equipment_system.equipment_management()
+            elif choice == "7":
+                self.save_game_menu()
             else:
                 print(self.lang.get_text("invalid_choice"))
 
@@ -590,6 +777,80 @@ class HeroGame:
         # 确保HP不超过最大值
         if self.hero_hp > self.hero_max_hp:
             self.hero_hp = self.hero_max_hp
+
+    def get_save_data(self):
+        """
+        获取当前游戏的存档数据
+
+        Returns:
+            SaveData: 包含所有游戏状态的存档数据实例
+        """
+        return SaveData(self)
+
+    def load_from_save_data(self, save_data):
+        """
+        从存档数据加载游戏状态
+
+        Args:
+            save_data: SaveData实例
+        """
+        # 英雄基础属性
+        self.hero_name = save_data.hero_name
+        self.hero_level = save_data.hero_level
+        self.hero_exp = save_data.hero_exp
+
+        # 英雄当前状态
+        self.hero_hp = save_data.hero_hp
+        self.hero_max_hp = save_data.hero_max_hp
+        self.hero_attack = save_data.hero_attack
+        self.hero_defense = save_data.hero_defense
+
+        # 基础属性
+        self.base_attack = save_data.base_attack
+        self.base_defense = save_data.base_defense
+        self.base_max_hp = save_data.base_max_hp
+
+        # 游戏进度
+        self.hero_position = save_data.hero_position
+        self.game_over = save_data.game_over
+        self.victory = save_data.victory
+
+        # 资源
+        self.hero_gold = save_data.hero_gold
+        self.hero_potions = save_data.hero_potions
+
+        # 装备和背包
+        self.equipment = save_data.equipment
+        self.inventory = save_data.inventory
+
+        # 技能
+        self.hero_skills = save_data.hero_skills
+
+        # 游戏设置
+        self.difficulty = save_data.difficulty
+        self.map_type = save_data.map_type
+        self.language = save_data.language
+        self.map_length = save_data.map_length
+
+        # 更新语言设置
+        self.lang.set_language(self.language)
+
+        # 统计数据
+        self.monsters_defeated = save_data.monsters_defeated
+        self.events_encountered = save_data.events_encountered
+        self.visited_positions = save_data.visited_positions
+
+        # 重新初始化子系统（确保它们引用正确的游戏实例）
+        self.combat_system = CombatSystem(self)
+        self.equipment_system = EquipmentSystem(self)
+        self.event_system = EventSystem(self)
+        self.newbie_village = NewbieVillage(self)
+
+        # 加载统计数据
+        if hasattr(save_data, 'statistics_data') and save_data.statistics_data:
+            self.statistics = GameStatistics.from_dict(save_data.statistics_data)
+        else:
+            self.statistics = GameStatistics()
 
     def restart_game(self):
         """重新开始游戏"""

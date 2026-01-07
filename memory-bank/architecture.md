@@ -173,6 +173,29 @@ skills_learned, skill_uses (dict)
 shop_visits, items_purchased
 ```
 
+**集成方式**:
+
+统计系统已完全集成到游戏的所有子系统中：
+
+```python
+# 在 HeroGame 中初始化
+self.statistics = GameStatistics()
+
+# 在各个事件中调用统计记录
+self.statistics.record_step()  # 移动时
+self.statistics.record_battle_start()  # 战斗开始
+self.statistics.record_battle_victory(monster_name, is_boss)  # 战斗胜利
+self.statistics.record_gold_earned(amount)  # 获得金币
+self.statistics.record_event_triggered(event_type)  # 触发事件
+# ... 等等
+```
+
+**集成位置**:
+- **CombatSystem**: 战斗开始/结束、技能使用、药剂使用
+- **EventSystem**: 学习技能、商店访问、药剂使用
+- **EquipmentSystem**: 商店访问、购买装备、获得装备
+- **HeroGame**: 移动步数、所有类型事件触发
+
 **核心方法**:
 ```python
 # 记录方法

@@ -100,6 +100,9 @@ class CombatSystem:
         print(self.game.lang.get_text("battle_start"))
         time.sleep(1)
 
+        # 记录战斗开始
+        self.game.statistics.record_battle_start()
+
         combat_round = 1
         while monster_hp > 0 and self.game.hero_hp > 0:
             print(f"\n--- {self.game.lang.get_text('round')} {combat_round} ---")
@@ -116,12 +119,16 @@ class CombatSystem:
                 self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                 self.game.hero_potions -= 1
                 print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
+                # 记录使用药剂
+                self.game.statistics.record_potion_used()
             elif action == "3":  # 使用火球术技能
                 fireball_skill = self.game.lang.get_text('fireball_skill')
                 if fireball_skill in self.game.hero_skills:
                     hero_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.5))
                     monster_hp -= hero_damage
                     print(f"🔥 {self.game.lang.get_text('fireball')} {monster_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    # 记录使用技能
+                    self.game.statistics.record_skill_used(fireball_skill)
                 else:
                     # 如果没有火球术技能，改为普通攻击
                     hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
@@ -136,6 +143,8 @@ class CombatSystem:
                         heal_amount = random.randint(1000, 2000)
                         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                         print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
+                        # 记录使用技能
+                        self.game.statistics.record_skill_used(healing_skill)
                 else:
                     # 如果没有治疗术技能，改为普通攻击
                     hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
@@ -154,6 +163,11 @@ class CombatSystem:
                 print(f"\n🎉 {self.game.lang.get_text('battle_victory')} {monster_name}!")
                 print(f"{self.game.lang.get_text('got_exp')} {exp_gain} {self.game.lang.get_text('exp_points')} {self.game.lang.get_text('gold_coins')} {gold_gain}!")
 
+                # 记录战斗胜利
+                self.game.statistics.record_battle_victory(monster_name, is_boss=False)
+                self.game.statistics.record_gold_earned(gold_gain)
+                self.game.statistics.record_exp_earned(exp_gain)
+
                 # 检查升级
                 self.check_level_up()
 
@@ -168,6 +182,10 @@ class CombatSystem:
             print(f"{self.game.lang.get_text('your_hp')} {self.game.hero_hp}, {self.game.lang.get_text('monster_hp')} {monster_name}{self.game.lang.get_text('item_separator')}{monster_hp}")
             combat_round += 1
             time.sleep(1)
+
+        # 记录战斗失败
+        if self.game.hero_hp <= 0:
+            self.game.statistics.record_battle_defeat()
 
         self.game.show_hero_info()
 
@@ -231,6 +249,9 @@ class CombatSystem:
         print(self.game.lang.get_text("boss_battle_start"))
         time.sleep(2)
 
+        # 记录战斗开始
+        self.game.statistics.record_battle_start()
+
         combat_round = 1
         while boss_hp > 0 and self.game.hero_hp > 0:
             print(f"\n--- {self.game.lang.get_text('round')} {combat_round} ---")
@@ -261,6 +282,8 @@ class CombatSystem:
                 self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                 self.game.hero_potions -= 1
                 print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
+                # 记录使用药剂
+                self.game.statistics.record_potion_used()
             elif action == "3":
                 fireball_skill = self.game.lang.get_text('fireball_skill')
                 if fireball_skill not in self.game.hero_skills:
@@ -286,6 +309,8 @@ class CombatSystem:
                     print(f"🔥 {self.game.lang.get_text('fireball')} {boss_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
                 boss_hp -= hero_damage
+                # 记录使用火球术技能
+                self.game.statistics.record_skill_used(fireball_skill)
 
                 lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
                 if lifesteal_skill in self.game.hero_skills:
@@ -312,6 +337,8 @@ class CombatSystem:
                     heal_amount = random.randint(1000, 2000)
                     self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                     print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
+                    # 记录使用治疗术技能
+                    self.game.statistics.record_skill_used(healing_skill)
             else:
                 print(self.game.lang.get_text("invalid_action"))
                 hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
@@ -331,6 +358,11 @@ class CombatSystem:
                 print(f"\n🎉 {self.game.lang.get_text('boss_victory')}{boss_name}!")
                 print(f"{self.game.lang.get_text('got_exp')} {exp_gain} {self.game.lang.get_text('exp_points')} {self.game.lang.get_text('gold_coins')} {gold_gain}!")
                 print("🏆 " + (self.game.lang.get_text('hero_badge') if self.game.lang.get_text('hero_badge') else "Got Hero Badge!"))
+
+                # 记录Boss战胜利
+                self.game.statistics.record_battle_victory(boss_name, is_boss=True)
+                self.game.statistics.record_gold_earned(gold_gain)
+                self.game.statistics.record_exp_earned(exp_gain)
 
                 self.check_level_up()
 
@@ -367,6 +399,10 @@ class CombatSystem:
             combat_round += 1
             time.sleep(1)
 
+        # 记录战斗失败
+        if self.game.hero_hp <= 0:
+            self.game.statistics.record_battle_defeat()
+
         self.game.show_hero_info()
 
     def ghost_combat(self, enemy_multiplier=1.0):
@@ -389,6 +425,9 @@ class CombatSystem:
         print(self.game.lang.get_text("battle_start"))
         time.sleep(1)
 
+        # 记录战斗开始
+        self.game.statistics.record_battle_start()
+
         combat_round = 1
         while ghost_hp > 0 and self.game.hero_hp > 0:
             print(f"\n--- {self.game.lang.get_text('round')} {combat_round} ---")
@@ -404,12 +443,16 @@ class CombatSystem:
                 self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                 self.game.hero_potions -= 1
                 print(f"🧪 {self.game.lang.get_text('poison')}{heal_amount}{self.game.lang.get_text('point_hp')}")
+                # 记录使用药剂
+                self.game.statistics.record_potion_used()
             elif action == "3":
                 fireball_skill = self.game.lang.get_text('fireball_skill')
                 if fireball_skill in self.game.hero_skills:
                     hero_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.5))
                     ghost_hp -= hero_damage
                     print(f"🔥 {self.game.lang.get_text('fireball')} {ghost_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    # 记录使用技能
+                    self.game.statistics.record_skill_used(fireball_skill)
                 else:
                     hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - ghost_defense)
                     ghost_hp -= hero_damage
@@ -423,6 +466,8 @@ class CombatSystem:
                         heal_amount = random.randint(25, 40)
                         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                         print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
+                        # 记录使用技能
+                        self.game.statistics.record_skill_used(healing_skill)
                 else:
                     hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - ghost_defense)
                     ghost_hp -= hero_damage
@@ -435,6 +480,9 @@ class CombatSystem:
 
             if ghost_hp <= 0:
                 self.game.monsters_defeated += 1
+                # 记录战斗胜利
+                self.game.statistics.record_battle_victory(ghost_name, is_boss=False)
+
                 # 鬼魂不提供经验值，但有概率掉落装备或宝石
                 drop_roll = random.randint(1, 10)
                 if drop_roll <= 3:
@@ -443,6 +491,8 @@ class CombatSystem:
                     gold_found = random.randint(5, 15)
                     self.game.hero_gold += gold_found
                     print(f"\n👻 {self.game.lang.get_text('find_chest')} {gold_found} {self.game.lang.get_text('coins')}")
+                    # 记录获得金币
+                    self.game.statistics.record_gold_earned(gold_found)
                     # 使用统一的多语言格式化函数处理鬼魂金币事件文本
                     ghost_gold_event = self.game.lang.format_text("event_text", "got_gold_from_ghost", gold_found)
                     self.game.events_encountered.append(ghost_gold_event)
@@ -463,6 +513,10 @@ class CombatSystem:
             print(f"{self.game.lang.get_text('your_hp')} {self.game.hero_hp}, {self.game.lang.get_text('ghost_hp')}{ghost_name}{self.game.lang.get_text('item_separator')}{ghost_hp}")
             combat_round += 1
             time.sleep(1)
+
+        # 记录战斗失败
+        if self.game.hero_hp <= 0:
+            self.game.statistics.record_battle_defeat()
 
         self.game.show_hero_info()
 

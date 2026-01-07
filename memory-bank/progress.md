@@ -57,7 +57,7 @@
 ### ✅ Task 1.4: 实现统计数据收集系统
 
 **状态**: 已完成
-**文件**: `src/hero/statistics.py`
+**文件**: `src/hero/statistics.py`, `src/hero/combat.py`, `src/hero/events.py`, `src/hero/equipment.py`, `src/hero/main.py`
 **内容**:
 - 创建 `GameStatistics` 类，追踪游戏数据
 - 实现的统计维度：
@@ -73,6 +73,11 @@
   - 技能统计：学习的技能和使用次数
   - 商店统计：访问次数和购买数量
 - 支持序列化和反序列化（与存档系统集成）
+- **在所有相关事件中集成统计记录**：
+  - CombatSystem: 3个战斗方法中添加战斗、技能、药剂使用统计
+  - EventSystem: 5个事件方法中添加学习技能、商店访问、药剂使用统计
+  - EquipmentSystem: 2个方法中添加商店访问、购买装备、获得装备统计
+  - HeroGame: 游戏循环中添加步数统计，random_event中添加所有事件类型统计
 
 **验证**: 创建了 `tests/test_statistics.py`，16个测试用例全部通过
 

@@ -280,6 +280,9 @@ class EquipmentSystem:
             item["price"] = int(base_price / gold_multiplier)
             shop_items.append(item)
 
+        # 记录访问商店
+        self.game.statistics.record_shop_visit()
+
         while True:
             self.game.clear_screen()
             print(self.game.lang.get_text("block_separator"))
@@ -307,6 +310,9 @@ class EquipmentSystem:
                             self.game.hero_gold -= item["price"]
                             self.game.inventory.append(item)
                             print(f"{self.game.lang.get_text('buy_success')} {item['name']}!")
+                            # 记录购买装备和花费
+                            self.game.statistics.record_item_purchased()
+                            self.game.statistics.record_gold_spent(item["price"])
                         else:
                             print(self.game.lang.get_text("not_enough_gold"))
                     else:
@@ -344,3 +350,6 @@ class EquipmentSystem:
 
         self.game.inventory.append(item)
         self.game.events_encountered.append(f"{self.game.lang.get_text('found_equipment_event')}{item['name']}")
+
+        # 记录获得装备
+        self.game.statistics.record_equipment_found(item["rarity"])

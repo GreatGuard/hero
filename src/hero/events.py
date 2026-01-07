@@ -49,6 +49,8 @@ class EventSystem:
                         bracket_start, bracket_end = self.game.lang.format_text("skill_brackets")
                         print(f"\n{self.game.lang.get_text('learn_skill_success')}{bracket_start}{skill}{bracket_end}!")
                         self.game.events_encountered.append(f"{self.game.lang.get_text('learned_skill_event')}{skill}")
+                        # 记录学习技能
+                        self.game.statistics.record_skill_learned(skill)
                         break
                     else:
                         print(self.game.lang.get_text("invalid_choice"))
@@ -61,6 +63,8 @@ class EventSystem:
             # 使用统一的多语言格式化函数处理技能括号
             bracket_start, bracket_end = self.game.lang.format_text("skill_brackets")
             print(f"\n{self.game.lang.get_text('learn_skill_success')}{bracket_start}{skill}{bracket_end}!")
+            # 记录学习技能
+            self.game.statistics.record_skill_learned(skill)
 
     def merchant_event(self, gold_multiplier=1.0):
         """商人事件"""
@@ -79,6 +83,9 @@ class EventSystem:
         print()
         print(f"{self.game.lang.get_text('your_gold')}: {self.game.hero_gold}")
         print()
+
+        # 记录访问商店
+        self.game.statistics.record_shop_visit()
 
         # 商店商品
         potions_price = int(10 / gold_multiplier)
@@ -101,6 +108,10 @@ class EventSystem:
                             self.game.hero_gold -= num * potions_price
                             self.game.hero_potions += num
                             print(f"{self.game.lang.get_text('buy_success')} {num} {self.game.lang.get_text('potions')}!")
+                            # 记录购买和花费
+                            self.game.statistics.record_item_purchased(num)
+                            self.game.statistics.record_gold_spent(num * potions_price)
+                            self.game.statistics.record_potion_found()  # 购买的药剂也计入获得
                         else:
                             print(self.game.lang.get_text("not_enough_gold"))
                     except ValueError:
@@ -112,6 +123,8 @@ class EventSystem:
             elif choice == "2":
                 if self.game.hero_gold >= skill_teach_price:
                     self.game.hero_gold -= skill_teach_price
+                    # 记录花费金币
+                    self.game.statistics.record_gold_spent(skill_teach_price)
                     self.learn_skill()
                 else:
                     print(self.game.lang.get_text("not_enough_gold"))
@@ -140,6 +153,9 @@ class EventSystem:
         print()
         print(f"{self.game.lang.get_text('your_gold')}: {self.game.hero_gold}")
         print()
+
+        # 记录访问商店
+        self.game.statistics.record_shop_visit()
 
         print(f"1. {self.game.lang.get_text('buy_equipment_short')}")
         print(f"2. {self.game.lang.get_text('leave_merchant')}")
@@ -196,4 +212,6 @@ class EventSystem:
         self.game.hero_potions -= 1
         print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
         self.game.events_encountered.append(f"{self.game.lang.get_text('used_potion_event')}{heal_amount}{self.game.lang.get_text('hp_points_event')}")
+        # 记录使用药剂
+        self.game.statistics.record_potion_used()
         self.game.show_hero_info()

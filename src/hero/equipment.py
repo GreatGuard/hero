@@ -90,17 +90,16 @@ class EquipmentSystem:
 
         # 根据稀有度概率生成
         rarity_roll = random.random()
-        # if rarity_roll < 0.5:
-        #     rarity = "common"
-        # elif rarity_roll < 0.75:
-        #     rarity = "uncommon"
-        # elif rarity_roll < 0.9:
-        #     rarity = "rare"
-        # elif rarity_roll < 0.97:
-        #     rarity = "epic"
-        # else:
-        #     rarity = "legendary"
-        rarity = "legendary"
+        if rarity_roll < 0.5:
+            rarity = "common"
+        elif rarity_roll < 0.75:
+            rarity = "uncommon"
+        elif rarity_roll < 0.9:
+            rarity = "rare"
+        elif rarity_roll < 0.97:
+            rarity = "epic"
+        else:
+            rarity = "legendary"
 
         # 使用统一的多语言格式化函数获取装备名称
         name = self.game.lang.format_text("equipment_name", self.equipment_database, item_type, rarity)
@@ -110,10 +109,10 @@ class EquipmentSystem:
 
         if item_type == "weapon":
             attack_bonus = int(random.randint(3, 8) * rarity_multiplier[rarity])
-            defense_bonus = 500
-            hp_bonus = 1000
+            defense_bonus = 0
+            hp_bonus = 0
         elif item_type == "armor":
-            attack_bonus = 500
+            attack_bonus = 0
             defense_bonus = int(random.randint(2, 6) * rarity_multiplier[rarity])
             hp_bonus = int(random.randint(5, 15) * rarity_multiplier[rarity])
         else:  # accessory

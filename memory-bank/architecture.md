@@ -351,7 +351,73 @@ class CombatSystem:
         """Boss暴风雪技能"""
 ```
 
-### 8. 新功能测试模块 (tests/test_new_features.py) ⭐ NEW
+### 8. 扩展技能系统模块 (技能系统) ⭐ UPDATED
+
+**职责**: 管理英雄技能的学习、使用和效果
+
+**新增功能 (阶段二)**:
+- **4个新技能**: 连斩、护盾、狂暴、专注
+- **技能状态管理**: 技能激活状态和持续时间
+- **技能战斗集成**: 在战斗系统中完全集成新技能
+
+**技能详情**:
+```python
+# 新技能配置
+SKILL_DESCRIPTIONS = {
+    "combo": "连续攻击2次，每次造成50%伤害",
+    "shield": "下次受到伤害减少50%", 
+    "berserk": "下3回合攻击提升50%，防御降低50%",
+    "focus": "下次攻击必中且暴击"
+}
+
+# 技能状态变量 (在HeroGame中)
+self.shield_active = False  # 护盾状态
+self.berserk_turns = 0  # 狂暴剩余回合
+self.focus_active = False  # 专注状态
+```
+
+**技能战斗逻辑**:
+- 在 `player_turn()` 中显示技能选项（仅显示已学习技能）
+- 在 `boss_combat()` 中支持Boss战技能使用
+- 技能效果在伤害计算中正确应用
+- 技能状态在回合结束时更新
+
+### 9. Boss战斗系统模块 (战斗系统) ⭐ UPDATED
+
+**职责**: 实现特殊Boss战斗机制，提供更具挑战性的战斗体验
+
+**新增功能 (阶段二)**:
+- **Boss模板系统**: 为每个地图类型定义专属Boss
+- **多阶段战斗**: Boss血量低于50%时进入狂暴状态
+- **技能系统**: Boss每3回合使用特殊技能
+- **Boss战触发**: 在随机事件中触发Boss战斗
+
+**Boss配置详情**:
+```python
+# Boss模板配置 (game_config.py)
+BOSS_TEMPLATES = {
+    "plains": {
+        "name_key": "boss_plains_warlord",
+        "base_hp": (100, 150), "base_attack": (25, 40), "base_defense": (15, 25),
+        "gold_reward": (100, 200), "exp_reward": (100, 200),
+        "skills": ["power_strike", "heal"]
+    },
+    # ... 其他地图类型的Boss配置
+}
+```
+
+**Boss技能系统**:
+- 10种不同技能类型，每种技能有独特效果
+- 技能包括：力量打击、治疗、根须陷阱、自然治疗、沙暴、召唤仆从、龙息、毒液咬、再生、暴风雪、冰之囚牢
+- 技能效果：伤害、治疗、状态效果、控制效果
+
+**Boss战特性**:
+- **狂暴机制**: 血量<50%时攻击力提升30%
+- **技能轮次**: 每3回合使用一次技能
+- **属性缩放**: 根据英雄等级调整Boss属性
+- **丰厚奖励**: Boss战胜利获得大量经验和金币
+
+### 10. 新功能测试模块 (tests/test_new_features.py) ⭐ NEW
 
 **职责**: 验证阶段二新增功能的完整性和正确性
 
@@ -361,6 +427,7 @@ class CombatSystem:
 - 状态效果系统测试
 - Boss系统测试
 - 存档/读档功能测试
+- 新技能系统测试
 
 ### 9. 新事件类型测试模块 (tests/test_new_event_types.py) ⭐ NEW
 

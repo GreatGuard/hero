@@ -171,15 +171,40 @@
 
 **验证**: 测试通过，特殊效果和套装系统完整集成
 
-### ✅ Task 2.6: 完善多语言支持
+### ✅ Task 2.6: 扩展技能系统 - 新技能
 **状态**: 已完成
-**文件**: `src/hero/language.py`
+**文件**: `src/hero/language.py`, `src/hero/combat.py`, `src/hero/main.py`
 **内容**:
-- 为所有新功能添加中英文文本
-- 包括新地图名称、怪物名称、状态效果描述等
-- 保持界面一致性
+- 在 `language.py` 中添加了4个新技能的中英文描述和文本
+  - 连斩（combo）：连续攻击2次，每次50%伤害
+  - 护盾（shield）：下次受到伤害减少50%
+  - 狂暴（berserk）：下3回合攻击提升50%，防御降低50%
+  - 专注（focus）：下次攻击必中且暴击
+- 在 `combat.py` 中实现了新技能的战斗逻辑
+  - 在 `player_turn()` 和 `boss_combat_enhanced()` 中添加技能选项
+  - 实现技能效果应用和状态管理
+  - 添加技能冷却和状态持续时间管理
+- 在 `main.py` 中添加技能状态变量（shield_active, berserk_turns, focus_active）
+- 更新技能学习系统支持新技能
 
-**验证**: 测试通过，多语言支持完整
+**验证**: 测试通过，所有新技能在战斗中正常工作，效果正确应用
+
+### ✅ Task 2.7: 实现Boss战机制
+**状态**: 已完成
+**文件**: `src/hero/game_config.py`, `src/hero/combat.py`, `src/hero/language.py`, `src/hero/main.py`
+**内容**:
+- 在 `game_config.py` 中创建 `BOSS_TEMPLATES` 配置，为每个地图类型定义专属Boss
+  - 7个地图类型都有对应的Boss（平原战将、森林古树、沙漠狮身人面像、地牢魔王、山地巨龙、沼泽九头蛇、冰霜之王）
+  - 每个Boss拥有独特的属性范围、技能组合和奖励
+- 在 `combat.py` 中实现 `boss_combat()` 方法，包含：
+  - Boss多阶段战斗（血量<50%进入狂暴状态，攻击力提升30%）
+  - Boss技能系统（每3回合使用特殊技能）
+  - 10种Boss技能（力量打击、治疗、根须陷阱、自然治疗、沙暴、召唤仆从、龙息、毒液咬、再生、暴风雪、冰之囚牢）
+- 在 `language.py` 中添加Boss相关文本（Boss名称、技能名称、战斗提示）
+- 在 `main.py` 的 `random_event()` 中设置Boss战触发（特定事件触发）
+- Boss击败后掉落传奇装备和丰厚奖励
+
+**验证**: 测试通过，Boss战机制完整，多阶段战斗和技能系统正常工作
 
 ---
 

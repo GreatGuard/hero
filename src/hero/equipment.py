@@ -4,6 +4,47 @@
 """
 
 import random
+import copy
+
+# 特殊效果类型 - 使用统一的多语言键名
+SPECIAL_EFFECTS = {
+    "crit_rate": {
+        "name_key": "critical_skill",
+        "description_key": "crit_desc"
+    },
+    "lifesteal": {
+        "name_key": "lifesteal_skill",
+        "description_key": "lifesteal_desc"
+    },
+    "dodge": {
+        "name_key": "dodge_skill",
+        "description_key": "dodge_desc"
+    },
+    "counter_attack": {
+        "name_key": "counter_attack_skill",
+        "description_key": "counter_attack_desc"
+    },
+    "ice_damage": {
+        "name_key": "ice_damage_skill",
+        "description_key": "ice_damage_desc"
+    },
+    "fire_damage": {
+        "name_key": "fire_damage_skill",
+        "description_key": "fire_damage_desc"
+    },
+    "healing": {
+        "name_key": "healing_skill",
+        "description_key": "heal_desc"
+    },
+    "mana_boost": {
+        "name_key": "mana_boost_skill",
+        "description_key": "mana_boost_desc"
+    },
+    "backstab": {
+        "name_key": "backstab_skill",
+        "description_key": "backstab_desc"
+    }
+}
 
 
 class EquipmentSystem:
@@ -83,15 +124,20 @@ class EquipmentSystem:
         # 直接使用多语言系统获取稀有度名称
         return self.game.lang.get_text(f"rarity_{rarity}")
 
-    def create_random_equipment(self, item_type=None, rarity_bonus=0):
+    def create_random_equipment(self, item_type=None, rarity_bonus=0, is_legendary=False):
         """创建随机装备
         
         Args:
             item_type (str): 装备类型，None表示随机
             rarity_bonus (float): 稀有度提升值
+            is_legendary (bool): 是否为传奇装备
         """
         if item_type is None:
             item_type = random.choice(["weapon", "armor", "accessory"])
+
+        # 如果是传奇装备，直接返回传奇装备
+        if is_legendary:
+            return self.create_legendary_equipment(item_type)
 
         # 根据稀有度概率生成
         rarity_roll = random.random()
@@ -129,14 +175,90 @@ class EquipmentSystem:
             defense_bonus = int(random.randint(1, 4) * rarity_multiplier[rarity])
             hp_bonus = int(random.randint(3, 10) * rarity_multiplier[rarity])
 
+        # 添加特殊效果
+        special_effects = self.generate_special_effects(rarity)
+        
+        # 为装备分配套装（稀有度越高，越有可能属于套装）
+        set_bonus = None
+        if rarity in ["rare", "epic", "legendary"]:
+            # 根据装备类型决定可能的套装
+            if item_type == "weapon":
+                # 武器可以属于任何套装
+                possible_sets = ["warrior_set", "mage_set", "assassin_set"]
+            elif item_type == "armor":
+                # 护甲只能属于战士套装
+                possible_sets = ["warrior_set"]
+            else:  # accessory
+                # 饰品可以属于法师或刺客套装
+                possible_sets = ["mage_set", "assassin_set"]
+            
+            # 根据稀有度决定套装概率
+            set_probability = {"rare": 0.3, "epic": 0.6, "legendary": 0.9}
+            if random.random() < set_probability.get(rarity, 0):
+                set_bonus = random.choice(possible_sets)
+
         return {
             "name": name,
             "type": item_type,
             "rarity": rarity,
             "attack": attack_bonus,
             "defense": defense_bonus,
-            "hp": hp_bonus
+            "hp": hp_bonus,
+            "special_effects": special_effects,
+            "set_bonus": set_bonus,  # 套装效果
+            "is_legendary": False
         }
+
+    def create_legendary_equipment(self, item_type):
+        """创建传奇装备"""
+        import game_config
+        
+        if item_type not in game_config.LEGENDARY_EQUIPMENT:
+            item_type = random.choice(list(game_config.LEGENDARY_EQUIPMENT.keys()))
+        
+        legendary_item = random.choice(game_config.LEGENDARY_EQUIPMENT[item_type])
+        
+        # 使用统一的多语言系统获取名称
+        name_key = legendary_item.get("name_key", "unknown_legendary_item")
+        name = self.game.lang.get_text(name_key)
+        
+        return {
+            "name": name,
+            "type": item_type,
+            "rarity": "legendary",
+            "attack": legendary_item["attack"],
+            "defense": legendary_item["defense"],
+            "hp": legendary_item["hp"],
+            "special_effects": legendary_item.get("special_effects", []),
+            "special_effects_values": {k: v for k, v in legendary_item.items() if k not in ["name_key", "attack", "defense", "hp", "special_effects"]},
+            "set_bonus": None,
+            "is_legendary": True
+        }
+
+    def generate_special_effects(self, rarity):
+        """根据稀有度生成特殊效果"""
+        effects = []
+        
+        # 稀有度越高，特殊效果越多
+        effect_chances = {
+            "common": 0.1,    # 10% 概率有特殊效果
+            "uncommon": 0.3,  # 30%
+            "rare": 0.6,     # 60%
+            "epic": 0.8,     # 80%
+            "legendary": 1.0 # 100%
+        }
+        
+        chance = effect_chances.get(rarity, 0)
+        
+        if random.random() < chance:
+            # 根据稀有度决定效果数量
+            max_effects = {"common": 1, "uncommon": 1, "rare": 2, "epic": 2, "legendary": 3}
+            num_effects = random.randint(1, max_effects.get(rarity, 1))
+            
+            available_effects = list(SPECIAL_EFFECTS.keys())
+            effects = random.sample(available_effects, min(num_effects, len(available_effects)))
+        
+        return effects
 
     def show_inventory(self):
         """显示背包内容"""

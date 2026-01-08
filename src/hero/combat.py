@@ -5,7 +5,7 @@
 
 import random
 import time
-from game_config import MONSTER_TEMPLATES, BOSS_TEMPLATES
+from .game_config import MONSTER_TEMPLATES, BOSS_TEMPLATES
 
 
 class CombatSystem:
@@ -124,9 +124,40 @@ class CombatSystem:
             action = self.get_combat_action()
 
             if action == "1" or action == "":  # 普通攻击
-                hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+                base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+                
+                # 应用暴击效果
+                if random.random() < self.game.special_effects["crit_rate"]:
+                    hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
+                    print(f"💥 {self.game.lang.get_text('critical_hit')} {monster_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                else:
+                    hero_damage = base_damage
+                    
+                    # 应用背刺效果（首回合）
+                    if combat_round == 1 and self.game.special_effects["backstab_damage"] > 0:
+                        backstab_bonus = int(hero_damage * self.game.special_effects["backstab_damage"])
+                        hero_damage += backstab_bonus
+                        print(f"🔪 {self.game.lang.get_text('backstab')} +{backstab_bonus}!")
+                        print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    else:
+                        print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                
+                # 应用元素伤害
+                if self.game.special_effects["ice_damage"] > 0:
+                    hero_damage += self.game.special_effects["ice_damage"]
+                    print(f"❄️ {self.game.lang.get_text('ice_damage')} +{self.game.special_effects['ice_damage']}!")
+                
+                if self.game.special_effects["fire_damage"] > 0:
+                    hero_damage += self.game.special_effects["fire_damage"]
+                    print(f"🔥 {self.game.lang.get_text('fire_damage')} +{self.game.special_effects['fire_damage']}!")
+                
                 monster_hp -= hero_damage
-                print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                
+                # 应用吸血效果
+                if self.game.special_effects["lifesteal_rate"] > 0:
+                    heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
+                    self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
+                    print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
             elif action == "2" and self.game.hero_potions > 0:  # 使用药剂
                 heal_amount = random.randint(20, 40)
                 self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
@@ -137,16 +168,45 @@ class CombatSystem:
             elif action == "3":  # 使用火球术技能
                 fireball_skill = self.game.lang.get_text('fireball_skill')
                 if fireball_skill in self.game.hero_skills:
-                    hero_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.5))
+                    base_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.8))
+                    base_damage = int(base_damage * (1.0 + self.game.special_effects["spell_power"]))
+                    
+                    # 应用暴击效果
+                    if random.random() < self.game.special_effects["crit_rate"]:
+                        hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
+                        print(f"🔥💥 {self.game.lang.get_text('fireball_critical')} {monster_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                    else:
+                        hero_damage = base_damage
+                        print(f"🔥 {self.game.lang.get_text('fireball')} {monster_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    
                     monster_hp -= hero_damage
-                    print(f"🔥 {self.game.lang.get_text('fireball')} {monster_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
                     # 记录使用技能
                     self.game.statistics.record_skill_used(fireball_skill)
+                    
+                    # 应用吸血效果
+                    if self.game.special_effects["lifesteal_rate"] > 0:
+                        heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
+                        self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
+                        print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
                 else:
                     # 如果没有火球术技能，改为普通攻击
-                    hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+                    base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+                    
+                    # 应用暴击效果
+                    if random.random() < self.game.special_effects["crit_rate"]:
+                        hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
+                        print(f"💥 {self.game.lang.get_text('critical_hit')} {monster_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                    else:
+                        hero_damage = base_damage
+                        print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    
                     monster_hp -= hero_damage
-                    print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    
+                    # 应用吸血效果
+                    if self.game.special_effects["lifesteal_rate"] > 0:
+                        heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
+                        self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
+                        print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
             elif action == "4":  # 使用治疗术技能
                 healing_skill = self.game.lang.get_text('healing_skill')
                 if healing_skill in self.game.hero_skills:
@@ -154,20 +214,49 @@ class CombatSystem:
                         print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
                     else:
                         heal_amount = random.randint(100, 200)
+                        heal_amount = int(heal_amount * (1.0 + self.game.special_effects["healing_rate"]))
                         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                         print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
                         # 记录使用技能
                         self.game.statistics.record_skill_used(healing_skill)
                 else:
                     # 如果没有治疗术技能，改为普通攻击
-                    hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+                    base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+                    
+                    # 应用暴击效果
+                    if random.random() < self.game.special_effects["crit_rate"]:
+                        hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
+                        print(f"💥 {self.game.lang.get_text('critical_hit')} {monster_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                    else:
+                        hero_damage = base_damage
+                        print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    
                     monster_hp -= hero_damage
-                    print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    
+                    # 应用吸血效果
+                    if self.game.special_effects["lifesteal_rate"] > 0:
+                        heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
+                        self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
+                        print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
             else:
                 print(self.game.lang.get_text("invalid_action"))
-                hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+                base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+                
+                # 应用暴击效果
+                if random.random() < self.game.special_effects["crit_rate"]:
+                    hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
+                    print(f"💥 {self.game.lang.get_text('critical_hit')} {monster_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                else:
+                    hero_damage = base_damage
+                    print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                
                 monster_hp -= hero_damage
-                print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                
+                # 应用吸血效果
+                if self.game.special_effects["lifesteal_rate"] > 0:
+                    heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
+                    self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
+                    print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
 
             if monster_hp <= 0:
                 self.game.monsters_defeated += 1
@@ -188,18 +277,36 @@ class CombatSystem:
                 break
 
             # 怪物反击
-            monster_damage = max(1, random.randint(monster_attack // 2, monster_attack) - self.game.hero_defense)
-            self.game.hero_hp -= monster_damage
-            print(f"🩸 {monster_name}{self.game.lang.get_text('monster_attack')} {monster_damage}{self.game.lang.get_text('damage')}")
+            # 应用闪避效果
+            if random.random() < self.game.special_effects["dodge_rate"]:
+                print(f"💨 {self.game.lang.get_text('dodge_attack')} {monster_name} {self.game.lang.get_text('dodge_success')}")
+            else:
+                # 应用反击效果
+                if random.random() < self.game.special_effects["counter_attack_rate"]:
+                    counter_damage = max(1, int(monster_attack * 0.5) - self.game.hero_defense)
+                    monster_hp -= counter_damage
+                    print(f"🔄 {self.game.lang.get_text('counter_attack')} {counter_damage}{self.game.lang.get_text('point_damage')}!")
+                
+                monster_damage = max(1, random.randint(monster_attack // 2, monster_attack) - self.game.hero_defense)
+                
+                # 应用抗性效果
+                if monster_template.get("special") == "poison" and self.game.special_effects["holy_resistance"] > 0:
+                    monster_damage = int(monster_damage * (1 - self.game.special_effects["holy_resistance"]))
+                
+                if monster_template.get("special") == "fire" and self.game.special_effects["fire_resistance"] > 0:
+                    monster_damage = int(monster_damage * (1 - self.game.special_effects["fire_resistance"]))
+                
+                self.game.hero_hp -= monster_damage
+                print(f"🩸 {monster_name}{self.game.lang.get_text('monster_attack')} {monster_damage}{self.game.lang.get_text('damage')}")
             
             # 特殊能力效果
             if has_poison and random.random() < 0.3:  # 30%概率施加中毒
                 self.game.add_status_effect("poison", 3)
-                print(f"☠️ {monster_name} 的攻击让你中毒了！")
+                print(f"☠️ {monster_name} {self.game.lang.get_text('monster_attack')}{self.game.lang.get_text('poisoned')}")
             
             if has_frost and random.random() < 0.3:  # 30%概率施加冰霜
                 self.game.add_status_effect("frost", 3)
-                print(f"❄️ {monster_name} 的攻击让你感到冰冻！")
+                print(f"❄️ {monster_name} {self.game.lang.get_text('monster_attack')}{self.game.lang.get_text('frost_effect_desc')}")
 
             print(f"{self.game.lang.get_text('your_hp')} {self.game.hero_hp}, {self.game.lang.get_text('monster_hp')} {monster_name}{self.game.lang.get_text('item_separator')}{monster_hp}")
             combat_round += 1
@@ -276,22 +383,52 @@ class CombatSystem:
 
             if action == "1" or action == "":  # 普通攻击
                 base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
-
-                critical_skill = self.game.lang.get_text('critical_skill')
-                if critical_skill in self.game.hero_skills and random.random() < 0.15:
-                    hero_damage = base_damage * 2
+                
+                # 应用暴击效果（优先使用装备的暴击率）
+                if random.random() < self.game.special_effects["crit_rate"]:
+                    hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
                     print(f"💥 {self.game.lang.get_text('critical_hit')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
                 else:
-                    hero_damage = base_damage
-                    print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
-
+                    # 如果没有装备暴击，检查技能暴击
+                    critical_skill = self.game.lang.get_text('critical_skill')
+                    if critical_skill in self.game.hero_skills and random.random() < 0.15:
+                        hero_damage = base_damage * 2
+                        print(f"💥 {self.game.lang.get_text('critical_hit')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                    else:
+                        hero_damage = base_damage
+                        
+                        # 应用背刺效果（首回合）
+                        if combat_round == 1 and self.game.special_effects["backstab_damage"] > 0:
+                            backstab_bonus = int(hero_damage * self.game.special_effects["backstab_damage"])
+                            hero_damage += backstab_bonus
+                            print(f"🔪 {self.game.lang.get_text('backstab')} +{backstab_bonus}!")
+                            print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                        else:
+                            print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                
+                # 应用元素伤害
+                if self.game.special_effects["ice_damage"] > 0:
+                    hero_damage += self.game.special_effects["ice_damage"]
+                    print(f"❄️ {self.game.lang.get_text('ice_damage')} +{self.game.special_effects['ice_damage']}!")
+                
+                if self.game.special_effects["fire_damage"] > 0:
+                    hero_damage += self.game.special_effects["fire_damage"]
+                    print(f"🔥 {self.game.lang.get_text('fire_damage')} +{self.game.special_effects['fire_damage']}!")
+                
                 boss_hp -= hero_damage
 
-                lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
-                if lifesteal_skill in self.game.hero_skills:
-                    heal = int(hero_damage * 0.3)
+                # 应用吸血效果（优先使用装备的吸血）
+                if self.game.special_effects["lifesteal_rate"] > 0:
+                    heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
                     self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
                     print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
+                else:
+                    # 如果没有装备吸血，检查技能吸血
+                    lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
+                    if lifesteal_skill in self.game.hero_skills:
+                        heal = int(hero_damage * 0.3)
+                        self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
+                        print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
 
             elif action == "2" and self.game.hero_potions > 0:
                 heal_amount = random.randint(20, 40)
@@ -304,46 +441,70 @@ class CombatSystem:
                 fireball_skill = self.game.lang.get_text('fireball_skill')
                 if fireball_skill not in self.game.hero_skills:
                     print(self.game.lang.get_text("invalid_action"))
-                    hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
+                    base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
+                    
+                    # 应用暴击效果
+                    if random.random() < self.game.special_effects["crit_rate"]:
+                        hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
+                        print(f"💥 {self.game.lang.get_text('critical_hit')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                    else:
+                        hero_damage = base_damage
+                        print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    
                     boss_hp -= hero_damage
-                    print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
-                    lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
-                    if lifesteal_skill in self.game.hero_skills:
-                        heal = int(hero_damage * 0.3)
+                    # 应用吸血效果
+                    if self.game.special_effects["lifesteal_rate"] > 0:
+                        heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
                         self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
                         print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
                     continue
+                
                 base_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.8))
+                base_damage = int(base_damage * (1.0 + self.game.special_effects["spell_power"]))
 
-                critical_skill = self.game.lang.get_text('critical_skill')
-                if critical_skill in self.game.hero_skills and random.random() < 0.15:
-                    hero_damage = int(base_damage * 1.5)
+                # 应用暴击效果（优先使用装备的暴击率）
+                if random.random() < self.game.special_effects["crit_rate"]:
+                    hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
                     print(f"🔥💥 {self.game.lang.get_text('fireball_critical')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
                 else:
-                    hero_damage = base_damage
-                    print(f"🔥 {self.game.lang.get_text('fireball')} {boss_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    # 如果没有装备暴击，检查技能暴击
+                    critical_skill = self.game.lang.get_text('critical_skill')
+                    if critical_skill in self.game.hero_skills and random.random() < 0.15:
+                        hero_damage = int(base_damage * 1.5)
+                        print(f"🔥💥 {self.game.lang.get_text('fireball_critical')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                    else:
+                        hero_damage = base_damage
+                        print(f"🔥 {self.game.lang.get_text('fireball')} {boss_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
                 boss_hp -= hero_damage
                 # 记录使用火球术技能
                 self.game.statistics.record_skill_used(fireball_skill)
 
-                lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
-                if lifesteal_skill in self.game.hero_skills:
-                    heal = int(hero_damage * 0.3)
+                # 应用吸血效果（优先使用装备的吸血）
+                if self.game.special_effects["lifesteal_rate"] > 0:
+                    heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
                     self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
                     print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
             elif action == "4":
                 healing_skill = self.game.lang.get_text('healing_skill')
                 if healing_skill not in self.game.hero_skills:
                     print(self.game.lang.get_text("invalid_action"))
-                    hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
+                    base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
+                    
+                    # 应用暴击效果
+                    if random.random() < self.game.special_effects["crit_rate"]:
+                        hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
+                        print(f"💥 {self.game.lang.get_text('critical_hit')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                    else:
+                        hero_damage = base_damage
+                        print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                    
                     boss_hp -= hero_damage
-                    print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
-                    lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
-                    if lifesteal_skill in self.game.hero_skills:
-                        heal = int(hero_damage * 0.3)
+                    # 应用吸血效果
+                    if self.game.special_effects["lifesteal_rate"] > 0:
+                        heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
                         self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
                         print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
                     continue
@@ -351,19 +512,28 @@ class CombatSystem:
                     print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
                 else:
                     heal_amount = random.randint(100, 200)
+                    heal_amount = int(heal_amount * (1.0 + self.game.special_effects["healing_rate"]))
                     self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                     print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
                     # 记录使用治疗术技能
                     self.game.statistics.record_skill_used(healing_skill)
             else:
                 print(self.game.lang.get_text("invalid_action"))
-                hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
+                base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - boss_defense)
+                
+                # 应用暴击效果
+                if random.random() < self.game.special_effects["crit_rate"]:
+                    hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
+                    print(f"💥 {self.game.lang.get_text('critical_hit')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+                else:
+                    hero_damage = base_damage
+                    print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
+                
                 boss_hp -= hero_damage
-                print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
 
-                lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
-                if lifesteal_skill in self.game.hero_skills:
-                    heal = int(hero_damage * 0.3)
+                # 应用吸血效果
+                if self.game.special_effects["lifesteal_rate"] > 0:
+                    heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
                     self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
                     print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
 
@@ -417,7 +587,7 @@ class CombatSystem:
                 elif skill == "root_trap":
                     # 陷阱效果，下回合英雄无法攻击
                     print(f"{boss_name} {skill_name}!")
-                    print("你的手脚被树根缠住了，下回合无法攻击！")
+                    print(self.game.lang.get_text("root_trap_effect"))
                     # 这里可以添加一个状态效果来表示被困
                     # 为简单起见，这里只打印提示
                 
@@ -433,7 +603,7 @@ class CombatSystem:
                 
                 elif skill == "summon_minions":
                     print(f"{boss_name} {skill_name}!")
-                    print("Boss召唤了仆从，下次攻击会更强！")
+                    print(self.game.lang.get_text("summon_minions_effect"))
                     # 这里可以添加一个状态效果表示下次攻击增强
                     # 为简单起见，这里只打印提示
                 
@@ -447,7 +617,7 @@ class CombatSystem:
                     self.game.hero_hp -= skill_damage
                     self.game.add_status_effect("poison", 3)
                     print(f"{boss_name} {skill_name} {self.game.lang.get_text('caused_damage')} {skill_damage}{self.game.lang.get_text('point_damage')}!")
-                    print(f"{boss_name} 的攻击让你中毒了！")
+                    print(f"{boss_name} {self.game.lang.get_text('monster_attack')}{self.game.lang.get_text('poisoned')}")
                 
                 elif skill == "regeneration":
                     heal_amount = int(max_boss_hp * 0.1)  # 恢复10%最大血量
@@ -459,12 +629,12 @@ class CombatSystem:
                     self.game.hero_hp -= skill_damage
                     self.game.add_status_effect("frost", 3)
                     print(f"{boss_name} {skill_name} {self.game.lang.get_text('caused_damage')} {skill_damage}{self.game.lang.get_text('point_damage')}!")
-                    print(f"{boss_name} 的攻击让你感到冰冻！")
+                    print(f"{boss_name} {self.game.lang.get_text('monster_attack')}{self.game.lang.get_text('frost_effect_desc')}")
                 
                 elif skill == "ice_prison":
                     # 冰牢效果，下回合英雄无法攻击
                     print(f"{boss_name} {skill_name}!")
-                    print("你被冰冻在冰牢中，下回合无法攻击！")
+                    print(self.game.lang.get_text("ice_prison_effect"))
                     # 这里可以添加一个状态效果来表示被困
                     # 为简单起见，这里只打印提示
                 
@@ -473,13 +643,32 @@ class CombatSystem:
             
             else:
                 # 普通攻击
-                dodge_skill = self.game.lang.get_text('dodge_skill')
-                if dodge_skill in self.game.hero_skills and random.random() < 0.2:
+                # 应用闪避效果（优先使用装备的闪避率）
+                if random.random() < self.game.special_effects["dodge_rate"]:
                     print(f"💨 {self.game.lang.get_text('dodge_attack')} {boss_name} {self.game.lang.get_text('dodge_success')}")
                 else:
-                    boss_damage = max(1, random.randint(boss_attack // 2, boss_attack) - self.game.hero_defense)
-                    self.game.hero_hp -= boss_damage
-                    print(f"🩸 {boss_name}{self.game.lang.get_text('monster_attack')} {boss_damage}{self.game.lang.get_text('damage')}")
+                    # 如果没有装备闪避，检查技能闪避
+                    dodge_skill = self.game.lang.get_text('dodge_skill')
+                    if dodge_skill in self.game.hero_skills and random.random() < 0.2:
+                        print(f"💨 {self.game.lang.get_text('dodge_attack')} {boss_name} {self.game.lang.get_text('dodge_success')}")
+                    else:
+                        # 应用反击效果
+                        if random.random() < self.game.special_effects["counter_attack_rate"]:
+                            counter_damage = max(1, int(boss_attack * 0.5) - self.game.hero_defense)
+                            boss_hp -= counter_damage
+                            print(f"🔄 {self.game.lang.get_text('counter_attack')} {counter_damage}{self.game.lang.get_text('point_damage')}!")
+                        
+                        boss_damage = max(1, random.randint(boss_attack // 2, boss_attack) - self.game.hero_defense)
+                        
+                        # 应用抗性效果
+                        if boss_template.get("special") == "poison" and self.game.special_effects["holy_resistance"] > 0:
+                            boss_damage = int(boss_damage * (1 - self.game.special_effects["holy_resistance"]))
+                        
+                        if boss_template.get("special") == "fire" and self.game.special_effects["fire_resistance"] > 0:
+                            boss_damage = int(boss_damage * (1 - self.game.special_effects["fire_resistance"]))
+                        
+                        self.game.hero_hp -= boss_damage
+                        print(f"🩸 {boss_name}{self.game.lang.get_text('monster_attack')} {boss_damage}{self.game.lang.get_text('damage')}")
 
             print(f"{self.game.lang.get_text('your_hp')}{self.game.hero_hp}, {self.game.lang.get_text('boss_hp')}{boss_name}{self.game.lang.get_text('item_separator')}{boss_hp}")
             combat_round += 1
@@ -584,7 +773,7 @@ class CombatSystem:
                     self.game.events_encountered.append(ghost_gold_event)
                 else:
                     # 获得一个随机装备（可能是特殊的）
-                    from equipment import EquipmentSystem
+                    from .equipment import EquipmentSystem
                     equip_system = EquipmentSystem(self.game)
                     print(f"\n👻 {self.game.lang.get_text('ghost_leave_equipment')}")
                     equip_system.find_equipment()
@@ -636,7 +825,7 @@ class CombatSystem:
 
                 # 升级时有概率学习新技能
                 if random.random() < 0.3:
-                    from events import EventSystem
+                    from .events import EventSystem
                     event_system = EventSystem(self.game)
                     event_system.learn_skill(level_up=True)
 

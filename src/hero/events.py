@@ -68,7 +68,7 @@ class EventSystem:
 
     def merchant_event(self, gold_multiplier=1.0):
         """商人事件"""
-        from equipment import EquipmentSystem
+        from hero.equipment import EquipmentSystem
         equip_system = EquipmentSystem(self.game)
 
         self.game.clear_screen()
@@ -137,10 +137,158 @@ class EventSystem:
                 break
             else:
                 print(self.game.lang.get_text("invalid_choice"))
+    
+    def mysterious_teleport(self):
+        """神秘传送事件"""
+        from hero.game_config import EVENT_TYPES
+        event_config = EVENT_TYPES["mysterious_teleport"]
+        
+        # 随机决定前进或后退
+        direction = random.choice(["forward", "backward"])
+        steps = random.randint(abs(event_config["min_effect"]), abs(event_config["max_effect"]))
+        
+        if direction == "backward":
+            # 后退
+            new_position = max(1, self.game.hero_position - steps)
+            print(f"🌀 {self.game.lang.get_text('event_mysterious_teleport_desc')}")
+            print(f"💫 {self.game.lang.get_text('teleported_to_position', position=new_position)}")
+        else:
+            # 前进
+            new_position = min(self.game.map_length, self.game.hero_position + steps)
+            print(f"🌀 {self.game.lang.get_text('event_mysterious_teleport_desc')}")
+            print(f"💫 {self.game.lang.get_text('teleported_to_position', position=new_position)}")
+        
+        # 记录事件
+        self.game.events_encountered.append(f"{self.game.lang.get_text('event_mysterious_teleport')} - {self.game.lang.get_text('moved_to_position', position=new_position)}")
+        self.game.statistics.record_event_triggered("mysterious_teleport")
+        
+        # 更新位置
+        self.game.hero_position = new_position
+    
+    def sage_guidance(self):
+        """贤者指引事件"""
+        from hero.game_config import EVENT_TYPES
+        event_config = EVENT_TYPES["sage_guidance"]
+        
+        # 随机获得经验值
+        exp_gained = random.randint(event_config["min_exp"], event_config["max_exp"])
+        self.game.hero_exp += exp_gained
+        
+        print(f"🧙 {self.game.lang.get_text('event_sage_guidance_desc')}")
+        print(f"✨ {self.game.lang.get_text('gained_exp', exp=exp_gained)}")
+        
+        # 记录事件
+        self.game.events_encountered.append(f"{self.game.lang.get_text('event_sage_guidance')} - {self.game.lang.get_text('gained_exp', exp=exp_gained)}")
+        self.game.statistics.record_event_triggered("sage_guidance")
+        self.game.statistics.record_exp_earned(exp_gained)
+        
+        # 检查升级
+        if self.game.hero_exp >= self.game.hero_level * 50:
+            from .combat import CombatSystem
+            combat_system = CombatSystem(self.game)
+            combat_system.check_level_up()
+    
+    def robber_encounter(self):
+        """遭遇强盗事件"""
+        from hero.game_config import EVENT_TYPES
+        event_config = EVENT_TYPES["robber_encounter"]
+        
+        print(f"🗡️ {self.game.lang.get_text('event_robber_encounter_desc')}")
+        print()
+        print(f"1. {self.game.lang.get_text('combat_option')}")
+        print(f"2. {self.game.lang.get_text('pay_gold_option')}")
+        
+        choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
+        
+        if choice == "1":  # 选择战斗
+            print(f"\n{self.game.lang.get_text('decide_to_combat')}")
+            # 记录事件
+            self.game.events_encountered.append(f"{self.game.lang.get_text('event_robber_encounter')} - {self.game.lang.get_text('chose_combat')}")
+            self.game.statistics.record_event_triggered("robber_combat")
+            # 与强盗战斗
+            self.game.combat_system.combat(self.game.difficulty_settings[self.game.difficulty]["enemy_multiplier"])
+        elif choice == "2":  # 选择交金币
+            gold_loss = random.randint(event_config["min_gold_loss"], event_config["max_gold_loss"])
+            gold_loss = min(gold_loss, self.game.hero_gold)  # 不能失去比拥有的更多的金币
+            
+            print(f"\n{self.game.lang.get_text('gave_gold_to_robber', gold=gold_loss)}")
+            self.game.hero_gold -= gold_loss
+            
+            # 记录事件
+            self.game.events_encountered.append(f"{self.game.lang.get_text('event_robber_encounter')} - {self.game.lang.get_text('lost_gold', gold=gold_loss)}")
+            self.game.statistics.record_event_triggered("robber_pay")
+            self.game.statistics.record_gold_spent(gold_loss)
+        else:
+            print(self.game.lang.get_text("invalid_choice"))
+            self.robber_encounter()  # 重新选择
+    
+    def mysterious_altar(self):
+        """神秘祭坛事件"""
+        from hero.game_config import EVENT_TYPES
+        event_config = EVENT_TYPES["mysterious_altar"]
+        
+        print(f"🪦 {self.game.lang.get_text('event_mysterious_altar_desc')}")
+        print()
+        print(f"1. {self.game.lang.get_text('sacrifice_hp_for_attack')}")
+        print(f"2. {self.game.lang.get_text('sacrifice_hp_for_defense')}")
+        print(f"3. {self.game.lang.get_text('leave_altar')}")
+        
+        choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
+        
+        if choice == "1":  # 换取攻击力
+            hp_cost = int(self.game.hero_max_hp * event_config["hp_cost_percent"])
+            hp_cost = min(hp_cost, self.game.hero_hp - 1)  # 保留至少1点血
+            
+            print(f"\n{self.game.lang.get_text('sacrificed_hp_for_attack_desc', hp=hp_cost)}")
+            self.game.hero_hp -= hp_cost
+            self.game.base_attack += event_config["attack_boost"]
+            self.game.update_attributes()  # 重新计算属性
+            
+            # 记录事件
+            self.game.events_encountered.append(f"{self.game.lang.get_text('event_mysterious_altar')} - {self.game.lang.get_text('sacrificed_hp_for_attack_event')}")
+            self.game.statistics.record_event_triggered("altar_attack")
+            self.game.show_hero_info()
+        elif choice == "2":  # 换取防御力
+            hp_cost = int(self.game.hero_max_hp * event_config["hp_cost_percent"])
+            hp_cost = min(hp_cost, self.game.hero_hp - 1)  # 保留至少1点血
+            
+            print(f"\n{self.game.lang.get_text('sacrificed_hp_for_defense_desc', hp=hp_cost)}")
+            self.game.hero_hp -= hp_cost
+            self.game.base_defense += event_config["defense_boost"]
+            self.game.update_attributes()  # 重新计算属性
+            
+            # 记录事件
+            self.game.events_encountered.append(f"{self.game.lang.get_text('event_mysterious_altar')} - {self.game.lang.get_text('sacrificed_hp_for_defense_event')}")
+            self.game.statistics.record_event_triggered("altar_defense")
+            self.game.show_hero_info()
+        elif choice == "3":  # 离开
+            print(f"\n{self.game.lang.get_text('decide_to_leave_altar')}")
+            self.game.events_encountered.append(f"{self.game.lang.get_text('event_mysterious_altar')} - {self.game.lang.get_text('chose_to_leave_altar')}")
+            self.game.statistics.record_event_triggered("altar_leave")
+        else:
+            print(self.game.lang.get_text("invalid_choice"))
+            self.mysterious_altar()  # 重新选择
+    
+    def roadside_camp(self):
+        """路边营地事件"""
+        from hero.game_config import EVENT_TYPES
+        event_config = EVENT_TYPES["roadside_camp"]
+        
+        # 随机恢复生命值
+        heal_amount = random.randint(event_config["min_heal"], event_config["max_heal"])
+        self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
+        
+        print(f"🏕️ {self.game.lang.get_text('event_roadside_camp_desc')}")
+        print(f"💚 {self.game.lang.get_text('rested_at_camp', heal=heal_amount)}")
+        
+        # 记录事件
+        self.game.events_encountered.append(f"{self.game.lang.get_text('event_roadside_camp')} - {self.game.lang.get_text('restored_hp', heal=heal_amount)}")
+        self.game.statistics.record_event_triggered("roadside_camp")
+        self.game.show_hero_info()
 
     def mysterious_merchant(self, gold_multiplier=1.0):
         """神秘商人事件（地牢/山脉特殊）"""
-        from equipment import EquipmentSystem
+        from hero.equipment import EquipmentSystem
         equip_system = EquipmentSystem(self.game)
 
         self.game.clear_screen()
@@ -173,7 +321,7 @@ class EventSystem:
 
     def treasure_chest_with_equipment(self):
         """带有装备的宝箱"""
-        from equipment import EquipmentSystem
+        from hero.equipment import EquipmentSystem
         equip_system = EquipmentSystem(self.game)
 
         self.game.clear_screen()
@@ -211,14 +359,14 @@ class EventSystem:
         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
         self.game.hero_potions -= 1
         print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
-        self.game.events_encountered.append(f"{self.game.lang.get_text('used_potion_event')}{heal_amount}{self.game.lang.get_text('hp_points_event')}")
+        self.game.events_encountered.append(f"{self.game.lang.get_text('used_potion_event', heal=heal_amount)}")
         # 记录使用药剂
         self.game.statistics.record_potion_used()
         self.game.show_hero_info()
 
     def swamp_merchant_event(self, gold_multiplier=1.0):
         """沼泽商人事件"""
-        from equipment import EquipmentSystem
+        from hero.equipment import EquipmentSystem
         equip_system = EquipmentSystem(self.game)
 
         self.game.clear_screen()

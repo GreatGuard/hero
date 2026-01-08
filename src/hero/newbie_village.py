@@ -143,7 +143,7 @@ class NewbieVillage:
                 print(f"{self.game.lang.get_text('got_exp')} {exp_gain} {self.game.lang.get_text('exp_points')} {self.game.lang.get_text('gold_coins')} {gold_gain}!")
 
                 # 检查升级
-                from combat import CombatSystem
+                from .combat import CombatSystem
                 combat_system = CombatSystem(self.game)
                 combat_system.check_level_up()
 

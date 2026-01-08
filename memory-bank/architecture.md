@@ -362,6 +362,19 @@ class CombatSystem:
 - Boss系统测试
 - 存档/读档功能测试
 
+### 9. 新事件类型测试模块 (tests/test_new_event_types.py) ⭐ NEW
+
+**职责**: 验证新事件类型的实现和功能正确性
+
+**测试范围**:
+- 事件类型配置测试
+- 神秘传送事件测试
+- 贤者指引事件测试
+- 遭遇强盗事件测试
+- 神秘祭坛事件测试
+- 路边营地事件测试
+- 多语言支持测试
+
 **关键测试类**:
 ```python
 class TestNewFeatures(unittest.TestCase):

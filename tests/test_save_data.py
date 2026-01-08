@@ -12,10 +12,10 @@ import tempfile
 import shutil
 
 # 添加src目录到路径
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'hero'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from save_data import SaveData, SaveManager
-from main import HeroGame
+from hero.save_data import SaveData, SaveManager
+from hero.main import HeroGame
 
 
 class TestSaveData(unittest.TestCase):

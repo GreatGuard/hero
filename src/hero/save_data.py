@@ -6,7 +6,7 @@
 import json
 import os
 from datetime import datetime
-from statistics import GameStatistics
+from .statistics import GameStatistics
 
 
 class SaveData:

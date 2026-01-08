@@ -42,6 +42,170 @@ DIFFICULTY_SETTINGS = {
     }
 }
 
+# 传奇装备配置 - 使用统一的多语言键名
+LEGENDARY_EQUIPMENT = {
+    "weapon": [
+        {
+            "name_key": "legendary_sword_dragon_god",
+            "attack": 25,
+            "defense": 5,
+            "hp": 10,
+            "special_effects": ["crit_rate", "lifesteal"],
+            "crit_rate": 0.15,
+            "lifesteal_rate": 0.2
+        },
+        {
+            "name_key": "legendary_staff_frost",
+            "attack": 18,
+            "defense": 0,
+            "hp": 0,
+            "special_effects": ["ice_damage", "mana_boost"],
+            "ice_damage": 10,
+            "mana_boost": 20
+        },
+        {
+            "name_key": "legendary_dagger_shadow",
+            "attack": 22,
+            "defense": 0,
+            "hp": 0,
+            "special_effects": ["backstab", "dodge"],
+            "backstab_damage": 0.3,
+            "dodge_rate": 0.15
+        }
+    ],
+    "armor": [
+        {
+            "name_key": "legendary_armor_holy_light",
+            "attack": 0,
+            "defense": 20,
+            "hp": 30,
+            "special_effects": ["healing", "holy_resistance"],
+            "healing_rate": 0.05,
+            "holy_resistance": 0.3
+        },
+        {
+            "name_key": "legendary_armor_dragon_scale",
+            "attack": 5,
+            "defense": 18,
+            "hp": 25,
+            "special_effects": ["fire_resistance", "counter_attack"],
+            "fire_resistance": 0.4,
+            "counter_attack_rate": 0.25
+        },
+        {
+            "name_key": "legendary_cloak_shadow",
+            "attack": 0,
+            "defense": 15,
+            "hp": 20,
+            "special_effects": ["stealth", "evasion"],
+            "stealth_chance": 0.2,
+            "evasion_rate": 0.1
+        }
+    ],
+    "accessory": [
+        {
+            "name_key": "legendary_ring_sage",
+            "attack": 8,
+            "defense": 8,
+            "hp": 15,
+            "special_effects": ["wisdom", "mana_regeneration"],
+            "wisdom_bonus": 0.1,
+            "mana_regeneration": 5
+        },
+        {
+            "name_key": "legendary_charm_lucky",
+            "attack": 0,
+            "defense": 0,
+            "hp": 10,
+            "special_effects": ["luck", "crit_damage"],
+            "luck_bonus": 0.15,
+            "crit_damage": 0.5
+        },
+        {
+            "name_key": "legendary_stone_eternal",
+            "attack": 0,
+            "defense": 0,
+            "hp": 25,
+            "special_effects": ["immortality", "health_regeneration"],
+            "immortality_chance": 0.05,
+            "health_regeneration": 3
+        }
+    ]
+}
+
+# 套装配置 - 使用统一的多语言键名
+EQUIPMENT_SETS = {
+    "warrior_set": {
+        "name_key": "equipment_set_warrior",
+        "pieces": ["weapon", "armor"],
+        "effects": {
+            "2_piece": {
+                "name_key": "set_bonus_warrior_glory",
+                "attack_bonus": 10,
+                "defense_bonus": 5
+            }
+        }
+    },
+    "mage_set": {
+        "name_key": "equipment_set_mage",
+        "pieces": ["weapon", "accessory"],
+        "effects": {
+            "2_piece": {
+                "name_key": "set_bonus_magic_mastery",
+                "mana_bonus": 30,
+                "spell_power": 0.15
+            }
+        }
+    },
+    "assassin_set": {
+        "name_key": "equipment_set_assassin",
+        "pieces": ["weapon", "accessory"],
+        "effects": {
+            "2_piece": {
+                "name_key": "set_bonus_shadow_assault",
+                "crit_rate": 0.1,
+                "dodge_rate": 0.1
+            }
+        }
+    }
+}
+
+# 新事件类型配置
+EVENT_TYPES = {
+    "mysterious_teleport": {
+        "name_key": "event_mysterious_teleport",
+        "description_key": "event_mysterious_teleport_desc",
+        "min_effect": -3,
+        "max_effect": 3
+    },
+    "sage_guidance": {
+        "name_key": "event_sage_guidance",
+        "description_key": "event_sage_guidance_desc",
+        "min_exp": 30,
+        "max_exp": 60
+    },
+    "robber_encounter": {
+        "name_key": "event_robber_encounter",
+        "description_key": "event_robber_encounter_desc",
+        "min_gold_loss": 10,
+        "max_gold_loss": 30,
+        "combat_chance": 0.5
+    },
+    "mysterious_altar": {
+        "name_key": "event_mysterious_altar",
+        "description_key": "event_mysterious_altar_desc",
+        "hp_cost_percent": 0.2,
+        "attack_boost": 5,
+        "defense_boost": 3
+    },
+    "roadside_camp": {
+        "name_key": "event_roadside_camp",
+        "description_key": "event_roadside_camp_desc",
+        "min_heal": 20,
+        "max_heal": 40
+    }
+}
+
 MAP_TYPES = {
     "plains": {
         "name": "plains",
@@ -276,6 +440,8 @@ MONSTER_TEMPLATES = {
     }
 }
 
+
+
 # Boss模板配置
 BOSS_TEMPLATES = {
     "plains": {
@@ -342,3 +508,5 @@ BOSS_TEMPLATES = {
         "skills": ["blizzard", "ice_prison"]
     }
 }
+
+

@@ -391,6 +391,16 @@ class LanguageSupport:
             "monster_dark_mage": "黑暗法师",
             "monster_elite_assassin": "精英刺客",
             "monster_troll": "巨魔",
+            "monster_beast": "野兽",
+            "monster_spider": "蜘蛛",
+            "monster_scorpion": "蝎子",
+            "monster_sand_worm": "沙虫",
+            "monster_golem": "石像鬼",
+            "monster_ghost": "鬼魂",
+            "monster_demon": "恶魔",
+            "monster_giant": "巨人",
+            "monster_dragon": "龙",
+            "monster_titan": "泰坦",
             # Boss名称
             "boss_lesser_demon_leader": "小恶魔首领",
             "boss_cave_troll": "洞穴巨魔",
@@ -544,7 +554,67 @@ class LanguageSupport:
             "status_frost": "冰霜",
             "status_duration": "剩余回合",
             "status_active": "生效中",
-            "status_expired": "已结束"
+            "status_expired": "已结束",
+            # Boss技能效果描述
+            "root_trap_effect": "你的手脚被树根缠住了，下回合无法攻击！",
+            "ice_prison_effect": "你被冰冻在冰牢中，下回合无法攻击！",
+            "summon_minions_effect": "Boss召唤了仆从，下次攻击会更强！",
+            # 新事件类型
+            "event_mysterious_teleport": "神秘传送",
+            "event_mysterious_teleport_desc": "你被神秘力量传送，位置发生了变化！",
+            "event_sage_guidance": "贤者指引",
+            "event_sage_guidance_desc": "一位神秘的贤者出现在你面前，给予了你宝贵的经验！",
+            "event_robber_encounter": "遭遇强盗",
+            "event_robber_encounter_desc": "一伙强盗拦住了你的去路，他们是选择战斗还是交出金币？",
+            "event_mysterious_altar": "神秘祭坛",
+            "event_mysterious_altar_desc": "你发现了一个神秘的祭坛，可以牺牲生命值来换取力量！",
+            "event_roadside_camp": "路边营地",
+            "event_roadside_camp_desc": "你发现了一个友善的营地，可以在那里休息恢复体力。",
+            # 套装系统
+            "equipment_set_warrior": "战士套装",
+            "equipment_set_mage": "法师套装", 
+            "equipment_set_assassin": "刺客套装",
+            "set_bonus_warrior_glory": "战士荣耀：攻击+10，防御+5",
+            "set_bonus_magic_mastery": "魔法精通：法力+30，法术强度+15%",
+            "set_bonus_shadow_assault": "暗影突袭：暴击率+10%，闪避率+10%",
+            "set_bonus_activated": "套装效果激活",
+            # 新增的多语言文本
+            "teleported_to_position": "你被传送到了第{position}格！",
+            "moved_to_position": "移动到第{position}格",
+            "gained_exp": "获得了 {exp} 点经验值！",
+            "combat_option": "战斗",
+            "pay_gold_option": "交出金币",
+            "decide_to_combat": "你决定与强盗战斗！",
+            "chose_combat": "选择战斗",
+            "gave_gold_to_robber": "你交出了 {gold} 个金币给强盗。",
+            "lost_gold": "失去了{gold}金币",
+            "sacrifice_hp_for_attack": "牺牲血量换取攻击力 (+5)",
+            "sacrifice_hp_for_defense": "牺牲血量换取防御力 (+3)",
+            "leave_altar": "离开祭坛",
+            "sacrificed_hp_for_attack_desc": "你牺牲了 {hp} 点血量，感受到了力量的涌动！",
+            "sacrificed_hp_for_defense_desc": "你牺牲了 {hp} 点血量，感受到了身体的坚韧！",
+            "sacrificed_hp_for_attack_event": "牺牲血量换取攻击力+5",
+            "sacrificed_hp_for_defense_event": "牺牲血量换取防御力+3",
+            "decide_to_leave_altar": "你决定离开祭坛，保持现状。",
+            "chose_to_leave_altar": "选择离开",
+            "rested_at_camp": "在营地里休息，恢复了 {heal} 点生命值！",
+            "restored_hp": "恢复了{heal}点生命",
+            "used_potion_event": "使用了药剂，恢复了{heal}点血量",
+            # 成就系统
+            "achievements": "成就",
+            "achievement_unlocked": "成就已解锁",
+            "total_achievements": "总成就数",
+            "unlocked_achievements": "已解锁成就",
+            "completion": "完成度",
+            "progress_achievements": "进度成就",
+            "combat_achievements": "战斗成就",
+            "resource_achievements": "资源成就",
+            "equipment_achievements": "装备成就",
+            "skill_achievements": "技能成就",
+            "special_achievements": "特殊成就",
+            "back_to_menu": "返回菜单",
+            "rarity": "稀有度",
+            "progress": "进度"
         }
     
     def _get_english_texts(self):
@@ -900,6 +970,16 @@ class LanguageSupport:
             "monster_dark_mage": "Dark Mage",
             "monster_elite_assassin": "Elite Assassin",
             "monster_troll": "Troll",
+            "monster_beast": "Beast",
+            "monster_spider": "Spider",
+            "monster_scorpion": "Scorpion",
+            "monster_sand_worm": "Sand Worm",
+            "monster_golem": "Golem",
+            "monster_ghost": "Ghost",
+            "monster_demon": "Demon",
+            "monster_giant": "Giant",
+            "monster_dragon": "Dragon",
+            "monster_titan": "Titan",
             # Boss names
             "boss_lesser_demon_leader": "Lesser Demon Leader",
             "boss_cave_troll": "Cave Troll",
@@ -1037,6 +1117,66 @@ class LanguageSupport:
             "status_duration": "Rounds remaining",
             "status_active": "Active",
             "status_expired": "Expired",
+            # Boss skill effect descriptions
+            "root_trap_effect": "Your hands and feet are entangled by roots, you cannot attack next round!",
+            "ice_prison_effect": "You are frozen in an ice prison, you cannot attack next round!",
+            "summon_minions_effect": "Boss summoned minions, next attack will be stronger!",
+            # New event types
+            "event_mysterious_teleport": "Mysterious Teleport",
+            "event_mysterious_teleport_desc": "You were teleported by a mysterious force, your position has changed!",
+            "event_sage_guidance": "Sage Guidance",
+            "event_sage_guidance_desc": "A mysterious sage appeared before you and gave you valuable experience!",
+            "event_robber_encounter": "Robber Encounter",
+            "event_robber_encounter_desc": "A group of robbers blocked your path, will you fight or give up your gold?",
+            "event_mysterious_altar": "Mysterious Altar",
+            "event_mysterious_altar_desc": "You found a mysterious altar where you can sacrifice health for power!",
+            "event_roadside_camp": "Roadside Camp",
+            "event_roadside_camp_desc": "You found a friendly camp where you can rest and recover your strength.",
+            # Set System
+            "equipment_set_warrior": "Warrior Set",
+            "equipment_set_mage": "Mage Set", 
+            "equipment_set_assassin": "Assassin Set",
+            "set_bonus_warrior_glory": "Warrior Glory: Attack +10, Defense +5",
+            "set_bonus_magic_mastery": "Magic Mastery: Mana +30, Spell Power +15%",
+            "set_bonus_shadow_assault": "Shadow Assault: Critical +10%, Dodge +10%",
+            "set_bonus_activated": "Set Bonus Activated",
+            # New multilingual text
+            "teleported_to_position": "You were teleported to position {position}!",
+            "moved_to_position": "Moved to position {position}",
+            "gained_exp": "You gained {exp} experience points!",
+            "combat_option": "Combat",
+            "pay_gold_option": "Give Gold",
+            "decide_to_combat": "You decided to fight the robbers!",
+            "chose_combat": "Chose combat",
+            "gave_gold_to_robber": "You gave {gold} gold coins to the robbers.",
+            "lost_gold": "Lost {gold} gold",
+            "sacrifice_hp_for_attack": "Sacrifice HP for Attack (+5)",
+            "sacrifice_hp_for_defense": "Sacrifice HP for Defense (+3)",
+            "leave_altar": "Leave Altar",
+            "sacrificed_hp_for_attack_desc": "You sacrificed {hp} health points and felt a surge of power!",
+            "sacrificed_hp_for_defense_desc": "You sacrificed {hp} health points and felt your body become tougher!",
+            "sacrificed_hp_for_attack_event": "Sacrificed HP for attack+5",
+            "sacrificed_hp_for_defense_event": "Sacrificed HP for defense+3",
+            "decide_to_leave_altar": "You decided to leave the altar, keeping things as they are.",
+            "chose_to_leave_altar": "Chose to leave",
+            "rested_at_camp": "You rested at the camp and restored {heal} health points!",
+            "restored_hp": "Restored {heal} HP",
+            "used_potion_event": "Used potion, restored {heal} HP",
+            # Achievement System
+            "achievements": "Achievements",
+            "achievement_unlocked": "Achievement Unlocked",
+            "total_achievements": "Total Achievements",
+            "unlocked_achievements": "Unlocked Achievements",
+            "completion": "Completion",
+            "progress_achievements": "Progress Achievements",
+            "combat_achievements": "Combat Achievements",
+            "resource_achievements": "Resource Achievements",
+            "equipment_achievements": "Equipment Achievements",
+            "skill_achievements": "Skill Achievements",
+            "special_achievements": "Special Achievements",
+            "back_to_menu": "Back to Menu",
+            "rarity": "Rarity",
+            "progress": "Progress",
             "total_battles": "Total Battles",
             "battles_won": "Battles Won",
             "battles_lost": "Battles Lost",
@@ -1056,9 +1196,15 @@ class LanguageSupport:
             "skill_statistics": "Skill Statistics"
         }
     
-    def get_text(self, key):
-        """获取指定键的文本"""
-        return self.texts.get(key, key)
+    def get_text(self, key, **kwargs):
+        """获取指定键的文本，支持参数替换"""
+        text = self.texts.get(key, key)
+        if kwargs:
+            try:
+                return text.format(**kwargs)
+            except (KeyError, ValueError):
+                return text
+        return text
     
     # 格式化函数集合
     def _get_position_format(self, position, total):

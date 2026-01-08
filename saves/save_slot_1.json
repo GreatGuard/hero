@@ -1,0 +1,293 @@
+{
+  "save_time": "2026-01-08 15:19:41",
+  "version": "3.0",
+  "hero_name": "1",
+  "hero_level": 10,
+  "hero_exp": 100000,
+  "hero_hp": 328,
+  "hero_max_hp": 340,
+  "hero_attack": 115,
+  "hero_defense": 57,
+  "base_attack": 65,
+  "base_defense": 32,
+  "base_max_hp": 280,
+  "hero_position": 4,
+  "game_over": false,
+  "victory": false,
+  "hero_gold": 15220,
+  "hero_potions": 3,
+  "equipment": {
+    "weapon": {
+      "name": "God Slayer",
+      "type": "weapon",
+      "rarity": "legendary",
+      "attack": 25,
+      "defense": 0,
+      "hp": 0,
+      "special_effects": [
+        "mana_boost",
+        "backstab"
+      ],
+      "set_bonus": "assassin_set",
+      "is_legendary": false,
+      "price": 2500
+    },
+    "armor": {
+      "name": "God Slayer Armor",
+      "type": "armor",
+      "rarity": "legendary",
+      "attack": 0,
+      "defense": 10,
+      "hp": 30,
+      "special_effects": [
+        "ice_damage"
+      ],
+      "set_bonus": "warrior_set",
+      "is_legendary": false,
+      "price": 2200
+    },
+    "accessory": {
+      "name": "God Slayer Amulet",
+      "type": "accessory",
+      "rarity": "legendary",
+      "attack": 15,
+      "defense": 10,
+      "hp": 30,
+      "special_effects": [
+        "ice_damage",
+        "counter_attack"
+      ],
+      "set_bonus": "assassin_set",
+      "is_legendary": false,
+      "price": 3700
+    }
+  },
+  "inventory": [
+    {
+      "name": "Legendary Armor",
+      "type": "armor",
+      "rarity": "legendary",
+      "attack": 0,
+      "defense": 15,
+      "hp": 65,
+      "special_effects": [
+        "backstab",
+        "healing"
+      ],
+      "set_bonus": null,
+      "is_legendary": false,
+      "price": 4100
+    },
+    {
+      "name": "Divine Armor",
+      "type": "armor",
+      "rarity": "legendary",
+      "attack": 0,
+      "defense": 15,
+      "hp": 40,
+      "special_effects": [
+        "fire_damage"
+      ],
+      "set_bonus": null,
+      "is_legendary": false,
+      "price": 3100
+    },
+    {
+      "name": "Divine Sword",
+      "type": "weapon",
+      "rarity": "legendary",
+      "attack": 25,
+      "defense": 0,
+      "hp": 0,
+      "special_effects": [
+        "dodge"
+      ],
+      "set_bonus": null,
+      "is_legendary": false,
+      "price": 2500
+    },
+    {
+      "name": "Divine Armor",
+      "type": "armor",
+      "rarity": "legendary",
+      "attack": 0,
+      "defense": 10,
+      "hp": 55,
+      "special_effects": [
+        "fire_damage"
+      ],
+      "set_bonus": null,
+      "is_legendary": false,
+      "price": 3200
+    },
+    {
+      "name": "Legendary Amulet",
+      "type": "accessory",
+      "rarity": "legendary",
+      "attack": 10,
+      "defense": 15,
+      "hp": 40,
+      "special_effects": [
+        "backstab",
+        "crit_rate"
+      ],
+      "set_bonus": null,
+      "is_legendary": false,
+      "price": 4100
+    },
+    {
+      "name": "God Slayer Amulet",
+      "type": "accessory",
+      "rarity": "legendary",
+      "attack": 20,
+      "defense": 10,
+      "hp": 30,
+      "special_effects": [
+        "dodge",
+        "backstab"
+      ],
+      "set_bonus": null,
+      "is_legendary": false,
+      "price": 4200
+    },
+    {
+      "name": "Legendary Armor",
+      "type": "armor",
+      "rarity": "legendary",
+      "attack": 0,
+      "defense": 20,
+      "hp": 75,
+      "special_effects": [
+        "lifesteal",
+        "mana_boost"
+      ],
+      "set_bonus": null,
+      "is_legendary": false,
+      "price": 5000
+    }
+  ],
+  "hero_skills": [
+    "Dodge",
+    "Fireball",
+    "Critical",
+    "Healing",
+    "Lifesteal"
+  ],
+  "difficulty": "easy",
+  "map_type": "plains",
+  "language": "en",
+  "map_length": 50,
+  "monsters_defeated": 0,
+  "events_encountered": [
+    "Learned skill: Healing",
+    "Learned skill: Lifesteal",
+    "Safe move, nothing happened",
+    "Mysterious Altar - Chose to leave",
+    "Safe move, nothing happened",
+    "Roadside Camp - Restored 23 HP",
+    "Mysterious Teleport - Moved to position 2",
+    "Safe move, nothing happened",
+    "Found magic bun, restored 25 HP"
+  ],
+  "visited_positions": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "statistics_data": {
+    "total_play_time": 0,
+    "total_steps": 7,
+    "total_battles": 0,
+    "battles_won": 0,
+    "battles_lost": 0,
+    "max_win_streak": 0,
+    "monsters_defeated": 0,
+    "monsters_by_type": {},
+    "bosses_defeated": 0,
+    "bosses_by_type": {},
+    "total_gold_earned": 0,
+    "total_gold_spent": 34750,
+    "total_exp_earned": 0,
+    "total_events_triggered": 10,
+    "events_by_type": {
+      "safe_move": 3,
+      "mysterious_altar": 1,
+      "altar_leave": 1,
+      "roadside_camp": 2,
+      "mysterious_teleport": 2,
+      "find_bun": 1
+    },
+    "equipment_found": 0,
+    "equipment_by_rarity": {
+      "common": 0,
+      "uncommon": 0,
+      "rare": 0,
+      "epic": 0,
+      "legendary": 0
+    },
+    "potions_used": 0,
+    "potions_found": 0,
+    "skills_learned": 5,
+    "skill_uses": {
+      "Dodge": 0,
+      "Fireball": 0,
+      "Critical": 0,
+      "Healing": 0,
+      "Lifesteal": 0
+    },
+    "shop_visits": 459,
+    "items_purchased": 10
+  },
+  "status_effects": {
+    "poison": 0,
+    "frostbite": 0,
+    "frost": 0
+  }
+}

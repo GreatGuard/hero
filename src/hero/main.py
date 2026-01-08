@@ -10,14 +10,15 @@ import random
 import time
 import os
 import sys
-from language import LanguageSupport
-from game_config import DIFFICULTY_SETTINGS, MAP_TYPES
-from combat import CombatSystem
-from equipment import EquipmentSystem
-from events import EventSystem
-from newbie_village import NewbieVillage
-from save_data import SaveData, SaveManager
-from statistics import GameStatistics
+from hero.language import LanguageSupport
+from hero.game_config import DIFFICULTY_SETTINGS, MAP_TYPES, EVENT_TYPES
+from hero.combat import CombatSystem
+from hero.equipment import EquipmentSystem
+from hero.events import EventSystem
+from hero.newbie_village import NewbieVillage
+from hero.save_data import SaveData, SaveManager
+from hero.statistics import GameStatistics
+from hero.achievements import AchievementSystem
 
 
 class HeroGame:
@@ -73,6 +74,30 @@ class HeroGame:
             "frostbite": 0,    # 冻伤剩余回合（减少攻击力）
             "frost": 0         # 冰霜效果剩余回合（减少防御力）
         }
+        
+        # 初始化特殊效果属性
+        self.special_effects = {
+            "crit_rate": 0.0,      # 暴击率
+            "lifesteal_rate": 0.0, # 吸血率
+            "dodge_rate": 0.0,     # 闪避率
+            "counter_attack_rate": 0.0, # 反击率
+            "ice_damage": 0,       # 冰霜伤害
+            "fire_damage": 0,      # 火焰伤害
+            "healing_rate": 0.0,   # 治疗效果
+            "mana_boost": 0,       # 法力提升
+            "backstab_damage": 0.0, # 背刺伤害
+            "luck_bonus": 0.0,     # 幸运加成
+            "wisdom_bonus": 0.0,   # 智慧加成
+            "immortality_chance": 0.0, # 不死概率
+            "health_regeneration": 0, # 生命恢复
+            "mana_regeneration": 0,   # 法力恢复
+            "holy_resistance": 0.0,   # 神圣抗性
+            "fire_resistance": 0.0,   # 火焰抗性
+            "stealth_chance": 0.0,    # 潜行概率
+            "evasion_rate": 0.0,      # 闪避率
+            "spell_power": 0.0,       # 法术强度
+            "crit_damage": 0.0        # 暴击伤害
+        }
 
         # 初始化子系统
         self.combat_system = CombatSystem(self)
@@ -82,6 +107,9 @@ class HeroGame:
 
         # 初始化统计系统
         self.statistics = GameStatistics()
+        
+        # 初始化成就系统
+        self.achievements = AchievementSystem(self)
 
     def select_language(self):
         """选择游戏语言"""
@@ -154,6 +182,8 @@ class HeroGame:
         print(f"3. {self.lang.get_text('map_desert')} - {self.lang.get_text('desert_desc')}")
         print(f"4. {self.lang.get_text('map_dungeon')} - {self.lang.get_text('dungeon_desc')}")
         print(f"5. {self.lang.get_text('map_mountain')} - {self.lang.get_text('mountain_desc')}")
+        print(f"6. {self.lang.get_text('map_swamp')} - {self.lang.get_text('swamp_desc')}")
+        print(f"7. {self.lang.get_text('map_snowfield')} - {self.lang.get_text('snowfield_desc')}")
         print()
 
         while True:
@@ -172,6 +202,12 @@ class HeroGame:
                 break
             elif choice == "5":
                 self.map_type = "mountain"
+                break
+            elif choice == "6":
+                self.map_type = "swamp"
+                break
+            elif choice == "7":
+                self.map_type = "snowfield"
                 break
             else:
                 print(self.lang.get_text("invalid_choice"))
@@ -286,7 +322,8 @@ class HeroGame:
             print(f"1. {self.lang.get_text('new_game')}")
             print(f"2. {self.lang.get_text('load_game')}")
             print(f"3. {self.lang.get_text('view_statistics')}")
-            print(f"4. {self.lang.get_text('exit_game')}")
+            print(f"4. {self.lang.get_text('achievements')}")
+            print(f"5. {self.lang.get_text('exit_game')}")
             print()
 
             choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
@@ -328,6 +365,10 @@ class HeroGame:
                 self.show_statistics_menu()
 
             elif choice == "4":
+                # 查看成就
+                self.achievements.show_achievements_menu()
+
+            elif choice == "5":
                 # 退出游戏
                 print("\n" + self.lang.get_text("goodbye"))
                 sys.exit(0)
@@ -485,6 +526,9 @@ class HeroGame:
             if self.check_game_status():
                 break
 
+            # 检查成就
+            self.achievements.check_achievements()
+
             input(f"\n{self.lang.get_text('continue_prompt')}")
             self.clear_screen()
 
@@ -575,13 +619,9 @@ class HeroGame:
         # 根据地图类型调整事件
         map_info = self.map_types[self.map_type]
 
-        event_num = random.randint(1, 30)
+        event_num = random.randint(1, 35)
         print(f"\n{self.lang.get_text('step_forward')}")
         time.sleep(1)
-        
-        # Boss战警告（地图倒数第5格）
-        if self.hero_position == self.map_length - 6:  # 倒数第5格（下一格是Boss）
-            print(f"⚠️ {self.lang.get_text('boss_warning')}")
 
         # 平原地图事件
         if self.map_type == "plains":
@@ -636,120 +676,28 @@ class HeroGame:
             elif event_num <= 19:  # 发现装备
                 self.statistics.record_event_triggered("find_equipment")
                 self.equipment_system.find_equipment()
-            elif event_num <= 21 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
+            elif event_num <= 21:
                 print("🐉 " + self.lang.get_text("encounter_boss"))
                 self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier)
+                self.combat_system.boss_combat(enemy_multiplier * 1.5)
+            elif event_num <= 23:  # 神秘传送
+                self.statistics.record_event_triggered("mysterious_teleport")
+                self.event_system.mysterious_teleport()
+            elif event_num <= 25:  # 贤者指引
+                self.statistics.record_event_triggered("sage_guidance")
+                self.event_system.sage_guidance()
+            elif event_num <= 27:  # 遭遇强盗
+                self.statistics.record_event_triggered("robber_encounter")
+                self.event_system.robber_encounter()
+            elif event_num <= 29:  # 神秘祭坛
+                self.statistics.record_event_triggered("mysterious_altar")
+                self.event_system.mysterious_altar()
+            elif event_num <= 31:  # 路边营地
+                self.statistics.record_event_triggered("roadside_camp")
+                self.event_system.roadside_camp()
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
                 # 使用统一的多语言格式化函数处理平安移动事件文本
-                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
-                self.statistics.record_event_triggered("safe_move")
-        
-
-            if event_num <= 3:  # 中毒云
-                damage = random.randint(10, 20)
-                actual_damage = max(1, int(damage * enemy_multiplier * 1.2))
-                self.hero_hp -= actual_damage
-                print(f"☠️ {self.lang.get_text('poison_cloud')}{actual_damage}{self.lang.get_text('point_damage')}")
-                # 添加中毒状态效果，持续3回合
-                self.add_status_effect("poison", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "poison_cloud", actual_damage))
-                self.statistics.record_event_triggered("poison_cloud")
-                self.show_hero_info()
-            elif event_num <= 6:  # 流沙
-                damage = int(self.hero_hp * 0.15)  # 当前血量的15%
-                actual_damage = max(5, damage)  # 最少损失5点
-                self.hero_hp -= actual_damage
-                print(f"🏖️ {self.lang.get_text('quicksand')}{actual_damage}{self.lang.get_text('point_damage')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "quicksand", actual_damage))
-                self.statistics.record_event_triggered("quicksand")
-                self.show_hero_info()
-            elif event_num <= 9:
-                print("🐊 " + self.lang.get_text("encounter_monster"))
-                self.statistics.record_event_triggered("combat")
-                self.combat_system.combat(enemy_multiplier * 1.1)
-            elif event_num <= 11:
-                heal = random.randint(30, 50)
-                self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
-                print(f"🌿 {self.lang.get_text('rare_herbs')}{heal}{self.lang.get_text('point_hp')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "rare_herbs", heal))
-                self.statistics.record_event_triggered("rare_herbs")
-                self.show_hero_info()
-            elif event_num <= 13:
-                gold_found = int(random.randint(15, 35) * gold_multiplier)
-                self.hero_gold += gold_found
-                print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
-                self.statistics.record_event_triggered("find_chest")
-                self.statistics.record_gold_earned(gold_found)
-                self.show_hero_info()
-            elif event_num <= 15:
-                self.statistics.record_event_triggered("swamp_merchant")
-                self.event_system.swamp_merchant_event(gold_multiplier)
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
-                print("🐲 " + self.lang.get_text("encounter_boss"))
-                self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.1)
-            else:
-                print("✨ " + self.lang.get_text("safe_move"))
-                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
-                self.statistics.record_event_triggered("safe_move")
-        
-
-            if event_num <= 3:  # 冻伤
-                print(f"❄️ {self.lang.get_text('frostbite')}")
-                # 添加冻伤状态效果，持续3回合
-                self.add_status_effect("frostbite", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "frostbite"))
-                self.statistics.record_event_triggered("frostbite")
-                self.show_hero_info()
-            elif event_num <= 6:  # 雪崩
-                damage = random.randint(20, 40)
-                actual_damage = max(1, int(damage * enemy_multiplier * 1.3))
-                self.hero_hp -= actual_damage
-                print(f"🏔️ {self.lang.get_text('avalanche')}{actual_damage}{self.lang.get_text('point_damage')}")
-                
-                # 有概率发现稀有装备
-                if random.random() < 0.3:  # 30%概率
-                    print(f"🎁 {self.lang.get_text('avalanche_loot')}")
-                    self.equipment_system.find_equipment(rarity_bonus=1)  # 提升稀有度
-                
-                self.events_encountered.append(self.lang.format_text("event_text", "avalanche", actual_damage))
-                self.statistics.record_event_triggered("avalanche")
-                self.show_hero_info()
-            elif event_num <= 9:
-                print("🐺 " + self.lang.get_text("encounter_monster"))
-                self.statistics.record_event_triggered("combat")
-                self.combat_system.combat(enemy_multiplier * 1.15)
-            elif event_num <= 11:
-                heal = random.randint(40, 60)
-                self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
-                print(f"🧊 {self.lang.get_text('ice_cave')}{heal}{self.lang.get_text('point_hp')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "ice_cave", heal))
-                self.statistics.record_event_triggered("ice_cave")
-                self.show_hero_info()
-            elif event_num <= 13:
-                gold_found = int(random.randint(20, 40) * gold_multiplier)
-                self.hero_gold += gold_found
-                print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
-                self.statistics.record_event_triggered("find_chest")
-                self.statistics.record_gold_earned(gold_found)
-                self.show_hero_info()
-            elif event_num <= 15:
-                print(f"❄️ {self.lang.get_text('frost_effect')}")
-                # 添加冰霜状态效果，持续3回合
-                self.add_status_effect("frost", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "frost_effect"))
-                self.statistics.record_event_triggered("frost_effect")
-                self.show_hero_info()
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
-                print("🐲 " + self.lang.get_text("encounter_boss"))
-                self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.15)
-            else:
-                print("✨ " + self.lang.get_text("safe_move"))
                 self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
                 self.statistics.record_event_triggered("safe_move")
 
@@ -794,7 +742,7 @@ class HeroGame:
             elif event_num <= 17:
                 print("🐉 " + self.lang.get_text("encounter_boss"))
                 self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier)
+                self.combat_system.boss_combat(enemy_multiplier * 1.5)
             elif event_num <= 19:
                 self.hero_potions += 1
                 print("🧪 " + self.lang.get_text("find_potion"))
@@ -803,66 +751,21 @@ class HeroGame:
                 self.statistics.record_event_triggered("find_potion")
                 self.statistics.record_potion_found()
                 self.show_hero_info()
+            elif event_num <= 21:  # 神秘传送
+                self.statistics.record_event_triggered("mysterious_teleport")
+                self.event_system.mysterious_teleport()
+            elif event_num <= 23:  # 贤者指引
+                self.statistics.record_event_triggered("sage_guidance")
+                self.event_system.sage_guidance()
+            elif event_num <= 25:  # 遭遇强盗
+                self.statistics.record_event_triggered("robber_encounter")
+                self.event_system.robber_encounter()
+            elif event_num <= 27:  # 路边营地
+                self.statistics.record_event_triggered("roadside_camp")
+                self.event_system.roadside_camp()
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
                 # 使用统一的多语言格式化函数处理平安移动事件文本
-                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
-                self.statistics.record_event_triggered("safe_move")
-        
-
-            if event_num <= 3:  # 冻伤
-                print(f"❄️ {self.lang.get_text('frostbite')}")
-                # 添加冻伤状态效果，持续3回合
-                self.add_status_effect("frostbite", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "frostbite"))
-                self.statistics.record_event_triggered("frostbite")
-                self.show_hero_info()
-            elif event_num <= 6:  # 雪崩
-                damage = random.randint(20, 40)
-                actual_damage = max(1, int(damage * enemy_multiplier * 1.3))
-                self.hero_hp -= actual_damage
-                print(f"🏔️ {self.lang.get_text('avalanche')}{actual_damage}{self.lang.get_text('point_damage')}")
-                
-                # 有概率发现稀有装备
-                if random.random() < 0.3:  # 30%概率
-                    print(f"🎁 {self.lang.get_text('avalanche_loot')}")
-                    self.equipment_system.find_equipment(rarity_bonus=1)  # 提升稀有度
-                
-                self.events_encountered.append(self.lang.format_text("event_text", "avalanche", actual_damage))
-                self.statistics.record_event_triggered("avalanche")
-                self.show_hero_info()
-            elif event_num <= 9:
-                print("🐺 " + self.lang.get_text("encounter_monster"))
-                self.statistics.record_event_triggered("combat")
-                self.combat_system.combat(enemy_multiplier * 1.15)
-            elif event_num <= 11:
-                heal = random.randint(40, 60)
-                self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
-                print(f"🧊 {self.lang.get_text('ice_cave')}{heal}{self.lang.get_text('point_hp')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "ice_cave", heal))
-                self.statistics.record_event_triggered("ice_cave")
-                self.show_hero_info()
-            elif event_num <= 13:
-                gold_found = int(random.randint(20, 40) * gold_multiplier)
-                self.hero_gold += gold_found
-                print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
-                self.statistics.record_event_triggered("find_chest")
-                self.statistics.record_gold_earned(gold_found)
-                self.show_hero_info()
-            elif event_num <= 15:
-                print(f"❄️ {self.lang.get_text('frost_effect')}")
-                # 添加冰霜状态效果，持续3回合
-                self.add_status_effect("frost", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "frost_effect"))
-                self.statistics.record_event_triggered("frost_effect")
-                self.show_hero_info()
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
-                print("🐲 " + self.lang.get_text("encounter_boss"))
-                self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.15)
-            else:
-                print("✨ " + self.lang.get_text("safe_move"))
                 self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
                 self.statistics.record_event_triggered("safe_move")
 
@@ -907,7 +810,7 @@ class HeroGame:
             elif event_num <= 17:
                 print("🐉 " + self.lang.get_text("encounter_boss"))
                 self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.1)
+                self.combat_system.boss_combat(enemy_multiplier * 1.6)
             elif event_num <= 19:
                 self.hero_potions += 1
                 print("🧪 " + self.lang.get_text("find_potion"))
@@ -916,116 +819,21 @@ class HeroGame:
                 self.statistics.record_event_triggered("find_potion")
                 self.statistics.record_potion_found()
                 self.show_hero_info()
+            elif event_num <= 21:  # 神秘传送
+                self.statistics.record_event_triggered("mysterious_teleport")
+                self.event_system.mysterious_teleport()
+            elif event_num <= 23:  # 贤者指引
+                self.statistics.record_event_triggered("sage_guidance")
+                self.event_system.sage_guidance()
+            elif event_num <= 25:  # 遭遇强盗
+                self.statistics.record_event_triggered("robber_encounter")
+                self.event_system.robber_encounter()
+            elif event_num <= 27:  # 路边营地
+                self.statistics.record_event_triggered("roadside_camp")
+                self.event_system.roadside_camp()
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
                 # 使用统一的多语言格式化函数处理平安移动事件文本
-                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
-                self.statistics.record_event_triggered("safe_move")
-        
-
-            if event_num <= 3:  # 中毒云
-                damage = random.randint(10, 20)
-                actual_damage = max(1, int(damage * enemy_multiplier * 1.2))
-                self.hero_hp -= actual_damage
-                print(f"☠️ {self.lang.get_text('poison_cloud')}{actual_damage}{self.lang.get_text('point_damage')}")
-                # 添加中毒状态效果，持续3回合
-                self.add_status_effect("poison", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "poison_cloud", actual_damage))
-                self.statistics.record_event_triggered("poison_cloud")
-                self.show_hero_info()
-            elif event_num <= 6:  # 流沙
-                damage = int(self.hero_hp * 0.15)  # 当前血量的15%
-                actual_damage = max(5, damage)  # 最少损失5点
-                self.hero_hp -= actual_damage
-                print(f"🏖️ {self.lang.get_text('quicksand')}{actual_damage}{self.lang.get_text('point_damage')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "quicksand", actual_damage))
-                self.statistics.record_event_triggered("quicksand")
-                self.show_hero_info()
-            elif event_num <= 9:
-                print("🐊 " + self.lang.get_text("encounter_monster"))
-                self.statistics.record_event_triggered("combat")
-                self.combat_system.combat(enemy_multiplier * 1.1)
-            elif event_num <= 11:
-                heal = random.randint(30, 50)
-                self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
-                print(f"🌿 {self.lang.get_text('rare_herbs')}{heal}{self.lang.get_text('point_hp')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "rare_herbs", heal))
-                self.statistics.record_event_triggered("rare_herbs")
-                self.show_hero_info()
-            elif event_num <= 13:
-                gold_found = int(random.randint(15, 35) * gold_multiplier)
-                self.hero_gold += gold_found
-                print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
-                self.statistics.record_event_triggered("find_chest")
-                self.statistics.record_gold_earned(gold_found)
-                self.show_hero_info()
-            elif event_num <= 15:
-                self.statistics.record_event_triggered("swamp_merchant")
-                self.event_system.swamp_merchant_event(gold_multiplier)
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
-                print("🐲 " + self.lang.get_text("encounter_boss"))
-                self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.1)
-            else:
-                print("✨ " + self.lang.get_text("safe_move"))
-                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
-                self.statistics.record_event_triggered("safe_move")
-        
-
-            if event_num <= 3:  # 冻伤
-                print(f"❄️ {self.lang.get_text('frostbite')}")
-                # 添加冻伤状态效果，持续3回合
-                self.add_status_effect("frostbite", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "frostbite"))
-                self.statistics.record_event_triggered("frostbite")
-                self.show_hero_info()
-            elif event_num <= 6:  # 雪崩
-                damage = random.randint(20, 40)
-                actual_damage = max(1, int(damage * enemy_multiplier * 1.3))
-                self.hero_hp -= actual_damage
-                print(f"🏔️ {self.lang.get_text('avalanche')}{actual_damage}{self.lang.get_text('point_damage')}")
-                
-                # 有概率发现稀有装备
-                if random.random() < 0.3:  # 30%概率
-                    print(f"🎁 {self.lang.get_text('avalanche_loot')}")
-                    self.equipment_system.find_equipment(rarity_bonus=1)  # 提升稀有度
-                
-                self.events_encountered.append(self.lang.format_text("event_text", "avalanche", actual_damage))
-                self.statistics.record_event_triggered("avalanche")
-                self.show_hero_info()
-            elif event_num <= 9:
-                print("🐺 " + self.lang.get_text("encounter_monster"))
-                self.statistics.record_event_triggered("combat")
-                self.combat_system.combat(enemy_multiplier * 1.15)
-            elif event_num <= 11:
-                heal = random.randint(40, 60)
-                self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
-                print(f"🧊 {self.lang.get_text('ice_cave')}{heal}{self.lang.get_text('point_hp')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "ice_cave", heal))
-                self.statistics.record_event_triggered("ice_cave")
-                self.show_hero_info()
-            elif event_num <= 13:
-                gold_found = int(random.randint(20, 40) * gold_multiplier)
-                self.hero_gold += gold_found
-                print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
-                self.statistics.record_event_triggered("find_chest")
-                self.statistics.record_gold_earned(gold_found)
-                self.show_hero_info()
-            elif event_num <= 15:
-                print(f"❄️ {self.lang.get_text('frost_effect')}")
-                # 添加冰霜状态效果，持续3回合
-                self.add_status_effect("frost", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "frost_effect"))
-                self.statistics.record_event_triggered("frost_effect")
-                self.show_hero_info()
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
-                print("🐲 " + self.lang.get_text("encounter_boss"))
-                self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.15)
-            else:
-                print("✨ " + self.lang.get_text("safe_move"))
                 self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
                 self.statistics.record_event_triggered("safe_move")
 
@@ -1063,120 +871,25 @@ class HeroGame:
             elif event_num <= 15:
                 self.statistics.record_event_triggered("mysterious_merchant")
                 self.event_system.mysterious_merchant(gold_multiplier)
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
+            elif event_num <= 17:
                 print("🐉 " + self.lang.get_text("encounter_boss"))
                 self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.2)
+                self.combat_system.boss_combat(enemy_multiplier * 1.7)
+            elif event_num <= 19:  # 神秘传送
+                self.statistics.record_event_triggered("mysterious_teleport")
+                self.event_system.mysterious_teleport()
+            elif event_num <= 21:  # 贤者指引
+                self.statistics.record_event_triggered("sage_guidance")
+                self.event_system.sage_guidance()
+            elif event_num <= 23:  # 遭遇强盗
+                self.statistics.record_event_triggered("robber_encounter")
+                self.event_system.robber_encounter()
+            elif event_num <= 25:  # 路边营地
+                self.statistics.record_event_triggered("roadside_camp")
+                self.event_system.roadside_camp()
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
                 # 使用统一的多语言格式化函数处理平安移动事件文本
-                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
-                self.statistics.record_event_triggered("safe_move")
-        
-
-            if event_num <= 3:  # 中毒云
-                damage = random.randint(10, 20)
-                actual_damage = max(1, int(damage * enemy_multiplier * 1.2))
-                self.hero_hp -= actual_damage
-                print(f"☠️ {self.lang.get_text('poison_cloud')}{actual_damage}{self.lang.get_text('point_damage')}")
-                # 添加中毒状态效果，持续3回合
-                self.add_status_effect("poison", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "poison_cloud", actual_damage))
-                self.statistics.record_event_triggered("poison_cloud")
-                self.show_hero_info()
-            elif event_num <= 6:  # 流沙
-                damage = int(self.hero_hp * 0.15)  # 当前血量的15%
-                actual_damage = max(5, damage)  # 最少损失5点
-                self.hero_hp -= actual_damage
-                print(f"🏖️ {self.lang.get_text('quicksand')}{actual_damage}{self.lang.get_text('point_damage')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "quicksand", actual_damage))
-                self.statistics.record_event_triggered("quicksand")
-                self.show_hero_info()
-            elif event_num <= 9:
-                print("🐊 " + self.lang.get_text("encounter_monster"))
-                self.statistics.record_event_triggered("combat")
-                self.combat_system.combat(enemy_multiplier * 1.1)
-            elif event_num <= 11:
-                heal = random.randint(30, 50)
-                self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
-                print(f"🌿 {self.lang.get_text('rare_herbs')}{heal}{self.lang.get_text('point_hp')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "rare_herbs", heal))
-                self.statistics.record_event_triggered("rare_herbs")
-                self.show_hero_info()
-            elif event_num <= 13:
-                gold_found = int(random.randint(15, 35) * gold_multiplier)
-                self.hero_gold += gold_found
-                print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
-                self.statistics.record_event_triggered("find_chest")
-                self.statistics.record_gold_earned(gold_found)
-                self.show_hero_info()
-            elif event_num <= 15:
-                self.statistics.record_event_triggered("swamp_merchant")
-                self.event_system.swamp_merchant_event(gold_multiplier)
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
-                print("🐲 " + self.lang.get_text("encounter_boss"))
-                self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.1)
-            else:
-                print("✨ " + self.lang.get_text("safe_move"))
-                self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
-                self.statistics.record_event_triggered("safe_move")
-        
-
-            if event_num <= 3:  # 冻伤
-                print(f"❄️ {self.lang.get_text('frostbite')}")
-                # 添加冻伤状态效果，持续3回合
-                self.add_status_effect("frostbite", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "frostbite"))
-                self.statistics.record_event_triggered("frostbite")
-                self.show_hero_info()
-            elif event_num <= 6:  # 雪崩
-                damage = random.randint(20, 40)
-                actual_damage = max(1, int(damage * enemy_multiplier * 1.3))
-                self.hero_hp -= actual_damage
-                print(f"🏔️ {self.lang.get_text('avalanche')}{actual_damage}{self.lang.get_text('point_damage')}")
-                
-                # 有概率发现稀有装备
-                if random.random() < 0.3:  # 30%概率
-                    print(f"🎁 {self.lang.get_text('avalanche_loot')}")
-                    self.equipment_system.find_equipment(rarity_bonus=1)  # 提升稀有度
-                
-                self.events_encountered.append(self.lang.format_text("event_text", "avalanche", actual_damage))
-                self.statistics.record_event_triggered("avalanche")
-                self.show_hero_info()
-            elif event_num <= 9:
-                print("🐺 " + self.lang.get_text("encounter_monster"))
-                self.statistics.record_event_triggered("combat")
-                self.combat_system.combat(enemy_multiplier * 1.15)
-            elif event_num <= 11:
-                heal = random.randint(40, 60)
-                self.hero_hp = min(self.hero_hp + heal, self.hero_max_hp)
-                print(f"🧊 {self.lang.get_text('ice_cave')}{heal}{self.lang.get_text('point_hp')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "ice_cave", heal))
-                self.statistics.record_event_triggered("ice_cave")
-                self.show_hero_info()
-            elif event_num <= 13:
-                gold_found = int(random.randint(20, 40) * gold_multiplier)
-                self.hero_gold += gold_found
-                print(f"💎 {self.lang.get_text('find_chest')} {gold_found} {self.lang.get_text('coins')}")
-                self.events_encountered.append(self.lang.format_text("event_text", "find_chest", gold_found))
-                self.statistics.record_event_triggered("find_chest")
-                self.statistics.record_gold_earned(gold_found)
-                self.show_hero_info()
-            elif event_num <= 15:
-                print(f"❄️ {self.lang.get_text('frost_effect')}")
-                # 添加冰霜状态效果，持续3回合
-                self.add_status_effect("frost", 3)
-                self.events_encountered.append(self.lang.format_text("event_text", "frost_effect"))
-                self.statistics.record_event_triggered("frost_effect")
-                self.show_hero_info()
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
-                print("🐲 " + self.lang.get_text("encounter_boss"))
-                self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.15)
-            else:
-                print("✨ " + self.lang.get_text("safe_move"))
                 self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
                 self.statistics.record_event_triggered("safe_move")
 
@@ -1204,23 +917,36 @@ class HeroGame:
                 print("🐲 " + self.lang.get_text("encounter_monster"))
                 self.statistics.record_event_triggered("combat")
                 self.combat_system.combat(enemy_multiplier * 1.3)
-            elif event_num <= 11 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
+            elif event_num <= 11:
                 print("🐲 " + self.lang.get_text("encounter_boss"))
                 self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.3)
+                self.combat_system.boss_combat(enemy_multiplier * 1.8)
             elif event_num <= 13:
                 self.statistics.record_event_triggered("find_equipment")
                 self.equipment_system.find_equipment()
             elif event_num <= 15:
                 self.statistics.record_event_triggered("mysterious_merchant")
                 self.event_system.mysterious_merchant(gold_multiplier)
+            elif event_num <= 17:  # 神秘传送
+                self.statistics.record_event_triggered("mysterious_teleport")
+                self.event_system.mysterious_teleport()
+            elif event_num <= 19:  # 贤者指引
+                self.statistics.record_event_triggered("sage_guidance")
+                self.event_system.sage_guidance()
+            elif event_num <= 21:  # 遭遇强盗
+                self.statistics.record_event_triggered("robber_encounter")
+                self.event_system.robber_encounter()
+            elif event_num <= 23:  # 路边营地
+                self.statistics.record_event_triggered("roadside_camp")
+                self.event_system.roadside_camp()
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
                 # 使用统一的多语言格式化函数处理平安移动事件文本
                 self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
                 self.statistics.record_event_triggered("safe_move")
-        
 
+        # 沼泽地图事件
+        elif self.map_type == "swamp":
             if event_num <= 3:  # 中毒云
                 damage = random.randint(10, 20)
                 actual_damage = max(1, int(damage * enemy_multiplier * 1.2))
@@ -1261,16 +987,26 @@ class HeroGame:
             elif event_num <= 15:
                 self.statistics.record_event_triggered("swamp_merchant")
                 self.event_system.swamp_merchant_event(gold_multiplier)
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
+            elif event_num <= 17:
                 print("🐲 " + self.lang.get_text("encounter_boss"))
                 self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.1)
+                self.combat_system.boss_combat(enemy_multiplier * 1.6)
+            elif event_num <= 19:  # 贤者指引
+                self.statistics.record_event_triggered("sage_guidance")
+                self.event_system.sage_guidance()
+            elif event_num <= 21:  # 神秘祭坛
+                self.statistics.record_event_triggered("mysterious_altar")
+                self.event_system.mysterious_altar()
+            elif event_num <= 23:  # 路边营地
+                self.statistics.record_event_triggered("roadside_camp")
+                self.event_system.roadside_camp()
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
                 self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
                 self.statistics.record_event_triggered("safe_move")
-        
 
+        # 雪地地图事件
+        elif self.map_type == "snowfield":
             if event_num <= 3:  # 冻伤
                 print(f"❄️ {self.lang.get_text('frostbite')}")
                 # 添加冻伤状态效果，持续3回合
@@ -1318,31 +1054,148 @@ class HeroGame:
                 self.events_encountered.append(self.lang.format_text("event_text", "frost_effect"))
                 self.statistics.record_event_triggered("frost_effect")
                 self.show_hero_info()
-            elif event_num <= 17 and self.hero_position == self.map_length - 5:  # Boss战只在倒数第5格触发
+            elif event_num <= 17:
                 print("🐲 " + self.lang.get_text("encounter_boss"))
                 self.statistics.record_event_triggered("boss_combat")
-                self.combat_system.boss_combat(enemy_multiplier * 1.15)
+                self.combat_system.boss_combat(enemy_multiplier * 1.65)
+            elif event_num <= 19:  # 神秘传送
+                self.statistics.record_event_triggered("mysterious_teleport")
+                self.event_system.mysterious_teleport()
+            elif event_num <= 21:  # 贤者指引
+                self.statistics.record_event_triggered("sage_guidance")
+                self.event_system.sage_guidance()
+            elif event_num <= 23:  # 神秘祭坛
+                self.statistics.record_event_triggered("mysterious_altar")
+                self.event_system.mysterious_altar()
             else:
                 print("✨ " + self.lang.get_text("safe_move"))
                 self.events_encountered.append(self.lang.format_text("event_text", "safe_move"))
                 self.statistics.record_event_triggered("safe_move")
 
     def update_attributes(self):
-        """更新英雄属性（基础属性 + 装备加成）"""
+        """更新英雄属性（基础属性 + 装备加成 + 特殊效果）"""
         self.hero_attack = self.base_attack
         self.hero_defense = self.base_defense
         self.hero_max_hp = self.base_max_hp
+        
+        # 重置特殊效果属性
+        self.special_effects = {
+            "crit_rate": 0.0,      # 暴击率
+            "lifesteal_rate": 0.0, # 吸血率
+            "dodge_rate": 0.0,     # 闪避率
+            "counter_attack_rate": 0.0, # 反击率
+            "ice_damage": 0,       # 冰霜伤害
+            "fire_damage": 0,      # 火焰伤害
+            "healing_rate": 0.0,   # 治疗效果
+            "mana_boost": 0,       # 法力提升
+            "backstab_damage": 0.0, # 背刺伤害
+            "luck_bonus": 0.0,     # 幸运加成
+            "wisdom_bonus": 0.0,   # 智慧加成
+            "immortality_chance": 0.0, # 不死概率
+            "health_regeneration": 0, # 生命恢复
+            "mana_regeneration": 0,   # 法力恢复
+            "holy_resistance": 0.0,   # 神圣抗性
+            "fire_resistance": 0.0,   # 火焰抗性
+            "stealth_chance": 0.0,    # 潜行概率
+            "evasion_rate": 0.0,      # 闪避率
+            "spell_power": 0.0,       # 法术强度
+            "crit_damage": 0.0        # 暴击伤害
+        }
 
-        # 添加装备加成
+        # 添加装备加成和特殊效果
+        equipped_items = []
         for item in self.equipment.values():
             if item:
+                equipped_items.append(item)
                 self.hero_attack += item.get("attack", 0)
                 self.hero_defense += item.get("defense", 0)
                 self.hero_max_hp += item.get("hp", 0)
+                
+                # 处理特殊效果
+                special_effects = item.get("special_effects", [])
+                special_effects_values = item.get("special_effects_values", {})
+                
+                for effect in special_effects:
+                    if effect in special_effects_values:
+                        self.special_effects[effect] += special_effects_values[effect]
+                    elif effect in self.special_effects:
+                        # 默认效果值
+                        default_values = {
+                            "crit_rate": 0.05,
+                            "lifesteal_rate": 0.1,
+                            "dodge_rate": 0.05,
+                            "counter_attack_rate": 0.1,
+                            "ice_damage": 5,
+                            "fire_damage": 5,
+                            "healing_rate": 0.02,
+                            "mana_boost": 10,
+                            "backstab_damage": 0.2,
+                            "luck_bonus": 0.05,
+                            "wisdom_bonus": 0.05,
+                            "immortality_chance": 0.02,
+                            "health_regeneration": 2,
+                            "mana_regeneration": 2,
+                            "holy_resistance": 0.1,
+                            "fire_resistance": 0.1,
+                            "stealth_chance": 0.1,
+                            "evasion_rate": 0.05,
+                            "spell_power": 0.1,
+                            "crit_damage": 0.2
+                        }
+                        if effect in default_values:
+                            self.special_effects[effect] += default_values[effect]
+
+        # 应用套装效果
+        self.apply_set_bonuses(equipped_items)
 
         # 确保HP不超过最大值
         if self.hero_hp > self.hero_max_hp:
             self.hero_hp = self.hero_max_hp
+    
+    def apply_set_bonuses(self, equipped_items):
+        """应用套装效果"""
+        from hero.game_config import EQUIPMENT_SETS
+        
+        for set_name, set_info in EQUIPMENT_SETS.items():
+            required_pieces = set_info["pieces"]
+            equipped_pieces = []
+            
+            # 检查是否装备了该套装的所有部件
+            for item in equipped_items:
+                if item["type"] in required_pieces and item.get("set_bonus") == set_name:
+                    equipped_pieces.append(item["type"])
+            
+            # 检查是否满足套装要求（必须装备该套装的所有部件）
+            if len(equipped_pieces) == len(required_pieces):
+                # 应用2件套效果
+                if "2_piece" in set_info["effects"]:
+                    effect = set_info["effects"]["2_piece"]
+                    
+                    # 应用属性加成
+                    if "attack_bonus" in effect:
+                        self.hero_attack += effect["attack_bonus"]
+                    if "defense_bonus" in effect:
+                        self.hero_defense += effect["defense_bonus"]
+                    if "hp_bonus" in effect:
+                        self.hero_max_hp += effect.get("hp_bonus", 0)
+                    if "mana_bonus" in effect:
+                        self.special_effects["mana_boost"] += effect.get("mana_bonus", 0)
+                    if "spell_power" in effect:
+                        self.special_effects["spell_power"] += effect.get("spell_power", 0)
+                    if "crit_rate" in effect:
+                        self.special_effects["crit_rate"] += effect.get("crit_rate", 0)
+                    if "dodge_rate" in effect:
+                        self.special_effects["dodge_rate"] += effect.get("dodge_rate", 0)
+                    
+                    # 显示套装激活信息
+                    set_name_key = set_info["name_key"]
+                    bonus_name_key = effect["name_key"]
+                    print(f"✨ {self.lang.get_text('set_bonus_activated')} {self.lang.get_text(set_name_key)}: {self.lang.get_text(bonus_name_key)}")
+                    
+                    # 标记套装效果已激活
+                    for item in equipped_items:
+                        if item["type"] in required_pieces and item.get("set_bonus") == set_name:
+                            item["set_bonus_active"] = True
     
     def apply_status_effects(self):
         """应用状态效果对属性的影响"""
@@ -1452,6 +1305,10 @@ class HeroGame:
         self.map_type = save_data.map_type
         self.language = save_data.language
         self.map_length = save_data.map_length
+        
+        # 重新初始化游戏配置（重要！）
+        self.difficulty_settings = DIFFICULTY_SETTINGS
+        self.map_types = MAP_TYPES
 
         # 更新语言设置
         self.lang.set_language(self.language)

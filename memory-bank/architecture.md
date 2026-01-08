@@ -257,6 +257,141 @@ format_text(format_type, *args)  # 格式化文本
 #### NewbieVillage (newbie_village.py)
 新手村系统，教程和准备区域
 
+### 6. 扩展的游戏配置模块 (game_config.py) ⭐ UPDATED
+
+**职责**: 管理所有游戏数据配置和模板
+
+**新增功能 (阶段二)**:
+- **新增地图类型**: 沼泽（swamp）和雪原（snowfield）
+- **新增怪物模板**: 6个新怪物（鳄鱼、毒蛇、沼泽巨兽、冰狼、雪怪、冰霜巨人）
+- **新增Boss模板**: 沼泽九头蛇和冰霜之王
+- **扩展特殊事件系统**: 每个地图的独特事件
+
+**关键数据结构更新**:
+```python
+# 地图类型扩展 (从5个增加到7个)
+MAP_TYPES = {
+    "plains": {...},
+    "forest": {...},
+    "desert": {...},
+    "volcano": {...},
+    "mountains": {...},
+    "swamp": {  # ⭐ NEW
+        "name": "swamp",
+        "monsters": ["crocodile", "venom_snake", "swamp_beast"],
+        "special_events": ["poison_cloud", "quicksand", "rare_herbs", "swamp_merchant"],
+        "boss": "swamp_hydra"
+    },
+    "snowfield": {  # ⭐ NEW
+        "name": "snowfield",
+        "monsters": ["ice_wolf", "snow_beast", "frost_giant"],
+        "special_events": ["frostbite", "avalanche", "ice_cave", "frost_effect"],
+        "boss": "frost_king"
+    }
+}
+
+# 怪物模板扩展
+MONSTER_TEMPLATES = {
+    # 原有怪物...
+    "crocodile": {  # ⭐ NEW
+        "name": "crocodile", "hp": 35, "attack": 18, "defense": 12
+    },
+    "venom_snake": {  # ⭐ NEW
+        "name": "venom_snake", "hp": 25, "attack": 20, "defense": 8, "special": "poison"
+    },
+    # ... 其他新怪物
+}
+
+# Boss模板扩展
+BOSS_TEMPLATES = {
+    # 原有Boss...
+    "swamp": {  # ⭐ NEW
+        "name": "swamp_hydra", "hp": 150, "attack": 25, "defense": 15,
+        "skills": ["poison_bite", "regeneration"]
+    },
+    "snowfield": {  # ⭐ NEW
+        "name": "frost_king", "hp": 180, "attack": 28, "defense": 18,
+        "skills": ["blizzard", "ice_prison"]
+    }
+}
+```
+
+### 7. 扩展的战斗系统模块 (combat.py) ⭐ UPDATED
+
+**职责**: 战斗逻辑、状态效果、伤害计算
+
+**新增功能 (阶段二)**:
+- **状态效果系统**: 中毒、冻伤、冰霜效果
+- **状态效果持续时间管理**
+- **状态效果伤害计算**
+- **新Boss技能实现**
+
+**关键功能更新**:
+```python
+# 状态效果系统
+class CombatSystem:
+    def __init__(self, game):
+        self.game = game
+        
+    def apply_status_effect(self, target, effect_type, duration):
+        """应用状态效果"""
+        # 实现中毒、冻伤、冰霜效果
+        
+    def update_status_effects(self):
+        """更新状态效果持续时间"""
+        
+    def calculate_status_damage(self, effect_type):
+        """计算状态效果伤害"""
+        
+    # 新Boss技能实现
+    def boss_poison_bite(self, boss_name, boss_attack):
+        """Boss毒液咬技能"""
+        
+    def boss_blizzard(self, boss_name, boss_attack):
+        """Boss暴风雪技能"""
+```
+
+### 8. 新功能测试模块 (tests/test_new_features.py) ⭐ NEW
+
+**职责**: 验证阶段二新增功能的完整性和正确性
+
+**测试范围**:
+- 新地图验证测试
+- 新怪物系统测试
+- 状态效果系统测试
+- Boss系统测试
+- 存档/读档功能测试
+
+**关键测试类**:
+```python
+class TestNewFeatures(unittest.TestCase):
+    """测试新增功能的类"""
+    
+    def test_swamp_map_exists(self):
+        """测试沼泽地图是否存在"""
+        
+    def test_snowfield_map_exists(self):
+        """测试雪原地图是否存在"""
+        
+    def test_new_monsters_exist(self):
+        """测试新怪物是否存在"""
+        
+    def test_boss_templates_exist(self):
+        """测试Boss模板是否存在"""
+        
+    def test_status_effects_initialization(self):
+        """测试状态效果初始化"""
+        
+    def test_status_effects_methods(self):
+        """测试状态效果方法"""
+        
+    def test_status_effects_update(self):
+        """测试状态效果更新"""
+        
+    def test_save_load_status_effects(self):
+        """测试状态效果的保存和加载"""
+```
+
 ---
 
 ## 数据流
@@ -319,8 +454,8 @@ HeroGame → load_game_menu()
 src/hero/
 ├── main.py              # 主控制器
 ├── language.py          # 语言支持
-├── game_config.py       # 游戏配置
-├── combat.py            # 战斗系统
+├── game_config.py       # 游戏配置 (已扩展) ⭐ UPDATED
+├── combat.py            # 战斗系统 (已扩展) ⭐ UPDATED
 ├── equipment.py         # 装备系统
 ├── events.py            # 事件系统
 ├── newbie_village.py    # 新手村
@@ -330,6 +465,7 @@ src/hero/
 tests/
 ├── test_save_data.py    # 存档测试 ⭐ NEW
 ├── test_statistics.py   # 统计测试 ⭐ NEW
+├── test_new_features.py # 新功能测试套件 ⭐ NEW
 ├── test_combat.py
 ├── test_equipment.py
 ├── test_events.py
@@ -446,10 +582,11 @@ GameStatistics.from_dict() - 从字典创建统计
 
 ## 未来改进
 
-### 短期 (阶段二)
-- 更多地图类型（沼泽、雪原）
-- Boss 战机制
-- 更多怪物和装备
+### 短期 (阶段二 - ✅ 已完成)
+- ✅ 更多地图类型（沼泽、雪原）
+- ✅ Boss 战机制
+- ✅ 更多怪物和装备
+- ✅ 状态效果系统
 
 ### 中期 (阶段三)
 - 成就系统

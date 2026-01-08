@@ -83,20 +83,29 @@ class EquipmentSystem:
         # 直接使用多语言系统获取稀有度名称
         return self.game.lang.get_text(f"rarity_{rarity}")
 
-    def create_random_equipment(self, item_type=None):
-        """创建随机装备"""
+    def create_random_equipment(self, item_type=None, rarity_bonus=0):
+        """创建随机装备
+        
+        Args:
+            item_type (str): 装备类型，None表示随机
+            rarity_bonus (float): 稀有度提升值
+        """
         if item_type is None:
             item_type = random.choice(["weapon", "armor", "accessory"])
 
         # 根据稀有度概率生成
         rarity_roll = random.random()
-        if rarity_roll < 0.5:
+        
+        # 应用稀有度提升（提升后稀有概率更高）
+        adjusted_roll = min(0.99, rarity_roll + rarity_bonus * 0.1)  # 每点稀有度提升10%概率
+        
+        if adjusted_roll < 0.5:
             rarity = "common"
-        elif rarity_roll < 0.75:
+        elif adjusted_roll < 0.75:
             rarity = "uncommon"
-        elif rarity_roll < 0.9:
+        elif adjusted_roll < 0.9:
             rarity = "rare"
-        elif rarity_roll < 0.97:
+        elif adjusted_roll < 0.97:
             rarity = "epic"
         else:
             rarity = "legendary"
@@ -266,13 +275,18 @@ class EquipmentSystem:
 
             print(f"  {i+1}. {color}{item['name']} {reset_color}[{rarity_name}] {', '.join(stats)} - {item['price']} {self.game.lang.get_text('gold')}")
 
-    def equipment_shop(self, gold_multiplier=1.0):
-        """装备商店"""
+    def equipment_shop(self, gold_multiplier=1.0, rarity_bonus=0):
+        """装备商店
+        
+        Args:
+            gold_multiplier (float): 金币倍率
+            rarity_bonus (float): 稀有度提升
+        """
         # 生成商店商品（3-5件）
         shop_items = []
         num_items = random.randint(3, 5)
         for _ in range(num_items):
-            item = self.create_random_equipment()
+            item = self.create_random_equipment(rarity_bonus=rarity_bonus)
             # 根据稀有度和属性定价
             rarity_multiplier = {"common": 1, "uncommon": 2, "rare": 5, "epic": 10, "legendary": 20}
             base_price = (item["attack"] * 5 + item["defense"] * 5 + item["hp"] * 2) * rarity_multiplier[item["rarity"]]
@@ -324,14 +338,21 @@ class EquipmentSystem:
             else:
                 print(self.game.lang.get_text("invalid_choice"))
 
-    def find_equipment(self):
-        """发现装备事件"""
+    def find_equipment(self, rarity_bonus=0):
+        """发现装备事件
+        
+        Args:
+            rarity_bonus (int): 稀有度提升值
+        """
         # 根据难度和地图类型调整发现概率
         settings = self.game.difficulty_settings[self.game.difficulty]
         # 高难度更容易发现稀有装备
-        rarity_bonus = (settings["enemy_multiplier"] - 0.5) * 2
+        difficulty_bonus = (settings["enemy_multiplier"] - 0.5) * 2
+        
+        # 总稀有度提升 = 难度提升 + 传入的参数提升
+        total_rarity_bonus = difficulty_bonus + rarity_bonus
 
-        item = self.create_random_equipment()
+        item = self.create_random_equipment(rarity_bonus=total_rarity_bonus)
         color = self.get_rarity_color(item["rarity"])
         rarity_name = self.get_rarity_name(item["rarity"])
         reset_color = "\033[0m"

@@ -76,6 +76,16 @@ class SaveData:
                 self.statistics_data = game.statistics.to_dict()
             else:
                 self.statistics_data = {}
+            
+            # 状态效果
+            if hasattr(game, 'status_effects') and game.status_effects is not None:
+                self.status_effects = game.status_effects
+            else:
+                self.status_effects = {
+                    "poison": 0,
+                    "frostbite": 0,
+                    "frost": 0
+                }
 
     def to_dict(self):
         """
@@ -132,7 +142,10 @@ class SaveData:
             "visited_positions": self.visited_positions,
 
             # 游戏统计
-            "statistics_data": self.statistics_data
+            "statistics_data": self.statistics_data,
+            
+            # 状态效果
+            "status_effects": self.status_effects
         }
 
     @classmethod
@@ -196,6 +209,13 @@ class SaveData:
         save_data.monsters_defeated = data.get("monsters_defeated", 0)
         save_data.events_encountered = data.get("events_encountered", [])
         save_data.visited_positions = data.get("visited_positions", [])
+        
+        # 状态效果
+        save_data.status_effects = data.get("status_effects", {
+            "poison": 0,
+            "frostbite": 0,
+            "frost": 0
+        })
 
         # 游戏统计
         save_data.statistics_data = data.get("statistics_data", {})

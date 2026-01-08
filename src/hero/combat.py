@@ -5,6 +5,7 @@
 
 import random
 import time
+from game_config import MONSTER_TEMPLATES, BOSS_TEMPLATES
 
 
 class CombatSystem:
@@ -40,60 +41,72 @@ class CombatSystem:
 
     def combat(self, enemy_multiplier=1.0):
         """普通战斗系统"""
-        # 基础怪物名称列表
-        monster_names = [
-            self.game.lang.get_text("monster_goblin"),
-            self.game.lang.get_text("monster_skeleton"),
-            self.game.lang.get_text("monster_wolf"),
-            self.game.lang.get_text("monster_bandit"),
-            self.game.lang.get_text("monster_slime")
-        ]
-
-        # 根据英雄等级选择怪物名称和强度
+        # 根据地图类型选择可能的怪物
+        map_monsters = self.game.map_types[self.game.map_type]["monsters"]
+        available_monsters = []
+        
+        # 为每个地图类型的怪物添加模板数据
+        for monster_key in map_monsters:
+            if monster_key in MONSTER_TEMPLATES:
+                available_monsters.append(monster_key)
+        
+        # 根据英雄等级添加一些通用怪物
         if self.game.hero_level <= 2:
-            monster_names = [
-                self.game.lang.get_text("monster_goblin"),
-                self.game.lang.get_text("monster_slime"),
-                self.game.lang.get_text("monster_pixie")
-            ]
-            hp_range = (20, 35)
-            atk_range = (5, 12)
-            def_range = (0, 3)
+            general_monsters = ["goblin", "slime"]
         elif self.game.hero_level <= 5:
-            monster_names = [
-                self.game.lang.get_text("monster_skeleton"),
-                self.game.lang.get_text("monster_wolf"),
-                self.game.lang.get_text("monster_orc_warrior")
-            ]
-            hp_range = (30, 50)
-            atk_range = (10, 20)
-            def_range = (2, 6)
+            general_monsters = ["skeleton", "wolf", "beast"]
         else:
-            monster_names = [
-                self.game.lang.get_text("monster_bandit_leader"),
-                self.game.lang.get_text("monster_dark_mage"),
-                self.game.lang.get_text("monster_elite_assassin"),
-                self.game.lang.get_text("monster_troll")
-            ]
-            hp_range = (40, 70)
-            atk_range = (15, 30)
-            def_range = (5, 10)
-
-        monster_name = random.choice(monster_names)
-
+            general_monsters = ["troll", "giant"]
+        
+        # 添加通用怪物到可用列表（如果不在地图怪物中）
+        for monster_key in general_monsters:
+            if monster_key in MONSTER_TEMPLATES and monster_key not in available_monsters:
+                available_monsters.append(monster_key)
+        
+        # 随机选择一个怪物
+        monster_key = random.choice(available_monsters)
+        monster_template = MONSTER_TEMPLATES[monster_key]
+        
+        # 获取怪物名称
+        monster_name = self.game.lang.get_text(monster_template["name_key"])
+        
         # 根据英雄等级和难度计算怪物属性
         level_bonus = (self.game.hero_level - 1) * 2
+        hp_range = monster_template["base_hp"]
+        atk_range = monster_template["base_attack"]
+        def_range = monster_template["base_defense"]
+        gold_range = monster_template["gold_reward"]
+        exp_range = monster_template["exp_reward"]
+        
+        # 计算怪物属性
         monster_hp = int((random.randint(hp_range[0], hp_range[1]) + level_bonus * 2) * enemy_multiplier)
         monster_attack = int((random.randint(atk_range[0], atk_range[1]) + level_bonus) * enemy_multiplier)
         monster_defense = int((random.randint(def_range[0], def_range[1]) + level_bonus // 2) * enemy_multiplier)
-
-        # 应用难度经验/金币倍数
+        
+        # 计算奖励
         settings = self.game.difficulty_settings[self.game.difficulty]
         exp_multiplier = settings["exp_multiplier"]
         gold_multiplier = settings["gold_multiplier"]
-
-        exp_gain = int((random.randint(10, 25) + self.game.hero_level * 3) * exp_multiplier)
-        gold_gain = int((random.randint(5, 20) + self.game.hero_level * 2) * gold_multiplier)
+        
+        exp_gain = int((random.randint(exp_range[0], exp_range[1]) + self.game.hero_level * 3) * exp_multiplier)
+        gold_gain = int((random.randint(gold_range[0], gold_range[1]) + self.game.hero_level * 2) * gold_multiplier)
+        
+        # 检查怪物是否有特殊能力
+        monster_special = monster_template.get("special", None)
+        is_elite = random.random() < 0.1  # 10%概率出现精英怪物
+        
+        if is_elite:
+            monster_hp = int(monster_hp * 1.5)
+            monster_attack = int(monster_attack * 1.5)
+            monster_defense = int(monster_defense * 1.5)
+            exp_gain = int(exp_gain * 1.5)
+            gold_gain = int(gold_gain * 1.5)
+            # 精英怪物名称前缀
+            monster_name = f"🟣 {monster_name}"  # 紫色标记
+        
+        # 特殊怪物效果
+        has_poison = monster_special == "poison"
+        has_frost = monster_special == "frost"
 
         print(f"\n👹 {self.game.lang.get_text('encounter_monster')} {monster_name}!")
         print(f"{monster_name} - {self.game.lang.get_text('hp')}{self.game.lang.get_text('item_separator')}{monster_hp}, {self.game.lang.get_text('attack')}{self.game.lang.get_text('item_separator')}{monster_attack}, {self.game.lang.get_text('defense')}{self.game.lang.get_text('item_separator')}{monster_defense}")
@@ -178,6 +191,15 @@ class CombatSystem:
             monster_damage = max(1, random.randint(monster_attack // 2, monster_attack) - self.game.hero_defense)
             self.game.hero_hp -= monster_damage
             print(f"🩸 {monster_name}{self.game.lang.get_text('monster_attack')} {monster_damage}{self.game.lang.get_text('damage')}")
+            
+            # 特殊能力效果
+            if has_poison and random.random() < 0.3:  # 30%概率施加中毒
+                self.game.add_status_effect("poison", 3)
+                print(f"☠️ {monster_name} 的攻击让你中毒了！")
+            
+            if has_frost and random.random() < 0.3:  # 30%概率施加冰霜
+                self.game.add_status_effect("frost", 3)
+                print(f"❄️ {monster_name} 的攻击让你感到冰冻！")
 
             print(f"{self.game.lang.get_text('your_hp')} {self.game.hero_hp}, {self.game.lang.get_text('monster_hp')} {monster_name}{self.game.lang.get_text('item_separator')}{monster_hp}")
             combat_round += 1
@@ -191,58 +213,46 @@ class CombatSystem:
 
     def boss_combat(self, enemy_multiplier=1.0):
         """Boss战斗系统"""
-        # 根据英雄等级选择Boss名称和强度
-        if self.game.hero_level <= 3:
-            boss_names = [
-                self.game.lang.get_text("boss_lesser_demon_leader"),
-                self.game.lang.get_text("boss_cave_troll"),
-                self.game.lang.get_text("boss_shadow_spider")
-            ]
-            hp_range = (60, 80)
-            atk_range = (15, 30)
-            def_range = (3, 7)
-            exp_range = (40, 70)
-            gold_range = (25, 50)
-        elif self.game.hero_level <= 6:
-            boss_names = [
-                self.game.lang.get_text("boss_dark_lord"),
-                self.game.lang.get_text("boss_frost_queen"),
-                self.game.lang.get_text("boss_fire_lizard")
-            ]
-            hp_range = (80, 120)
-            atk_range = (25, 45)
-            def_range = (6, 12)
-            exp_range = (70, 120)
-            gold_range = (50, 90)
+        # 根据地图类型选择对应的Boss
+        map_type = self.game.map_type
+        if map_type in BOSS_TEMPLATES:
+            boss_template = BOSS_TEMPLATES[map_type]
         else:
-            boss_names = [
-                self.game.lang.get_text("boss_ancient_dragon"),
-                self.game.lang.get_text("boss_abyss_demon"),
-                self.game.lang.get_text("boss_death_knight"),
-                self.game.lang.get_text("boss_chaos_wizard")
-            ]
-            hp_range = (100, 150)
-            atk_range = (35, 65)
-            def_range = (10, 18)
-            exp_range = (120, 200)
-            gold_range = (80, 150)
-
-        boss_name = random.choice(boss_names)
+            # 如果没有为该地图定义Boss，使用默认Boss
+            boss_template = BOSS_TEMPLATES["plains"]
+        
+        # 获取Boss名称
+        boss_name = self.game.lang.get_text(boss_template["name_key"])
         boss_level = max(1, self.game.hero_level + random.randint(-1, 1))
-
+        
+        # 获取Boss属性范围
+        hp_range = boss_template["base_hp"]
+        atk_range = boss_template["base_attack"]
+        def_range = boss_template["base_defense"]
+        gold_range = boss_template["gold_reward"]
+        exp_range = boss_template["exp_reward"]
+        
+        # 获取Boss技能列表
+        boss_skills = boss_template["skills"]
+        
         # 应用难度倍数
         level_bonus = self.game.hero_level * 3
-        boss_hp = int((random.randint(hp_range[0], hp_range[1]) + level_bonus * 3) * enemy_multiplier)
+        max_boss_hp = int((random.randint(hp_range[0], hp_range[1]) + level_bonus * 3) * enemy_multiplier)
+        boss_hp = max_boss_hp
         boss_attack = int((random.randint(atk_range[0], atk_range[1]) + level_bonus * 2) * enemy_multiplier)
         boss_defense = int((random.randint(def_range[0], def_range[1]) + level_bonus) * enemy_multiplier)
-
+        
         # 应用难度经验/金币倍数
         settings = self.game.difficulty_settings[self.game.difficulty]
         exp_multiplier = settings["exp_multiplier"]
         gold_multiplier = settings["gold_multiplier"]
-
+        
         exp_gain = int((random.randint(exp_range[0], exp_range[1]) + self.game.hero_level * 8) * exp_multiplier)
         gold_gain = int((random.randint(gold_range[0], gold_range[1]) + self.game.hero_level * 5) * gold_multiplier)
+        
+        # Boss战标志
+        boss_enraged = False  # 是否进入狂暴状态
+        next_skill_round = 3  # 下次使用技能的回合
 
         print(f"\n⚠️ {self.game.lang.get_text('danger_encounter')} Lv.{boss_level} {boss_name}!")
         print(f"{boss_name} - {self.game.lang.get_text('hp')}{self.game.lang.get_text('item_separator')}{boss_hp}, {self.game.lang.get_text('attack')}{self.game.lang.get_text('item_separator')}{boss_attack}, {self.game.lang.get_text('defense')}{self.game.lang.get_text('item_separator')}{boss_defense}")
@@ -255,6 +265,12 @@ class CombatSystem:
         combat_round = 1
         while boss_hp > 0 and self.game.hero_hp > 0:
             print(f"\n--- {self.game.lang.get_text('round')} {combat_round} ---")
+
+            # 检查Boss是否进入狂暴状态（血量低于50%）
+            if not boss_enraged and boss_hp <= max_boss_hp * 0.5:
+                boss_enraged = True
+                boss_attack = int(boss_attack * 1.3)  # 攻击力提升30%
+                print(f"🔥 {self.game.lang.get_text('boss_enraged')}")
 
             action = self.get_combat_action()
 
@@ -377,19 +393,89 @@ class CombatSystem:
                 input(f"\n{self.game.lang.get_text('continue_prompt')}")
                 break
 
-            # Boss反击（更强）
-            if combat_round % 3 == 0:
+            # Boss反击和技能系统
+            # 检查Boss是否使用技能
+            if combat_round == next_skill_round and boss_skills:
+                # 随机选择一个Boss技能
+                skill = random.choice(boss_skills)
+                skill_name_key = f"boss_skill_{skill}"
+                skill_name = self.game.lang.get_text(skill_name_key)
+                
+                print(f"💀 {self.game.lang.get_text('boss_skill_used')} {skill_name}!")
+                
+                # 应用不同技能的效果
+                if skill == "power_strike":
+                    skill_damage = max(10, random.randint(int(boss_attack * 1.2), int(boss_attack * 1.8)) - self.game.hero_defense)
+                    self.game.hero_hp -= skill_damage
+                    print(f"{boss_name} {skill_name} {self.game.lang.get_text('caused_damage')} {skill_damage}{self.game.lang.get_text('point_damage')}!")
+                
+                elif skill == "heal":
+                    heal_amount = int(max_boss_hp * 0.15)  # 恢复15%最大血量
+                    boss_hp = min(boss_hp + heal_amount, max_boss_hp)
+                    print(f"{boss_name} {skill_name} {heal_amount}{self.game.lang.get_text('point_hp')}!")
+                
+                elif skill == "root_trap":
+                    # 陷阱效果，下回合英雄无法攻击
+                    print(f"{boss_name} {skill_name}!")
+                    print("你的手脚被树根缠住了，下回合无法攻击！")
+                    # 这里可以添加一个状态效果来表示被困
+                    # 为简单起见，这里只打印提示
+                
+                elif skill == "nature_heal":
+                    heal_amount = int(max_boss_hp * 0.2)  # 恢复20%最大血量
+                    boss_hp = min(boss_hp + heal_amount, max_boss_hp)
+                    print(f"{boss_name} {skill_name} {heal_amount}{self.game.lang.get_text('point_hp')}!")
+                
+                elif skill == "sandstorm":
+                    skill_damage = max(5, random.randint(int(boss_attack * 0.8), int(boss_attack * 1.2)) - self.game.hero_defense)
+                    self.game.hero_hp -= skill_damage
+                    print(f"{boss_name} {skill_name} {self.game.lang.get_text('caused_damage')} {skill_damage}{self.game.lang.get_text('point_damage')}!")
+                
+                elif skill == "summon_minions":
+                    print(f"{boss_name} {skill_name}!")
+                    print("Boss召唤了仆从，下次攻击会更强！")
+                    # 这里可以添加一个状态效果表示下次攻击增强
+                    # 为简单起见，这里只打印提示
+                
+                elif skill == "dragon_breath":
+                    skill_damage = max(15, random.randint(int(boss_attack * 1.3), int(boss_attack * 1.7)) - self.game.hero_defense)
+                    self.game.hero_hp -= skill_damage
+                    print(f"{boss_name} {skill_name} {self.game.lang.get_text('caused_damage')} {skill_damage}{self.game.lang.get_text('point_damage')}!")
+                
+                elif skill == "poison_bite":
+                    skill_damage = max(8, random.randint(int(boss_attack * 0.9), int(boss_attack * 1.3)) - self.game.hero_defense)
+                    self.game.hero_hp -= skill_damage
+                    self.game.add_status_effect("poison", 3)
+                    print(f"{boss_name} {skill_name} {self.game.lang.get_text('caused_damage')} {skill_damage}{self.game.lang.get_text('point_damage')}!")
+                    print(f"{boss_name} 的攻击让你中毒了！")
+                
+                elif skill == "regeneration":
+                    heal_amount = int(max_boss_hp * 0.1)  # 恢复10%最大血量
+                    boss_hp = min(boss_hp + heal_amount, max_boss_hp)
+                    print(f"{boss_name} {skill_name} {heal_amount}{self.game.lang.get_text('point_hp')}!")
+                
+                elif skill == "blizzard":
+                    skill_damage = max(10, random.randint(int(boss_attack * 1.0), int(boss_attack * 1.4)) - self.game.hero_defense)
+                    self.game.hero_hp -= skill_damage
+                    self.game.add_status_effect("frost", 3)
+                    print(f"{boss_name} {skill_name} {self.game.lang.get_text('caused_damage')} {skill_damage}{self.game.lang.get_text('point_damage')}!")
+                    print(f"{boss_name} 的攻击让你感到冰冻！")
+                
+                elif skill == "ice_prison":
+                    # 冰牢效果，下回合英雄无法攻击
+                    print(f"{boss_name} {skill_name}!")
+                    print("你被冰冻在冰牢中，下回合无法攻击！")
+                    # 这里可以添加一个状态效果来表示被困
+                    # 为简单起见，这里只打印提示
+                
+                # 设置下次使用技能的回合
+                next_skill_round = combat_round + 3
+            
+            else:
+                # 普通攻击
                 dodge_skill = self.game.lang.get_text('dodge_skill')
                 if dodge_skill in self.game.hero_skills and random.random() < 0.2:
                     print(f"💨 {self.game.lang.get_text('dodge_attack')} {boss_name} {self.game.lang.get_text('dodge_success')}")
-                else:
-                    boss_skill_damage = max(5, random.randint(boss_attack, int(boss_attack * 1.5)) - self.game.hero_defense)
-                    self.game.hero_hp -= boss_skill_damage
-                    print(f"💀 {self.game.lang.get_text('boss_powerful_attack')} {boss_skill_damage}{self.game.lang.get_text('point_damage')}!")
-            else:
-                dodge_skill = self.game.lang.get_text('dodge_skill')
-                if dodge_skill in self.game.hero_skills and random.random() < 0.2:
-                    print(f"💨 {self.game.lang.get_text('dodge_attack')}{boss_name}{self.game.lang.get_text('dodge_success')}")
                 else:
                     boss_damage = max(1, random.randint(boss_attack // 2, boss_attack) - self.game.hero_defense)
                     self.game.hero_hp -= boss_damage

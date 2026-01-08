@@ -215,3 +215,73 @@ class EventSystem:
         # 记录使用药剂
         self.game.statistics.record_potion_used()
         self.game.show_hero_info()
+
+    def swamp_merchant_event(self, gold_multiplier=1.0):
+        """沼泽商人事件"""
+        from equipment import EquipmentSystem
+        equip_system = EquipmentSystem(self.game)
+
+        self.game.clear_screen()
+        print(self.game.lang.get_text("block_separator"))
+        print(f"          {self.game.lang.get_text('swamp_merchant_encounter')}")
+        print(self.game.lang.get_text("block_separator"))
+        print()
+
+        print(f"{self.game.lang.get_text('swamp_merchant_desc')}")
+        print()
+        print(f"{self.game.lang.get_text('your_gold')}: {self.game.hero_gold}")
+        print()
+
+        # 记录访问商店
+        self.game.statistics.record_shop_visit()
+
+        # 商店商品 - 沼泽商人有特殊折扣
+        potions_price = int(8 / gold_multiplier)  # 比普通商人便宜
+        skill_teach_price = int(40 / gold_multiplier)
+
+        print(f"1. {self.game.lang.get_text('buy_potion')} - {potions_price} {self.game.lang.get_text('gold')}")
+        print(f"2. {self.game.lang.get_text('learn_skill')} - {skill_teach_price} {self.game.lang.get_text('gold')}")
+        print(f"3. {self.game.lang.get_text('buy_equipment_short')} - {self.game.lang.get_text('equipment_shop')}")
+        print(f"4. {self.game.lang.get_text('leave_merchant')}")
+
+        while True:
+            choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
+
+            if choice == "1":
+                if self.game.hero_gold >= potions_price:
+                    num = input(f"{self.game.lang.get_text('how_many')}: ").strip()
+                    try:
+                        num = int(num)
+                        if num > 0 and num * potions_price <= self.game.hero_gold:
+                            self.game.hero_gold -= num * potions_price
+                            self.game.hero_potions += num
+                            print(f"{self.game.lang.get_text('buy_success')} {num} {self.game.lang.get_text('potions')}!")
+                            # 记录购买和花费
+                            self.game.statistics.record_item_purchased(num)
+                            self.game.statistics.record_gold_spent(num * potions_price)
+                            self.game.statistics.record_potion_found()  # 购买的药剂也计入获得
+                        else:
+                            print(self.game.lang.get_text("not_enough_gold"))
+                    except ValueError:
+                        print(self.game.lang.get_text("invalid_choice"))
+                else:
+                    print(self.game.lang.get_text("not_enough_gold"))
+                input(f"{self.game.lang.get_text('continue_prompt')}")
+                break
+            elif choice == "2":
+                if self.game.hero_gold >= skill_teach_price:
+                    self.game.hero_gold -= skill_teach_price
+                    # 记录花费金币
+                    self.game.statistics.record_gold_spent(skill_teach_price)
+                    self.learn_skill()
+                else:
+                    print(self.game.lang.get_text("not_enough_gold"))
+                input(f"{self.game.lang.get_text('continue_prompt')}")
+                break
+            elif choice == "3":
+                equip_system.equipment_shop(gold_multiplier * 1.2)  # 装备有折扣但不如神秘商人
+                break
+            elif choice == "4":
+                break
+            else:
+                print(self.game.lang.get_text("invalid_choice"))

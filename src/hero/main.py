@@ -49,6 +49,11 @@ class HeroGame:
         self.victory = False
         self.monsters_defeated = 0  # 击败的怪物数量
         self.events_encountered = []  # 遇到的事件历史
+        
+        # 技能状态跟踪
+        self.shield_active = False  # 护盾状态
+        self.berserk_turns = 0  # 狂暴剩余回合
+        self.focus_active = False  # 专注状态
 
         # 注意：map_length、hero_gold、hero_potions、visited_positions 已在 select_map_and_difficulty() 中设置
 
@@ -570,8 +575,9 @@ class HeroGame:
             print(f"4. {self.lang.get_text('use_potion')}")
         print(f"5. {self.lang.get_text('shop')}")
         print(f"6. {self.lang.get_text('equipment_management')}")
-        print(f"7. {self.lang.get_text('save_and_exit')}")
+        print(f"7. {self.lang.get_text('save_game')}")
         print(f"8. {self.lang.get_text('view_statistics')}")
+        print(f"9. {self.lang.get_text('exit_game')}")
 
         while True:
             choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
@@ -606,6 +612,10 @@ class HeroGame:
                 self.save_game_menu()
             elif choice == "8":
                 self.show_statistics()
+            elif choice == "9":
+                # 退出游戏循环
+                self.game_over = True
+                return False
             else:
                 print(self.lang.get_text("invalid_choice"))
 
@@ -1324,6 +1334,11 @@ class HeroGame:
         self.event_system = EventSystem(self)
         self.newbie_village = NewbieVillage(self)
 
+        # 加载技能状态
+        self.shield_active = getattr(save_data, 'shield_active', False)
+        self.berserk_turns = getattr(save_data, 'berserk_turns', 0)
+        self.focus_active = getattr(save_data, 'focus_active', False)
+        
         # 加载统计数据
         if hasattr(save_data, 'statistics_data') and save_data.statistics_data:
             self.statistics = GameStatistics.from_dict(save_data.statistics_data)

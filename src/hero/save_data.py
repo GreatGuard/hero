@@ -86,6 +86,11 @@ class SaveData:
                     "frostbite": 0,
                     "frost": 0
                 }
+                
+            # 技能状态
+            self.shield_active = getattr(game, 'shield_active', False)
+            self.berserk_turns = getattr(game, 'berserk_turns', 0)
+            self.focus_active = getattr(game, 'focus_active', False)
 
     def to_dict(self):
         """
@@ -145,7 +150,12 @@ class SaveData:
             "statistics_data": self.statistics_data,
             
             # 状态效果
-            "status_effects": self.status_effects
+            "status_effects": self.status_effects,
+            
+            # 技能状态
+            "shield_active": self.shield_active,
+            "berserk_turns": self.berserk_turns,
+            "focus_active": self.focus_active
         }
 
     @classmethod
@@ -216,6 +226,11 @@ class SaveData:
             "frostbite": 0,
             "frost": 0
         })
+        
+        # 技能状态
+        save_data.shield_active = data.get("shield_active", False)
+        save_data.berserk_turns = data.get("berserk_turns", 0)
+        save_data.focus_active = data.get("focus_active", False)
 
         # 游戏统计
         save_data.statistics_data = data.get("statistics_data", {})

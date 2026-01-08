@@ -21,7 +21,12 @@ class EventSystem:
             self.game.lang.get_text("healing_skill"),
             self.game.lang.get_text("critical_skill"),
             self.game.lang.get_text("lifesteal_skill"),
-            self.game.lang.get_text("dodge_skill")
+            self.game.lang.get_text("dodge_skill"),
+            # 新增技能
+            self.game.lang.get_text("combo_skill"),
+            self.game.lang.get_text("shield_skill"),
+            self.game.lang.get_text("berserk_skill"),
+            self.game.lang.get_text("focus_skill")
         ]
 
         # 获取还未学习的技能

@@ -91,6 +91,16 @@ class SaveData:
             self.shield_active = getattr(game, 'shield_active', False)
             self.berserk_turns = getattr(game, 'berserk_turns', 0)
             self.focus_active = getattr(game, 'focus_active', False)
+            
+            # 任务系统
+            if hasattr(game, 'quest_system') and game.quest_system is not None:
+                self.quest_data = game.quest_system.to_dict()
+            else:
+                self.quest_data = {
+                    'active_quests': [],
+                    'completed_quests': [],
+                    'quest_counter': 0
+                }
 
     def to_dict(self):
         """
@@ -155,7 +165,10 @@ class SaveData:
             # 技能状态
             "shield_active": self.shield_active,
             "berserk_turns": self.berserk_turns,
-            "focus_active": self.focus_active
+            "focus_active": self.focus_active,
+            
+            # 任务系统
+            "quest_data": self.quest_data
         }
 
     @classmethod
@@ -234,6 +247,13 @@ class SaveData:
 
         # 游戏统计
         save_data.statistics_data = data.get("statistics_data", {})
+        
+        # 任务系统
+        save_data.quest_data = data.get("quest_data", {
+            'active_quests': [],
+            'completed_quests': [],
+            'quest_counter': 0
+        })
 
         return save_data
 

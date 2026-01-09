@@ -518,6 +518,19 @@ class LanguageSupport:
             "potions_found": "获得药剂",
             "potions_used": "使用药剂",
             "skill_statistics": "技能统计",
+            # 任务系统
+            "view_quests": "查看任务",
+            "quests_menu": "任务列表",
+            "no_active_quests": "没有活跃任务。冒险过程中会自动生成任务。",
+            "completed_quests": "已完成任务",
+            "kill_monster_quest": "击杀{target}只怪物 ({current}/{target})",
+            "collect_gold_quest": "收集{target}枚金币 ({current}/{target})",
+            "reach_position_quest": "到达第{target}格 ({current}/{target})",
+            "use_potion_quest": "使用{target}瓶药剂 ({current}/{target})",
+            "quest_reward": "奖励: {gold}金币, {exp}经验值",
+            "new_quest_received": "新任务已接收",
+            "quest_completed": "任务完成！",
+            "quest_reward_received": "获得任务奖励：{gold}金币, {exp}经验值",
             # 新地图类型
             "map_swamp": "沼泽",
             "map_snowfield": "雪原",
@@ -1252,7 +1265,20 @@ class LanguageSupport:
             "potion_statistics": "Potion Statistics",
             "potions_found": "Potions Found",
             "potions_used": "Potions Used",
-            "skill_statistics": "Skill Statistics"
+            "skill_statistics": "Skill Statistics",
+            # Quest System
+            "view_quests": "View Quests",
+            "quests_menu": "Quest List",
+            "no_active_quests": "No active quests. Quests will be automatically generated during your adventure.",
+            "completed_quests": "Completed Quests",
+            "kill_monster_quest": "Defeat {target} monsters ({current}/{target})",
+            "collect_gold_quest": "Collect {target} gold coins ({current}/{target})",
+            "reach_position_quest": "Reach position {target} ({current}/{target})",
+            "use_potion_quest": "Use {target} potions ({current}/{target})",
+            "quest_reward": "Reward: {gold} gold, {exp} exp",
+            "new_quest_received": "New quest received",
+            "quest_completed": "Quest completed!",
+            "quest_reward_received": "Received quest reward: {gold} gold, {exp} exp"
         }
     
     def get_text(self, key, **kwargs):

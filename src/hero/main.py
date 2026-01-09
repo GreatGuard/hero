@@ -19,6 +19,7 @@ from hero.newbie_village import NewbieVillage
 from hero.save_data import SaveData, SaveManager
 from hero.statistics import GameStatistics
 from hero.achievements import AchievementSystem
+from hero.quest import QuestSystem
 
 
 class HeroGame:
@@ -115,6 +116,9 @@ class HeroGame:
         
         # 初始化成就系统
         self.achievements = AchievementSystem(self)
+        
+        # 初始化任务系统
+        self.quest_system = QuestSystem()
 
     def select_language(self):
         """选择游戏语言"""
@@ -577,7 +581,8 @@ class HeroGame:
         print(f"6. {self.lang.get_text('equipment_management')}")
         print(f"7. {self.lang.get_text('save_game')}")
         print(f"8. {self.lang.get_text('view_statistics')}")
-        print(f"9. {self.lang.get_text('exit_game')}")
+        print(f"9. {self.lang.get_text('view_quests')}")
+        print(f"10. {self.lang.get_text('exit_game')}")
 
         while True:
             choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
@@ -590,6 +595,10 @@ class HeroGame:
                     
                     # 更新状态效果
                     self.update_status_effects()
+                    
+                    # 更新到达位置任务进度
+                    completed_quests = self.quest_system.update_quest_progress("reach_position", self.hero_position)
+                    self.handle_quest_completions(completed_quests)
                     
                     # 触发随机事件
                     self.random_event()
@@ -604,6 +613,10 @@ class HeroGame:
                 self.event_system.show_adventure_history()
             elif choice == "4" and self.hero_potions > 0:
                 self.event_system.use_potion()
+                
+                # 更新使用药剂任务进度
+                completed_quests = self.quest_system.update_quest_progress("use_potion")
+                self.handle_quest_completions(completed_quests)
             elif choice == "5":
                 self.event_system.merchant_event()
             elif choice == "6":
@@ -613,6 +626,8 @@ class HeroGame:
             elif choice == "8":
                 self.show_statistics()
             elif choice == "9":
+                self.show_quests()
+            elif choice == "10":
                 # 退出游戏循环
                 self.game_over = True
                 return False
@@ -632,6 +647,17 @@ class HeroGame:
         event_num = random.randint(1, 35)
         print(f"\n{self.lang.get_text('step_forward')}")
         time.sleep(1)
+        
+        # 随机生成新任务（20%概率）
+        if random.random() < 0.2:
+            new_quest = self.quest_system.generate_random_quest(self.hero_level)
+            if new_quest and self.quest_system.add_quest(new_quest):
+                quest_desc = self.lang.get_text(new_quest.description_key).format(
+                    target=new_quest.target_value,
+                    current=new_quest.current_value
+                )
+                print(f"📜 {self.lang.get_text('new_quest_received')}: {quest_desc}")
+                time.sleep(1)
 
         # 平原地图事件
         if self.map_type == "plains":
@@ -658,6 +684,10 @@ class HeroGame:
                 print("👹 " + self.lang.get_text("encounter_monster"))
                 self.statistics.record_event_triggered("combat")
                 self.combat_system.combat(enemy_multiplier)
+                
+                # 更新击杀怪物任务进度
+                completed_quests = self.quest_system.update_quest_progress("kill_monster")
+                self.handle_quest_completions(completed_quests)
             elif event_num <= 11:  # 发现宝箱
                 gold_found = int(random.randint(10, 30) * gold_multiplier)
                 self.hero_gold += gold_found
@@ -667,6 +697,11 @@ class HeroGame:
                 # 记录事件和金币
                 self.statistics.record_event_triggered("find_chest")
                 self.statistics.record_gold_earned(gold_found)
+                
+                # 更新收集金币任务进度
+                completed_quests = self.quest_system.update_quest_progress("collect_gold", gold_found)
+                self.handle_quest_completions(completed_quests)
+                
                 self.show_hero_info()
             elif event_num <= 13:  # 遇到商人
                 self.statistics.record_event_triggered("merchant")
@@ -1261,6 +1296,19 @@ class HeroGame:
             if duration > 0:
                 active_effects.append((effect, duration))
         return active_effects
+    
+    def handle_quest_completions(self, completed_quests):
+        """处理完成的任务，给予奖励并显示消息"""
+        for quest in completed_quests:
+            reward_gold, reward_exp = self.quest_system.get_quest_rewards(quest)
+            self.hero_gold += reward_gold
+            self.hero_exp += reward_exp
+            
+            print(f"🎉 {self.lang.get_text('quest_completed')}")
+            print(f"💰 {self.lang.get_text('quest_reward_received').format(gold=reward_gold, exp=reward_exp)}")
+            
+            # 检查是否升级
+            self.combat_system.check_level_up()
 
     def get_save_data(self):
         """
@@ -1354,6 +1402,30 @@ class HeroGame:
                 "frostbite": 0,
                 "frost": 0
             }
+        
+        # 加载任务系统
+        if hasattr(save_data, 'quest_data') and save_data.quest_data:
+            self.quest_system.from_dict(save_data.quest_data)
+        else:
+            self.quest_system = QuestSystem()
+
+    def show_quests(self):
+        """显示当前任务列表"""
+        self.clear_screen()
+        print(self.lang.get_text("block_separator"))
+        print(f"          {self.lang.get_text('quests_menu')}")
+        print(self.lang.get_text("block_separator"))
+        print()
+        
+        # 显示当前任务
+        quests_list = self.quest_system.format_quests_list(self.lang)
+        print(quests_list)
+        
+        # 显示已完成任务数量
+        completed_count = len(self.quest_system.completed_quests)
+        print(f"\n{self.lang.get_text('completed_quests')}: {completed_count}")
+        
+        input(f"\n{self.lang.get_text('continue_prompt')}")
 
     def restart_game(self):
         """重新开始游戏"""

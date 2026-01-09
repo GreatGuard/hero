@@ -21,7 +21,8 @@ HeroGame (主控制器)
 ├── EventSystem (事件系统)
 ├── NewbieVillage (新手村系统)
 ├── GameStatistics (统计系统) ⭐ NEW
-└── SaveManager (存档管理) ⭐ NEW
+├── SaveManager (存档管理) ⭐ NEW
+└── QuestSystem (任务系统) ⭐ NEW
 ```
 
 **架构原则**:
@@ -237,13 +238,56 @@ from_dict(data)  # 从字典创建
 - 存档系统相关文本（约30个）
 - 统计系统相关文本（约20个）
 
+**新增文本 (阶段二)**:
+- 任务系统相关文本（约10个）
+
 **核心方法**:
 ```python
 get_text(key)  # 获取指定键的文本
 format_text(format_type, *args)  # 格式化文本
 ```
 
-### 5. 其他模块
+### 5. 任务系统模块 (quest.py) ⭐ NEW
+
+**类**:
+- `Quest` - 单个任务容器
+- `QuestSystem` - 任务系统管理器
+
+**职责**: 管理随机任务的生成、追踪和完成
+
+**任务类型**:
+- **击杀怪物**: 击败指定数量的怪物
+- **收集金币**: 获得指定数量的金币  
+- **到达位置**: 前进到指定位置
+- **使用药剂**: 使用指定次数的药剂
+
+**核心特性**:
+- 同时最多3个活动任务
+- 根据英雄等级调整任务难度和奖励
+- 自动任务进度追踪
+- 支持序列化到存档系统
+
+**核心方法**:
+```python
+# Quest类方法
+update_progress(value=1)  # 更新任务进度
+get_progress_percentage()  # 获取进度百分比
+to_dict() / from_dict()  # 序列化支持
+
+# QuestSystem类方法
+generate_random_quest(hero_level)  # 生成随机任务
+add_quest(quest)  # 添加任务
+update_quest_progress(quest_type, value)  # 更新指定类型任务进度
+format_quests_list(lang)  # 格式化任务列表显示
+to_dict() / from_dict()  # 序列化支持
+```
+
+**集成方式**:
+- 在 HeroGame 中初始化 QuestSystem 实例
+- 在游戏内菜单添加"查看任务"选项（action 9）
+- 任务进度自动与游戏事件同步
+
+### 6. 其他模块
 
 #### CombatSystem (combat.py)
 战斗系统，处理回合制战斗逻辑
@@ -540,12 +584,14 @@ src/hero/
 ├── events.py            # 事件系统
 ├── newbie_village.py    # 新手村
 ├── save_data.py         # 存档系统 ⭐ NEW
-└── statistics.py        # 统计系统 ⭐ NEW
+├── statistics.py        # 统计系统 ⭐ NEW
+└── quest.py            # 任务系统 ⭐ NEW
 
 tests/
 ├── test_save_data.py    # 存档测试 ⭐ NEW
 ├── test_statistics.py   # 统计测试 ⭐ NEW
 ├── test_new_features.py # 新功能测试套件 ⭐ NEW
+├── test_quest.py        # 任务系统测试 ⭐ NEW
 ├── test_combat.py
 ├── test_equipment.py
 ├── test_events.py

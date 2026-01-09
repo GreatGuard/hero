@@ -22,7 +22,8 @@ HeroGame (主控制器)
 ├── NewbieVillage (新手村系统)
 ├── GameStatistics (统计系统) ⭐ NEW
 ├── SaveManager (存档管理) ⭐ NEW
-└── QuestSystem (任务系统) ⭐ NEW
+├── QuestSystem (任务系统) ⭐ NEW
+└── ClassSystem (职业系统) ⭐ NEW
 ```
 
 **架构原则**:
@@ -516,6 +517,170 @@ class TestNewFeatures(unittest.TestCase):
         """测试状态效果的保存和加载"""
 ```
 
+### 10. 职业系统模块 (main.py, game_config.py, combat.py) ⭐ NEW
+
+**职责**: 实现多职业选择系统，提供不同游戏体验和职业技能差异
+
+**职业定义** (扩展版本):
+```python
+CLASS_DEFINITIONS = {
+    "warrior": {
+        "name_key": "class_warrior",
+        "description_key": "class_warrior_desc",
+        "base_attributes": {
+            "attack": 25,  # 高攻击
+            "defense": 8,   # 中等防御
+            "max_hp": 120   # 高血量
+        },
+        "growth_multipliers": {
+            "attack": 1.2,  # 升级时攻击力+20%
+            "defense": 1.0,  # 升级时防御力+10%
+            "max_hp": 1.2    # 升级时血量上限+20%
+        },
+        "starting_skills": ["power_strike"],  # 初始技能
+        "skill_affinity": ["power_strike", "shield_bash", "berserk", "whirlwind"],  # 容易学习的技能
+        "equipment_preference": {
+            "weapon": "sword",
+            "armor": "heavy_armor",
+            "accessory": "shield"
+        },
+        "class_skills": ["shield_bash", "battle_cry"],  # 职业专属技能
+        "passive_effects": {
+            "damage_reduction": 0.1,  # 受到伤害减少10%
+            "hp_regen_per_turn": 0.05,  # 每回合恢复5%最大生命值
+            "counter_attack_chance": 0.15  # 15%概率反击
+        }
+    },
+    "mage": {
+        "name_key": "class_mage",
+        "description_key": "class_mage_desc",
+        "base_attributes": {
+            "attack": 15,  # 低攻击
+            "defense": 5,   # 低防御
+            "max_hp": 80    # 低血量
+        },
+        "growth_multipliers": {
+            "attack": 1.4,  # 升级时攻击力+40%（魔法攻击）
+            "defense": 0.8,  # 升级时防御力+8%
+            "max_hp": 0.9    # 升级时血量上限+9%
+        },
+        "starting_skills": ["fireball"],  # 初始技能
+        "skill_affinity": ["fireball", "frost_armor", "teleport", "meteor"],  # 容易学习的技能
+        "equipment_preference": {
+            "weapon": "staff",
+            "armor": "robe",
+            "accessory": "amulet"
+        },
+        "class_skills": ["fireball", "frost_armor"],  # 职业专属技能
+        "passive_effects": {
+            "spell_power": 0.2,  # 法术伤害提升20%
+            "mana_regen": 5,  # 每回合恢复5点法力值
+            "elemental_resistance": 0.15  # 元素抗性15%
+        },
+        "mana_system": True  # 启用法力值系统
+    },
+    "assassin": {
+        "name_key": "class_assassin",
+        "description_key": "class_assassin_desc",
+        "base_attributes": {
+            "attack": 22,  # 高攻击
+            "defense": 6,   # 低防御
+            "max_hp": 90    # 中等血量
+        },
+        "growth_multipliers": {
+            "attack": 1.3,  # 升级时攻击力+30%
+            "defense": 0.9,  # 升级时防御力+9%
+            "max_hp": 1.0    # 升级时血量上限+10%
+        },
+        "starting_skills": ["backstab"],  # 初始技能
+        "skill_affinity": ["backstab", "poison_blade", "shadow_step", "critical_strike"],  # 容易学习的技能
+        "equipment_preference": {
+            "weapon": "dagger",
+            "armor": "leather_armor",
+            "accessory": "ring"
+        }
+    }
+}
+```
+
+**核心方法**:
+```python
+# 职业选择方法
+select_hero_class()  # 显示职业选择界面，处理选择确认
+
+# 职业属性应用方法
+apply_class_attributes(class_key)  # 应用职业基础属性
+get_class_growth_multiplier(attribute)  # 获取职业属性成长倍率
+
+# 存档集成
+save_data.py: 添加hero_class字段的序列化和反序列化
+```
+
+**系统特性**:
+- 三种职业：战士、法师、刺客，各有特色
+- 职业基础属性差异：战士高血量，法师低血量但有法力值，刺客高攻击低防御
+- 职业成长倍率：不同职业在升级时属性增长速率不同
+- 职业初始技能：每个职业有不同的初始技能
+- 职业技能亲和度：不同职业更容易学习特定类型的技能
+- 职业装备偏好：不同职业偏好不同类型的装备
+
+### 11. 新事件类型测试模块 (tests/test_new_event_types.py) ⭐ NEW
+
+**职责**: 验证新事件类型的实现和功能正确性
+
+**测试范围**:
+- 事件类型配置测试
+- 神秘传送事件测试
+- 贤者指引事件测试
+- 遭遇强盗事件测试
+- 神秘祭坛事件测试
+- 路边营地事件测试
+- 多语言支持测试
+
+**关键测试类**:
+```python
+class TestNewFeatures(unittest.TestCase):
+    """测试新增功能的类"""
+    
+    def test_swamp_map_exists(self):
+        """测试沼泽地图是否存在"""
+        
+    def test_snowfield_map_exists(self):
+        """测试雪原地图是否存在"""
+        
+    def test_new_monsters_exist(self):
+        """测试新怪物是否存在"""
+        
+    def test_boss_templates_exist(self):
+        """测试Boss模板是否存在"""
+        
+    def test_status_effects_initialization(self):
+        """测试状态效果初始化"""
+        
+    def test_status_effects_methods(self):
+        """测试状态效果方法"""
+        
+    def test_status_effects_update(self):
+        """测试状态效果更新"""
+        
+    def test_save_load_status_effects(self):
+        """测试状态效果的保存和加载"""
+```
+
+### 12. 职业系统测试模块 (tests/test_class.py) ⭐ NEW
+
+**职责**: 验证职业系统的完整性和正确性
+
+**测试范围**:
+- 职业定义结构测试
+- 职业属性差异测试
+- 职业属性应用测试
+- 职业成长倍率测试
+- 职业初始化测试
+- 职业存档和加载测试
+- 职业多语言文本支持测试
+- 职业技能亲和度测试
+
 ---
 
 ## 数据流
@@ -576,8 +741,8 @@ HeroGame → load_game_menu()
 
 ```
 src/hero/
-├── main.py              # 主控制器
-├── language.py          # 语言支持
+├── main.py              # 主控制器 (已扩展) ⭐ UPDATED
+├── language.py          # 语言支持 (已扩展) ⭐ UPDATED
 ├── game_config.py       # 游戏配置 (已扩展) ⭐ UPDATED
 ├── combat.py            # 战斗系统 (已扩展) ⭐ UPDATED
 ├── equipment.py         # 装备系统
@@ -592,6 +757,7 @@ tests/
 ├── test_statistics.py   # 统计测试 ⭐ NEW
 ├── test_new_features.py # 新功能测试套件 ⭐ NEW
 ├── test_quest.py        # 任务系统测试 ⭐ NEW
+├── test_class.py        # 职业系统测试 ⭐ NEW
 ├── test_combat.py
 ├── test_equipment.py
 ├── test_events.py

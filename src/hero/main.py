@@ -11,7 +11,7 @@ import time
 import os
 import sys
 from hero.language import LanguageSupport
-from hero.game_config import DIFFICULTY_SETTINGS, MAP_TYPES, EVENT_TYPES
+from hero.game_config import DIFFICULTY_SETTINGS, MAP_TYPES, EVENT_TYPES, CLASS_DEFINITIONS
 from hero.combat import CombatSystem
 from hero.equipment import EquipmentSystem
 from hero.events import EventSystem
@@ -38,6 +38,7 @@ class HeroGame:
 
         # 初始化英雄属性
         self.hero_name = ""
+        self.hero_class = ""  # 英雄职业
         self.hero_hp = 100  # 初始血量
         self.hero_max_hp = 100  # 最大血量
         self.hero_attack = 20  # 初始攻击力
@@ -50,6 +51,11 @@ class HeroGame:
         self.victory = False
         self.monsters_defeated = 0  # 击败的怪物数量
         self.events_encountered = []  # 遇到的事件历史
+        
+        # 职业系统相关属性
+        self.class_mana = 0  # 法师的法力值
+        self.class_max_mana = 0  # 最大法力值
+        self.combat_first_turn = True  # 战斗第一回合标记（用于刺客特性）
         
         # 技能状态跟踪
         self.shield_active = False  # 护盾状态
@@ -275,16 +281,109 @@ class HeroGame:
                 break
             else:
                 print(self.lang.get_text("name_empty"))
+    
+    def select_hero_class(self):
+        """选择英雄职业"""
+        self.clear_screen()
+        print(self.lang.get_text("block_separator"))
+        print(f"          {self.lang.get_text('class_selection')}")
+        print(self.lang.get_text("block_separator"))
+        print()
+        
+        # 显示三个职业选项
+        class_options = {
+            "1": "warrior",
+            "2": "mage",
+            "3": "assassin"
+        }
+        
+        for num, class_key in class_options.items():
+            class_info = CLASS_DEFINITIONS[class_key]
+            print(f"{num}. {self.lang.get_text(class_info['name_key'])}")
+            print(f"   {self.lang.get_text(class_info['description_key'])}")
+            print(f"   {self.lang.get_text('class_attributes')}: {self.lang.get_text('attack')}={class_info['base_attributes']['attack']}, {self.lang.get_text('defense')}={class_info['base_attributes']['defense']}, {self.lang.get_text('max_hp')}={class_info['base_attributes']['max_hp']}")
+            print()
+        
+        while True:
+            choice = input(self.lang.get_text("choose_your_class")).strip()
+            if choice in class_options:
+                selected_class = class_options[choice]
+                class_info = CLASS_DEFINITIONS[selected_class]
+                
+                # 确认选择
+                print()
+                class_name = self.lang.get_text(class_info['name_key'])
+                confirm_text = self.lang.get_text("confirm_class_selection").format(
+                    hero_class=class_name
+                )
+                confirm = input(confirm_text).strip().lower()
+                
+                if confirm in self.lang.get_text("yes_options"):
+                    self.hero_class = selected_class
+                    print()
+                    print(self.lang.get_text("class_selected").format(
+                        hero_class=class_name
+                    ))
+                    
+                    # 应用职业基础属性
+                    self.apply_class_attributes(selected_class)
+                    
+                    # 添加职业初始技能
+                    for skill in class_info['starting_skills']:
+                        self.hero_skills.append(self.lang.get_text(f"{skill}_skill"))
+                    
+                    print()
+                    input(self.lang.get_text("continue_prompt"))
+                    break
+            else:
+                print(f"{self.lang.get_text('invalid_choice')} (1-3)")
+    
+    def apply_class_attributes(self, class_key):
+        """应用职业属性加成"""
+        class_info = CLASS_DEFINITIONS[class_key]
+        
+        # 应用基础属性
+        self.base_attack = class_info['base_attributes']['attack']
+        self.base_defense = class_info['base_attributes']['defense']
+        self.base_max_hp = class_info['base_attributes']['max_hp']
+        
+        # 初始化当前属性
+        self.hero_hp = self.base_max_hp
+        self.hero_max_hp = self.base_max_hp
+        
+        # 如果是法师，初始化法力值
+        if class_key == "mage":
+            self.class_max_mana = 100  # 初始法力值
+            self.class_mana = self.class_max_mana
+        
+        # 更新总属性（包含装备加成）
+        self.update_attributes()
+    
+    def get_class_growth_multiplier(self, attribute):
+        """获取职业属性成长倍率"""
+        if not self.hero_class:
+            return 1.0
+            
+        class_info = CLASS_DEFINITIONS.get(self.hero_class, {})
+        growth_multipliers = class_info.get('growth_multipliers', {})
+        return growth_multipliers.get(attribute, 1.0)
 
     def show_hero_info(self):
         """显示英雄信息"""
         print(f"\n【{self.hero_name}】 Lv.{self.hero_level}")
+        if self.hero_class:
+            class_name = self.lang.get_text(f"class_{self.hero_class}")
+            print(f"⚔️  {self.lang.get_text('class')}: {class_name}")
         print(f"❤️  {self.lang.get_text('hp')}{self.lang.get_text('item_separator')}{self.hero_hp}/{self.hero_max_hp}")
         print(f"⚔️  {self.lang.get_text('attack')}{self.lang.get_text('item_separator')}{self.hero_attack}")
         print(f"🛡️  {self.lang.get_text('defense')}{self.lang.get_text('item_separator')}{self.hero_defense}")
         print(f"💰  {self.lang.get_text('gold')}{self.lang.get_text('item_separator')}{self.hero_gold}")
         print(f"⭐  {self.lang.get_text('exp')}{self.lang.get_text('item_separator')}{self.hero_exp}")
         print(f"🧪  {self.lang.get_text('potions')}{self.lang.get_text('item_separator')}{self.hero_potions}")
+        
+        # 如果是法师，显示法力值
+        if self.hero_class == "mage" and hasattr(self, 'class_max_mana'):
+            print(f"💧  {self.lang.get_text('mana')}{self.lang.get_text('item_separator')}{self.class_mana}/{self.class_max_mana}")
         # 使用统一的多语言格式化函数处理位置显示
         position_text = self.lang.format_text("position_format", self.hero_position+1, self.map_length)
         print(f"📍  {self.lang.get_text('position')}{self.lang.get_text('item_separator')}{position_text}")
@@ -340,6 +439,7 @@ class HeroGame:
             if choice == "" or choice == "1":
                 # 新游戏
                 self.get_hero_name()
+                self.select_hero_class()  # 添加职业选择
                 self.select_map_and_difficulty()
 
                 # 进入新手村
@@ -1328,6 +1428,7 @@ class HeroGame:
         """
         # 英雄基础属性
         self.hero_name = save_data.hero_name
+        self.hero_class = save_data.hero_class
         self.hero_level = save_data.hero_level
         self.hero_exp = save_data.hero_exp
 
@@ -1386,6 +1487,10 @@ class HeroGame:
         self.shield_active = getattr(save_data, 'shield_active', False)
         self.berserk_turns = getattr(save_data, 'berserk_turns', 0)
         self.focus_active = getattr(save_data, 'focus_active', False)
+        
+        # 加载职业系统相关属性
+        self.class_mana = getattr(save_data, 'class_mana', 0)
+        self.class_max_mana = getattr(save_data, 'class_max_mana', 0)
         
         # 加载统计数据
         if hasattr(save_data, 'statistics_data') and save_data.statistics_data:

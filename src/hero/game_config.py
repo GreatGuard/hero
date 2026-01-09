@@ -442,6 +442,92 @@ MONSTER_TEMPLATES = {
 
 
 
+# 职业定义配置
+CLASS_DEFINITIONS = {
+    "warrior": {
+        "name_key": "class_warrior",
+        "description_key": "class_warrior_desc",
+        "base_attributes": {
+            "attack": 25,  # 高攻击
+            "defense": 8,   # 中等防御
+            "max_hp": 120   # 高血量
+        },
+        "growth_multipliers": {
+            "attack": 1.2,  # 升级时攻击力+20%
+            "defense": 1.0,  # 升级时防御力+10%
+            "max_hp": 1.2    # 升级时血量上限+20%
+        },
+        "starting_skills": ["power_strike"],  # 初始技能
+        "skill_affinity": ["power_strike", "shield_bash", "berserk", "whirlwind", "battle_cry"],  # 容易学习的技能
+        "equipment_preference": {
+            "weapon": "sword",
+            "armor": "heavy_armor",
+            "accessory": "shield"
+        },
+        "class_skills": ["shield_bash", "battle_cry"],  # 职业专属技能
+        "passive_effects": {
+            "damage_reduction": 0.1,  # 受到伤害减少10%
+            "hp_regen_per_turn": 0.05,  # 每回合恢复5%最大生命值
+            "counter_attack_chance": 0.15  # 15%概率反击
+        }
+    },
+    "mage": {
+        "name_key": "class_mage",
+        "description_key": "class_mage_desc",
+        "base_attributes": {
+            "attack": 15,  # 低攻击
+            "defense": 5,   # 低防御
+            "max_hp": 80    # 低血量
+        },
+        "growth_multipliers": {
+            "attack": 1.4,  # 升级时攻击力+40%（魔法攻击）
+            "defense": 0.8,  # 升级时防御力+8%
+            "max_hp": 0.9    # 升级时血量上限+9%
+        },
+        "starting_skills": ["fireball"],  # 初始技能
+        "skill_affinity": ["fireball", "frost_armor", "teleport", "meteor"],  # 容易学习的技能
+        "equipment_preference": {
+            "weapon": "staff",
+            "armor": "robe",
+            "accessory": "amulet"
+        },
+        "class_skills": ["fireball", "frost_armor"],  # 职业专属技能
+        "passive_effects": {
+            "spell_power": 0.2,  # 法术伤害提升20%
+            "mana_regen": 5,  # 每回合恢复5点法力值
+            "elemental_resistance": 0.15  # 元素抗性15%
+        },
+        "mana_system": True  # 启用法力值系统
+    },
+    "assassin": {
+        "name_key": "class_assassin",
+        "description_key": "class_assassin_desc",
+        "base_attributes": {
+            "attack": 22,  # 高攻击
+            "defense": 6,   # 低防御
+            "max_hp": 90    # 中等血量
+        },
+        "growth_multipliers": {
+            "attack": 1.3,  # 升级时攻击力+30%
+            "defense": 0.9,  # 升级时防御力+9%
+            "max_hp": 1.0    # 升级时血量上限+10%
+        },
+        "starting_skills": ["backstab"],  # 初始技能
+        "skill_affinity": ["backstab", "poison_blade", "shadow_step", "critical_strike", "shadow_strike"],  # 容易学习的技能
+        "equipment_preference": {
+            "weapon": "dagger",
+            "armor": "leather_armor",
+            "accessory": "ring"
+        },
+        "class_skills": ["backstab", "shadow_strike"],  # 职业专属技能
+        "passive_effects": {
+            "crit_rate": 0.15,  # 暴击率15%
+            "dodge_chance": 0.2,  # 闪避率20%
+            "first_turn_damage": 0.3  # 首回合伤害提升30%
+        }
+    }
+}
+
 # Boss模板配置
 BOSS_TEMPLATES = {
     "plains": {

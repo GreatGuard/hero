@@ -26,6 +26,7 @@ class SaveData:
         if game:
             # 英雄基础属性
             self.hero_name = game.hero_name
+            self.hero_class = game.hero_class
             self.hero_level = game.hero_level
             self.hero_exp = game.hero_exp
 
@@ -92,6 +93,10 @@ class SaveData:
             self.berserk_turns = getattr(game, 'berserk_turns', 0)
             self.focus_active = getattr(game, 'focus_active', False)
             
+            # 职业系统相关属性
+            self.class_mana = getattr(game, 'class_mana', 0)
+            self.class_max_mana = getattr(game, 'class_max_mana', 0)
+            
             # 任务系统
             if hasattr(game, 'quest_system') and game.quest_system is not None:
                 self.quest_data = game.quest_system.to_dict()
@@ -115,6 +120,7 @@ class SaveData:
 
             # 英雄基础属性
             "hero_name": self.hero_name,
+            "hero_class": self.hero_class,
             "hero_level": self.hero_level,
             "hero_exp": self.hero_exp,
 
@@ -144,6 +150,10 @@ class SaveData:
 
             # 技能
             "hero_skills": self.hero_skills,
+            
+            # 职业系统相关属性
+            "class_mana": getattr(self, 'class_mana', 0),
+            "class_max_mana": getattr(self, 'class_max_mana', 0),
 
             # 游戏设置
             "difficulty": self.difficulty,
@@ -188,6 +198,7 @@ class SaveData:
 
         # 英雄基础属性
         save_data.hero_name = data.get("hero_name", "")
+        save_data.hero_class = data.get("hero_class", "")
         save_data.hero_level = data.get("hero_level", 1)
         save_data.hero_exp = data.get("hero_exp", 0)
 
@@ -244,6 +255,10 @@ class SaveData:
         save_data.shield_active = data.get("shield_active", False)
         save_data.berserk_turns = data.get("berserk_turns", 0)
         save_data.focus_active = data.get("focus_active", False)
+        
+        # 职业系统相关属性
+        save_data.class_mana = data.get("class_mana", 0)
+        save_data.class_max_mana = data.get("class_max_mana", 0)
 
         # 游戏统计
         save_data.statistics_data = data.get("statistics_data", {})

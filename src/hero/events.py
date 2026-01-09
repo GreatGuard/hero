@@ -15,7 +15,19 @@ class EventSystem:
 
     def learn_skill(self, level_up=False):
         """学习技能"""
-        # 使用统一的多语言技能名称
+        from hero.game_config import CLASS_DEFINITIONS
+        
+        # 获取当前职业信息
+        class_info = CLASS_DEFINITIONS.get(self.game.hero_class, {})
+        class_skills = class_info.get("class_skills", [])
+        skill_affinity = class_info.get("skill_affinity", [])
+        
+        # 获取所有职业的专属技能
+        all_class_skills = []
+        for class_name, class_data in CLASS_DEFINITIONS.items():
+            all_class_skills.extend(class_data.get("class_skills", []))
+        
+        # 使用统一的多语言技能名称 - 只包含通用技能
         all_skills = [
             self.game.lang.get_text("fireball_skill"),
             self.game.lang.get_text("healing_skill"),
@@ -28,9 +40,46 @@ class EventSystem:
             self.game.lang.get_text("berserk_skill"),
             self.game.lang.get_text("focus_skill")
         ]
+        
+        # 添加当前职业的专属技能
+        for skill_key in class_skills:
+            skill_name = self.game.lang.get_text(f"{skill_key}_skill")
+            if skill_name not in all_skills:
+                all_skills.append(skill_name)
 
-        # 获取还未学习的技能
+        # 获取还未学习的技能，并根据职业亲和度排序
         available_skills = [s for s in all_skills if s not in self.game.hero_skills]
+        
+        # 过滤掉其他职业的专属技能
+        def is_skill_allowed(skill_name):
+            # 检查技能是否属于某个职业的专属技能
+            for class_name, class_data in CLASS_DEFINITIONS.items():
+                if class_name == self.game.hero_class:
+                    continue  # 跳过当前职业
+                
+                for skill_key in class_data.get("class_skills", []):
+                    if skill_name == self.game.lang.get_text(f"{skill_key}_skill"):
+                        return False  # 这是其他职业的专属技能，不允许学习
+            
+            return True  # 允许学习
+        
+        available_skills = [s for s in available_skills if is_skill_allowed(s)]
+        
+        # 根据职业亲和度排序技能列表（亲和度高的在前）
+        def get_skill_priority(skill_name):
+            # 检查是否是当前职业的专属技能
+            for skill_key in class_skills:
+                if skill_name == self.game.lang.get_text(f"{skill_key}_skill"):
+                    return 0  # 职业专属技能最高优先级
+            
+            # 检查是否是职业亲和技能
+            for skill_key in skill_affinity:
+                if skill_name == self.game.lang.get_text(f"{skill_key}_skill"):
+                    return 1  # 职业亲和技能中等优先级
+            
+            return 2  # 普通技能最低优先级
+        
+        available_skills.sort(key=get_skill_priority)
 
         if not available_skills:
             print(f"\n{self.game.lang.get_text('all_skills_learned')}")

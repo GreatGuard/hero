@@ -20,6 +20,7 @@ from hero.save_data import SaveData, SaveManager
 from hero.statistics import GameStatistics
 from hero.achievements import AchievementSystem
 from hero.quest import QuestSystem
+from hero.skill_tree import SkillTree
 
 
 class HeroGame:
@@ -47,6 +48,7 @@ class HeroGame:
         self.hero_exp = 0  # 经验值
         self.hero_level = 1  # 等级
         self.hero_skills = []  # 英雄技能
+        self.skill_points = 0  # 技能点
         self.game_over = False
         self.victory = False
         self.monsters_defeated = 0  # 击败的怪物数量
@@ -125,6 +127,9 @@ class HeroGame:
         
         # 初始化任务系统
         self.quest_system = QuestSystem()
+        
+        # 技能树系统将在职业选择后初始化
+        self.skill_tree = None
 
     def select_language(self):
         """选择游戏语言"""
@@ -328,9 +333,19 @@ class HeroGame:
                     # 应用职业基础属性
                     self.apply_class_attributes(selected_class)
                     
+                    # 初始化技能树系统
+                    self.skill_tree = SkillTree(selected_class, self.lang)
+                    
                     # 添加职业初始技能
                     for skill in class_info['starting_skills']:
                         self.hero_skills.append(self.lang.get_text(f"{skill}_skill"))
+                        # 学习初始技能
+                        if skill in self.skill_tree.skill_nodes:
+                            self.skill_tree.learned_skills[skill] = 1
+                            self.skill_tree.skill_nodes[skill].current_level = 1
+                    
+                    # 更新技能树可用性
+                    self.skill_tree._update_skill_availability()
                     
                     print()
                     input(self.lang.get_text("continue_prompt"))
@@ -384,6 +399,11 @@ class HeroGame:
         # 如果是法师，显示法力值
         if self.hero_class == "mage" and hasattr(self, 'class_max_mana'):
             print(f"💧  {self.lang.get_text('mana')}{self.lang.get_text('item_separator')}{self.class_mana}/{self.class_max_mana}")
+        
+        # 显示技能点
+        if self.skill_tree:
+            print(f"⭐  {self.lang.get_text('skill_points')}{self.lang.get_text('item_separator')}{self.skill_points}")
+        
         # 使用统一的多语言格式化函数处理位置显示
         position_text = self.lang.format_text("position_format", self.hero_position+1, self.map_length)
         print(f"📍  {self.lang.get_text('position')}{self.lang.get_text('item_separator')}{position_text}")
@@ -682,7 +702,9 @@ class HeroGame:
         print(f"7. {self.lang.get_text('save_game')}")
         print(f"8. {self.lang.get_text('view_statistics')}")
         print(f"9. {self.lang.get_text('view_quests')}")
-        print(f"10. {self.lang.get_text('exit_game')}")
+        if self.skill_tree:
+            print(f"10. {self.lang.get_text('skill_tree_title')}")
+        print(f"11. {self.lang.get_text('exit_game')}")
 
         while True:
             choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
@@ -727,12 +749,84 @@ class HeroGame:
                 self.show_statistics()
             elif choice == "9":
                 self.show_quests()
-            elif choice == "10":
+            elif choice == "10" and self.skill_tree:
+                self.show_skill_tree_menu()
+            elif choice == "11" or (choice == "10" and not self.skill_tree):
                 # 退出游戏循环
                 self.game_over = True
                 return False
             else:
                 print(self.lang.get_text("invalid_choice"))
+
+    def show_skill_tree_menu(self):
+        """显示技能树菜单"""
+        self.clear_screen()
+        print(self.lang.get_text("block_separator"))
+        print(f"          {self.lang.get_text('skill_tree_title')}")
+        print(self.lang.get_text("block_separator"))
+        
+        show_all = False
+        while True:
+            self.clear_screen()
+            
+            # 显示技能树
+            print(self.skill_tree.format_tree(show_all))
+            print(f"\n{self.lang.get_text('skill_points')}: {self.skill_points}")
+            print()
+            
+            # 显示选项
+            print(f"1. {self.lang.get_text('select_skill_to_upgrade')}")
+            if show_all:
+                print(f"2. {self.lang.get_text('show_available_skills')}")
+            else:
+                print(f"2. {self.lang.get_text('show_all_skills')}")
+            print(f"3. {self.lang.get_text('back_to_game')}")
+            
+            choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
+            
+            if choice == "" or choice == "1":
+                # 获取可升级的技能列表
+                upgradeable_skills = [
+                    skill_id for skill_id in self.skill_tree.skill_nodes
+                    if self.skill_tree.can_upgrade_skill(skill_id, self.skill_points)
+                ]
+                
+                if not upgradeable_skills:
+                    input(self.lang.get_text("not_enough_skill_points"))
+                    continue
+                
+                # 显示可升级的技能
+                print(f"\n{self.lang.get_text('select_skill_to_upgrade')}:")
+                for i, skill_id in enumerate(upgradeable_skills, 1):
+                    skill_node = self.skill_tree.skill_nodes[skill_id]
+                    skill_name = self.lang.get_text(f"skill_{skill_id}")
+                    cost = skill_node.cost_per_level
+                    print(f"{i}. {skill_name} (Lv.{skill_node.current_level}/{skill_node.max_level}) - {self.lang.get_text('skill_points')}: {cost}")
+                
+                skill_choice = input(f"{self.lang.get_text('enter_choice')}: ").strip()
+                
+                if skill_choice.isdigit() and 1 <= int(skill_choice) <= len(upgradeable_skills):
+                    selected_skill_id = upgradeable_skills[int(skill_choice) - 1]
+                    success, remaining_points = self.skill_tree.upgrade_skill(selected_skill_id, self.skill_points)
+                    
+                    if success:
+                        self.skill_points = remaining_points
+                        skill_name = self.lang.get_text(f"skill_{selected_skill_id}")
+                        print(f"\n{self.lang.get_text('skill_upgrade_success')} - {skill_name}")
+                        input(self.lang.get_text('continue_prompt'))
+                    else:
+                        input(self.lang.get_text("skill_upgrade_failed"))
+                else:
+                    input(self.lang.get_text("invalid_choice"))
+            
+            elif choice == "2":
+                show_all = not show_all
+            
+            elif choice == "3":
+                break
+            
+            else:
+                input(self.lang.get_text("invalid_choice"))
 
     def random_event(self):
         """随机事件处理（根据地图类型和难度调整）"""
@@ -1452,12 +1546,21 @@ class HeroGame:
         self.hero_gold = save_data.hero_gold
         self.hero_potions = save_data.hero_potions
 
+        # 技能系统
+        self.skill_points = save_data.skill_points
+        
         # 装备和背包
         self.equipment = save_data.equipment
         self.inventory = save_data.inventory
 
         # 技能
         self.hero_skills = save_data.hero_skills
+        
+        # 恢复技能树
+        if save_data.skill_tree_data:
+            self.skill_tree = SkillTree.from_dict(save_data.skill_tree_data, self.lang)
+        else:
+            self.skill_tree = SkillTree(self.hero_class, self.lang)
 
         # 游戏设置
         self.difficulty = save_data.difficulty

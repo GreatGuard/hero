@@ -49,6 +49,10 @@ class SaveData:
             # 资源
             self.hero_gold = game.hero_gold
             self.hero_potions = game.hero_potions
+            
+            # 技能系统
+            self.skill_points = game.skill_points
+            self.skill_tree_data = game.skill_tree.to_dict() if game.skill_tree else None
 
             # 装备和背包
             self.equipment = {

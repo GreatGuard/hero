@@ -1255,6 +1255,11 @@ class CombatSystem:
 
                 print(f"{self.game.lang.get_text('attack')} {self.game.hero_attack}, {self.game.lang.get_text('defense')} {self.game.hero_defense}, {self.game.lang.get_text('max_hp')} {self.game.hero_max_hp}")
 
+                # 升级时获得技能点
+                skill_points_gained = 1 + (level // 3)  # 每3级多获得1点技能点
+                self.game.skill_points += skill_points_gained
+                print(f"{self.game.lang.get_text('skill_points_earned').format(points=skill_points_gained)}")
+                
                 # 升级时有概率学习新技能
                 if random.random() < 0.3:
                     from .events import EventSystem

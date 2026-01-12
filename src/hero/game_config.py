@@ -42,6 +42,199 @@ DIFFICULTY_SETTINGS = {
     }
 }
 
+# 技能树配置
+SKILL_TREES = {
+    "warrior": {
+        # 战士核心技能
+        "power_strike": {
+            "name": "力量打击",
+            "description": "基础攻击技能，造成额外伤害",
+            "category": "core",
+            "max_level": 5,
+            "cost_per_level": 1,
+            "effects_per_level": [2],  # 每级增加2点攻击力
+            "prerequisites": [],
+            "class_requirement": "warrior"
+        },
+        "shield_bash": {
+            "name": "盾击",
+            "description": "用盾牌攻击敌人并降低其攻击力",
+            "category": "combat",
+            "max_level": 5,
+            "cost_per_level": 1,
+            "effects_per_level": [1.5, 0.05],  # 伤害倍率，降低攻击力百分比
+            "prerequisites": [("power_strike", 2)],
+            "class_requirement": "warrior"
+        },
+        "battle_cry": {
+            "name": "战吼",
+            "description": "提升自身攻击和防御力",
+            "category": "combat",
+            "max_level": 3,
+            "cost_per_level": 2,
+            "effects_per_level": [1, 2],  # 回合数，属性加成百分比
+            "prerequisites": [("shield_bash", 3)],
+            "class_requirement": "warrior"
+        },
+        "iron_will": {
+            "name": "钢铁意志",
+            "description": "永久提升防御力和生命值上限",
+            "category": "passive",
+            "max_level": 5,
+            "cost_per_level": 2,
+            "effects_per_level": [2, 5],  # 防御力，生命值上限
+            "prerequisites": [("power_strike", 3)],
+            "class_requirement": "warrior"
+        },
+        "counter_attack": {
+            "name": "反击",
+            "description": "受击时有概率反击敌人",
+            "category": "passive",
+            "max_level": 3,
+            "cost_per_level": 2,
+            "effects_per_level": [0.1],  # 反击概率
+            "prerequisites": [("iron_will", 3)],
+            "class_requirement": "warrior"
+        },
+        "berserker_rage": {
+            "name": "狂暴之怒",
+            "description": "进入狂暴状态，大幅提升攻击力但降低防御",
+            "category": "ultimate",
+            "max_level": 3,
+            "cost_per_level": 3,
+            "effects_per_level": [3, 0.5, 0.3],  # 回合数，攻击加成，防御降低
+            "prerequisites": [("battle_cry", 2), ("counter_attack", 1)],
+            "class_requirement": "warrior"
+        }
+    },
+    "mage": {
+        # 法师核心技能
+        "fireball": {
+            "name": "火球术",
+            "description": "发射火球攻击敌人",
+            "category": "core",
+            "max_level": 5,
+            "cost_per_level": 1,
+            "effects_per_level": [3],  # 每级增加3点法术攻击力
+            "prerequisites": [],
+            "class_requirement": "mage"
+        },
+        "frost_armor": {
+            "name": "冰霜护甲",
+            "description": "提升防御力并反弹部分伤害",
+            "category": "combat",
+            "max_level": 5,
+            "cost_per_level": 1,
+            "effects_per_level": [1.5, 0.05],  # 防御倍率，反弹伤害百分比
+            "prerequisites": [("fireball", 2)],
+            "class_requirement": "mage"
+        },
+        "mana_burn": {
+            "name": "法力燃烧",
+            "description": "燃烧敌人法力值并造成额外伤害",
+            "category": "combat",
+            "max_level": 3,
+            "cost_per_level": 2,
+            "effects_per_level": [2.0, 5],  # 伤害倍率，燃烧法力值
+            "prerequisites": [("frost_armor", 3)],
+            "class_requirement": "mage"
+        },
+        "meditation": {
+            "name": "冥想",
+            "description": "每回合恢复额外法力值",
+            "category": "passive",
+            "max_level": 5,
+            "cost_per_level": 2,
+            "effects_per_level": [2],  # 每级增加2点法力恢复
+            "prerequisites": [("fireball", 3)],
+            "class_requirement": "mage"
+        },
+        "arcane_power": {
+            "name": "奥术之力",
+            "description": "永久提升法术强度和最大法力值",
+            "category": "passive",
+            "max_level": 3,
+            "cost_per_level": 2,
+            "effects_per_level": [0.1, 10],  # 法术强度加成，最大法力值
+            "prerequisites": [("meditation", 3)],
+            "class_requirement": "mage"
+        },
+        "meteor": {
+            "name": "陨石术",
+            "description": "召唤陨石攻击敌人，造成大量伤害",
+            "category": "ultimate",
+            "max_level": 3,
+            "cost_per_level": 3,
+            "effects_per_level": [4.0, 2],  # 伤害倍率，冷却回合
+            "prerequisites": [("mana_burn", 2), ("arcane_power", 1)],
+            "class_requirement": "mage"
+        }
+    },
+    "assassin": {
+        # 刺客核心技能
+        "backstab": {
+            "name": "背刺",
+            "description": "从背后攻击敌人造成额外伤害",
+            "category": "core",
+            "max_level": 5,
+            "cost_per_level": 1,
+            "effects_per_level": [0.1],  # 每级增加10%背刺伤害
+            "prerequisites": [],
+            "class_requirement": "assassin"
+        },
+        "shadow_strike": {
+            "name": "影袭",
+            "description": "快速连续攻击敌人多次",
+            "category": "combat",
+            "max_level": 5,
+            "cost_per_level": 1,
+            "effects_per_level": [0.5, 1],  # 每次攻击伤害倍率，额外攻击次数
+            "prerequisites": [("backstab", 2)],
+            "class_requirement": "assassin"
+        },
+        "poison_blade": {
+            "name": "毒刃",
+            "description": "为武器涂毒，攻击时造成持续伤害",
+            "category": "combat",
+            "max_level": 3,
+            "cost_per_level": 2,
+            "effects_per_level": [3, 2],  # 毒伤害，持续回合
+            "prerequisites": [("shadow_strike", 3)],
+            "class_requirement": "assassin"
+        },
+        "evasion": {
+            "name": "闪避",
+            "description": "提升闪避率和暴击率",
+            "category": "passive",
+            "max_level": 5,
+            "cost_per_level": 2,
+            "effects_per_level": [0.05, 0.03],  # 闪避率，暴击率
+            "prerequisites": [("backstab", 3)],
+            "class_requirement": "assassin"
+        },
+        "stealth": {
+            "name": "潜行",
+            "description": "提升第一回合伤害和闪避率",
+            "category": "passive",
+            "max_level": 3,
+            "cost_per_level": 2,
+            "effects_per_level": [0.2, 0.1],  # 首回合伤害加成，闪避率
+            "prerequisites": [("evasion", 3)],
+            "class_requirement": "assassin"
+        },
+        "shadow_clone": {
+            "name": "影分身",
+            "description": "创建影分身协助攻击",
+            "category": "ultimate",
+            "max_level": 3,
+            "cost_per_level": 3,
+            "effects_per_level": [2, 0.7],  # 分身数量，分身伤害倍率
+            "prerequisites": [("poison_blade", 2), ("stealth", 1)],
+            "class_requirement": "assassin"
+        }
+    }
+}
+
 # 传奇装备配置 - 使用统一的多语言键名
 LEGENDARY_EQUIPMENT = {
     "weapon": [

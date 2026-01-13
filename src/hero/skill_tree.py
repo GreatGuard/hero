@@ -299,11 +299,21 @@ class SkillTree:
                     status = "🔒"
                 
                 # 技能信息
-                skill_name = self.lang.get_text(f"skill_{skill_id}")
+                # 检查技能ID是否已经包含"_skill"后缀
+                if skill_id.endswith("_skill"):
+                    skill_name_key = skill_id
+                else:
+                    skill_name_key = f"skill_{skill_id}"
+                skill_name = self.lang.get_text(skill_name_key)
                 level_text = f"Lv.{skill_node.current_level}/{skill_node.max_level}"
                 
                 # 技能描述（简化版）
-                description = self.lang.get_text(f"skill_{skill_id}_desc")
+                # 检查技能ID是否已经包含"_skill"后缀
+                if skill_id.endswith("_skill"):
+                    desc_key = f"{skill_id}_desc"
+                else:
+                    desc_key = f"skill_{skill_id}_desc"
+                description = self.lang.get_text(desc_key)
                 if len(description) > 40:
                     description = description[:37] + "..."
                 
@@ -312,8 +322,15 @@ class SkillTree:
                 
                 # 前置技能
                 if skill_node.prerequisites:
-                    prereq_text = ", ".join([f"{self.lang.get_text(f'skill_{p}')} Lv.{l}" 
-                                           for p, l in skill_node.prerequisites])
+                    prereq_skills = []
+                    for p, l in skill_node.prerequisites:
+                        # 检查前置技能ID是否已经包含"_skill"后缀
+                        if p.endswith("_skill"):
+                            prereq_key = p
+                        else:
+                            prereq_key = f"skill_{p}"
+                        prereq_skills.append(f"{self.lang.get_text(prereq_key)} Lv.{l}")
+                    prereq_text = ", ".join(prereq_skills)
                     result.append(f"    {self.lang.get_text('skill_prerequisites')}: {prereq_text}")
                 
                 result.append("")

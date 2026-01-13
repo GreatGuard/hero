@@ -326,11 +326,84 @@
 
 **验证**: 测试通过，职业技能系统完整实现，各职业差异化明显
 
-### Task 3.6: 实现技能树系统
-**状态**: ⬜ 待开始
+### ✅ Task 3.6: 实现技能树系统
 
-### Task 3.7: 创建技能树 UI
-**状态**: ⬜ 待开始
+**状态**: 已完成
+**文件**: `src/hero/skill_tree.py`
+**内容**:
+- 创建 `SkillNode` 和 `SkillTree` 类，实现技能树核心功能
+- 实现技能节点管理（升级、前置条件检查等）
+- 支持技能树序列化和反序列化
+- 在 `game_config.py` 中定义 `SKILL_TREES` 配置，为每个职业定义专属技能树
+- 修复技能标识系统，统一使用 skill_id 存储和检查技能
+- 学习技能时自动更新技能树状态
+
+**验证**: 创建了 `tests/test_skill_tree.py`，17个测试用例全部通过
+
+### ✅ Task 3.7: 创建技能树 UI
+
+**状态**: 已完成
+**文件**: `src/hero/main.py`, `src/hero/skill_tree.py`
+**内容**:
+- 在 `SkillTree` 类中实现 `format_tree()` 方法，可以显示技能树
+- 在 `main.py` 中添加技能树显示入口（action 10）
+- 实现技能点消费和技能升级 UI 逻辑
+- 支持显示所有技能和可升级技能
+- 将技能树数据集成到存档系统
+
+**验证**: 手动测试技能树 UI，功能正常
+
+### ✅ 修复战斗系统技能检查
+
+**状态**: 已完成
+**文件**: `src/hero/combat.py`
+**内容**:
+- 修改所有技能检查逻辑，统一使用 skill_id 而不是技能名称
+- 修复 `get_combat_action()` 方法中的技能显示逻辑
+- 修复 `handle_skill_action()` 方法中的技能处理逻辑
+- 更新技能使用记录，使用 skill_id 而不是技能名称
+
+**验证**: 技能检查逻辑正常工作，支持多语言
+
+### ✅ 修复学习技能逻辑
+
+**状态**: 已完成
+**文件**: `src/hero/events.py`, `tests/test_events.py`
+**内容**:
+- 修改 `learn_skill()` 方法，使用 skill_id 存储技能
+- 学习技能时更新技能树状态（`learned_skills` 和 `current_level`）
+- 修复技能名称获取逻辑，优先从技能树获取名称
+- 更新测试文件，使其与新的技能存储方式一致
+
+**验证**: 学习技能功能正常，技能树状态正确更新
+
+### ✅ Task 3.6: 实现技能树系统（最终修复）
+
+**状态**: 已完成
+**文件**: `src/hero/game_config.py`, `src/hero/events.py`, `src/hero/combat.py`, `src/hero/newbie_village.py`
+**内容**:
+- 修改CLASS_DEFINITIONS，移除skill_affinity字段，完全依赖技能树系统
+- 修改events.py中的learn_skill方法，去掉通用技能列表，改为使用技能树系统
+- 修改combat.py中的技能检查逻辑，改为使用技能树系统，添加统一的技能处理方法
+- 修改newbie_village.py中的技能检查，改为使用skill_id而不是技能名称
+- 确保所有技能都有多语言支持
+
+**验证**: 技能树系统完全集成，所有技能检查和学习逻辑使用技能树系统
+
+### ✅ Task 3.6.1: 移除学习技能功能，保留技能树系统
+
+**状态**: 已完成 (2026-01-12)
+**文件**: `src/hero/events.py`, `src/hero/newbie_village.py`, `src/hero/combat.py`, `src/hero/main.py`, `tests/test_events.py`, `tests/test_newbie_village.py`
+**内容**:
+- 移除events.py中的learn_skill方法和相关逻辑
+- 移除商人事件中的技能学习选项
+- 移除新手村中的技能学习训练场功能
+- 移除升级时的技能学习逻辑
+- 移除主菜单中的技能学习选项
+- 更新相关测试文件，删除技能学习相关测试
+- 保留完整的技能树系统（skill_tree.py）和技能配置（game_config.py）
+
+**验证**: 移除学习技能功能，但保留完整的技能树显示和效果获取功能
 
 ### Task 3.8: 实现装备强化系统
 **状态**: ⬜ 待开始

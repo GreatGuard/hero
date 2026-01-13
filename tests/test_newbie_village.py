@@ -55,7 +55,7 @@ class TestNewbieVillage(unittest.TestCase):
             "hp_recovered": "生命值已恢复",
             "training_desc": "训练场描述",
             "practice_combat": "练习战斗",
-            "learn_skill_short": "学习技能",
+
             "return_to_village": "返回村庄",
             "training_dummy": "训练假人",
             "hp": "生命值",
@@ -196,57 +196,7 @@ class TestNewbieVillage(unittest.TestCase):
         
         self.assertGreater(self.mock_game.hero_hp, 50)
     
-    def test_training_ground_learn_skill_success(self):
-        """测试训练场-学习技能成功"""
-        # 确保 hero_skills 是空列表
-        self.mock_game.hero_skills = []
-        self.mock_game.hero_gold = 50
-        initial_gold = self.mock_game.hero_gold
 
-        # 输入序列：确认学习(y) -> 选择技能(1) -> 继续提示
-        # 注意：需要确保输入序列足够长以覆盖所有input调用
-        inputs = ['y', '1', ''] + [''] * 100
-
-        # 调试：追踪输入使用情况
-        input_idx = [0]
-        def debug_input(prompt=''):
-            idx = input_idx[0]
-            result = inputs[idx]
-            print(f"  [TEST] Input #{idx}: {result!r} for: {prompt!r}")
-            print(f"  [TEST] hero_skills: {self.mock_game.hero_skills}")
-            input_idx[0] += 1
-            return result
-
-        with patch('builtins.input', side_effect=debug_input):
-            # 不 patch print，这样可以看到调试输出
-            self.newbie_village.learn_skill_training()
-
-        # 验证扣除金币
-        self.assertEqual(self.mock_game.hero_gold, initial_gold - 30)
-    
-    def test_training_ground_learn_skill_insufficient_gold(self):
-        """测试训练场-学习技能金币不足"""
-        self.mock_game.hero_gold = 20
-        initial_gold = self.mock_game.hero_gold
-        
-        inputs = ['', '']
-        with patch('builtins.input', side_effect=inputs):
-            with patch('builtins.print'):
-                self.newbie_village.learn_skill_training()
-        
-        self.assertEqual(self.mock_game.hero_gold, initial_gold)
-    
-    def test_training_ground_learn_skill_cancel(self):
-        """测试训练场-取消学习技能"""
-        self.mock_game.hero_gold = 50
-        initial_gold = self.mock_game.hero_gold
-        
-        inputs = ['n', '']
-        with patch('builtins.input', side_effect=inputs):
-            with patch('builtins.print'):
-                self.newbie_village.learn_skill_training()
-        
-        self.assertEqual(self.mock_game.hero_gold, initial_gold)
     
     def test_village_shop_buy_potion_success(self):
         """测试村庄商店-购买药剂成功"""

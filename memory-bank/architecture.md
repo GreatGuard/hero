@@ -23,7 +23,8 @@ HeroGame (主控制器)
 ├── GameStatistics (统计系统) ⭐ NEW
 ├── SaveManager (存档管理) ⭐ NEW
 ├── QuestSystem (任务系统) ⭐ NEW
-└── ClassSystem (职业系统) ⭐ NEW
+├── ClassSystem (职业系统) ⭐ NEW
+└── SkillTree (技能树系统) ⭐ NEW
 ```
 
 **架构原则**:
@@ -290,6 +291,135 @@ to_dict() / from_dict()  # 序列化支持
 
 ### 6. 其他模块
 
+#### SkillTree (skill_tree.py) ⭐ NEW
+
+技能树系统，管理英雄技能的学习和升级
+
+**职责**: 管理技能树数据、技能学习、技能升级、技能效果计算
+
+**核心类**:
+```python
+class SkillNode:
+    """技能节点类"""
+    
+__init__(self, skill_id, skill_data, lang)
+    # 初始化技能节点
+    
+can_upgrade(self, skill_points)
+    # 检查是否可以升级
+    
+upgrade(self, skill_points)
+    # 升级技能
+    
+get_effect_value(self, effect_index)
+    # 获取技能效果值
+    
+to_dict()
+    # 转换为字典（用于序列化）
+```
+
+```python
+class SkillTree:
+    """技能树类"""
+    
+__init__(self, hero_class, lang)
+    # 初始化技能树
+    
+format_tree(self, show_all=False)
+    # 格式化显示技能树
+    
+can_upgrade_skill(self, skill_id, skill_points)
+    # 检查技能是否可以升级
+    
+upgrade_skill(self, skill_id, skill_points)
+    # 升级指定技能
+    
+get_skill_effect(self, skill_id)
+    # 获取技能效果
+    
+to_dict()
+    # 转换为字典（用于序列化）
+    
+from_dict(data, lang)
+    # 从字典创建技能树（用于反序列化）
+```
+
+**技能树配置**:
+```python
+SKILL_TREES = {
+    "warrior": {
+        # 战士专属技能树
+        "power_strike": {...},     # 核心技能
+        "shield_bash": {...},       # 战斗技能
+        "battle_cry": {...},       # 战斗技能
+        "iron_will": {...},        # 被动技能
+        "counter_attack": {...},   # 被动技能
+        "berserker_rage": {...}    # 终极技能
+    },
+    "mage": {
+        # 法师专属技能树
+        "fireball": {...},
+        "frost_armor": {...},
+        "mana_burn": {...},
+        "meditation": {...},
+        "arcane_power": {...},
+        "meteor": {...}
+    },
+    "assassin": {
+        # 刺客专属技能树
+        "backstab": {...},
+        "shadow_strike": {...},
+        "poison_blade": {...},
+        "evasion": {...},
+        "stealth": {...},
+        "shadow_clone": {...}
+    }
+}
+```
+
+**技能节点结构**:
+```python
+{
+    "name": "技能名称（中英文）",
+    "description": "技能描述",
+    "category": "技能类别（core/combat/passive/ultimate）",
+    "max_level": "最大等级",
+    "cost_per_level": "每级升级消耗的技能点",
+    "effects_per_level": "每级效果值列表",
+    "prerequisites": "前置技能要求",
+    "class_requirement": "职业要求"
+}
+```
+
+**核心特性**:
+- **技能ID系统**: 统一使用英文 skill_id 存储和检查技能
+- **前置条件**: 技能需要满足前置技能要求才能学习/升级
+- **技能点系统**: 升级需要消耗技能点
+- **技能分类**: 核心技能、战斗技能、被动技能、终极技能
+- **技能效果**: 每个技能有独特的效果，根据等级变化
+- **多语言支持**: 技能名称支持中英文双语
+- **序列化支持**: 支持保存和加载技能树状态
+
+**集成方式**:
+- 在 `HeroGame.__init__()` 中初始化技能树
+- 在 `select_hero_class()` 中初始化职业专属技能树
+- 在 `game_loop()` 中添加技能树UI入口（action 10）
+- 在 `show_hero_info()` 中显示技能树相关信息
+- 在 `learn_skill()` 中更新技能树状态
+- 在 `combat.py` 中统一使用 skill_id 检查技能
+- 在 `save_data.py` 中集成技能树数据序列化
+
+**核心方法**:
+```python
+# SkillTree类方法
+format_tree(show_all)          # 格式化显示技能树
+can_upgrade_skill(skill_id, skill_points)  # 检查升级条件
+upgrade_skill(skill_id, skill_points)  # 执行升级
+get_skill_effect(skill_id)          # 获取技能效果
+to_dict()                      # 序列化
+from_dict(data, lang)          # 反序列化
+```
+
 #### CombatSystem (combat.py)
 战斗系统，处理回合制战斗逻辑
 
@@ -297,10 +427,10 @@ to_dict() / from_dict()  # 序列化支持
 装备系统，生成和管理装备
 
 #### EventSystem (events.py)
-事件系统，触发随机事件
+事件系统，触发随机事件（已移除学习技能功能）
 
 #### NewbieVillage (newbie_village.py)
-新手村系统，教程和准备区域
+新手村系统，教程和准备区域（已移除技能学习训练场功能）
 
 ### 6. 扩展的游戏配置模块 (game_config.py) ⭐ UPDATED
 
@@ -892,5 +1022,119 @@ GameStatistics.from_dict() - 从字典创建统计
 
 ---
 
-*最后更新: 2026-01-07*
+## 技能树系统集成（2026-01-12）
+
+### 修改概述
+为了完全实现阶段三的Task 3.6要求，我们对技能系统进行了全面重构，完全移除了通用技能概念，改为完全依赖技能树系统。
+
+### 主要修改
+
+1. **CLASS_DEFINITIONS更新** (`src/hero/game_config.py`)
+   - 移除了所有职业的`skill_affinity`字段
+   - 保留`starting_skills`和`class_skills`字段
+   - 完全依赖SKILL_TREES配置
+
+2. **技能学习系统重构** (`src/hero/events.py`)
+   - 移除了通用技能列表（fireball, healing, combo, shield, focus）
+   - 修改`learn_skill()`方法，只从职业技能树中提供学习选项
+   - 学习技能时自动更新技能树状态
+
+3. **战斗系统技能检查** (`src/hero/combat.py`)
+   - 添加了`handle_skill_by_id()`方法，统一处理所有技能效果
+   - 修改`get_combat_action()`和`handle_skill_action()`方法
+   - 改为显示已学习的技能（从技能树获取）
+   - 所有技能检查改为使用skill_id
+
+4. **新手村系统更新** (`src/hero/newbie_village.py`)
+   - 修改技能检查逻辑，改为使用skill_id而不是技能名称
+   - 确保与技能树系统一致
+
+### 多语言支持
+- 确保所有技能在language.py中有多语言支持
+- 技能名称使用`skill_{skill_id}`键名
+- 技能描述使用`skill_{skill_id}_desc`键名
+
+### 技能树配置
+每个职业有完整的技能树配置，包括：
+- 核心技能（core）
+- 战斗技能（combat）
+- 被动技能（passive）
+- 终极技能（ultimate）
+
+每个技能包含：
+- 技能名称和描述
+- 最大等级
+- 每级技能点消耗
+- 每级效果
+- 前置技能要求
+- 职业要求
+
+---
+
+## 学习技能功能移除（2026-01-12）
+
+### 修改概述
+根据用户要求，移除了游戏中的学习技能功能，但保留了完整的技能树系统。这意味着玩家无法再通过事件、商人或新手村学习新技能，但已学习的技能和技能树系统仍然可以正常显示和使用。
+
+### 主要修改
+
+1. **事件系统修改** (`src/hero/events.py`)
+   - 移除了`learn_skill()`方法及其相关逻辑
+   - 移除了商人事件中的技能学习选项
+   - 移除了随机事件中触发技能学习的可能性
+
+2. **新手村系统修改** (`src/hero/newbie_village.py`)
+   - 移除了`learn_skill_training()`方法
+   - 移除了训练场中的技能学习选项
+   - 更新了训练场菜单，移除了学习技能相关选项
+
+3. **战斗系统修改** (`src/hero/combat.py`)
+   - 移除了升级时自动学习技能的逻辑
+   - 保留了技能使用功能，确保已学习的技能仍然可以正常使用
+
+4. **主控制器修改** (`src/hero/main.py`)
+   - 移除了主菜单中的技能学习选项
+   - 移除了随机事件中触发技能学习的可能性
+
+5. **测试文件更新**
+   - 删除了`test_events.py`中与学习技能相关的测试用例
+   - 删除了`test_newbie_village.py`中与技能学习训练场相关的测试用例
+   - 保留了技能树系统的相关测试
+
+### 保留的功能
+
+1. **技能树系统** (`src/hero/skill_tree.py`)
+   - 完整保留了技能树的数据结构和显示功能
+   - 保留了技能效果获取功能
+   - 保留了技能树的序列化和反序列化功能
+
+2. **技能配置** (`src/hero/game_config.py`)
+   - 保留了完整的`SKILL_TREES`配置
+   - 保留了技能相关的语言配置
+
+3. **技能使用功能**
+   - 保留了战斗中使用已学习技能的功能
+   - 保留了技能效果的计算和应用
+
+### 影响分析
+
+1. **游戏流程影响**
+   - 玩家无法再学习新技能，只能使用初始技能
+   - 商人事件不再提供技能学习选项
+   - 升级时不再自动学习新技能
+   - 新手村不再有技能学习训练场
+
+2. **平衡性影响**
+   - 游戏难度可能略有增加，因为玩家无法获取新技能
+   - 职业差异主要表现在初始技能和属性上
+   - 技能树系统仍然可以查看，但只能作为参考
+
+3. **存档兼容性**
+   - 旧的存档仍然可以正常加载
+   - 已学习的技能仍然可以正常使用
+   - 技能树状态会正确保存和加载
+
+---
+
+*最后更新: 2026-01-12*
 *维护者: Kevin*

@@ -13,112 +13,7 @@ class EventSystem:
     def __init__(self, game):
         self.game = game
 
-    def learn_skill(self, level_up=False):
-        """学习技能"""
-        from hero.game_config import CLASS_DEFINITIONS
-        
-        # 获取当前职业信息
-        class_info = CLASS_DEFINITIONS.get(self.game.hero_class, {})
-        class_skills = class_info.get("class_skills", [])
-        skill_affinity = class_info.get("skill_affinity", [])
-        
-        # 获取所有职业的专属技能
-        all_class_skills = []
-        for class_name, class_data in CLASS_DEFINITIONS.items():
-            all_class_skills.extend(class_data.get("class_skills", []))
-        
-        # 使用统一的多语言技能名称 - 只包含通用技能
-        all_skills = [
-            self.game.lang.get_text("fireball_skill"),
-            self.game.lang.get_text("healing_skill"),
-            self.game.lang.get_text("critical_skill"),
-            self.game.lang.get_text("lifesteal_skill"),
-            self.game.lang.get_text("dodge_skill"),
-            # 新增技能
-            self.game.lang.get_text("combo_skill"),
-            self.game.lang.get_text("shield_skill"),
-            self.game.lang.get_text("berserk_skill"),
-            self.game.lang.get_text("focus_skill")
-        ]
-        
-        # 添加当前职业的专属技能
-        for skill_key in class_skills:
-            skill_name = self.game.lang.get_text(f"{skill_key}_skill")
-            if skill_name not in all_skills:
-                all_skills.append(skill_name)
 
-        # 获取还未学习的技能，并根据职业亲和度排序
-        available_skills = [s for s in all_skills if s not in self.game.hero_skills]
-        
-        # 过滤掉其他职业的专属技能
-        def is_skill_allowed(skill_name):
-            # 检查技能是否属于某个职业的专属技能
-            for class_name, class_data in CLASS_DEFINITIONS.items():
-                if class_name == self.game.hero_class:
-                    continue  # 跳过当前职业
-                
-                for skill_key in class_data.get("class_skills", []):
-                    if skill_name == self.game.lang.get_text(f"{skill_key}_skill"):
-                        return False  # 这是其他职业的专属技能，不允许学习
-            
-            return True  # 允许学习
-        
-        available_skills = [s for s in available_skills if is_skill_allowed(s)]
-        
-        # 根据职业亲和度排序技能列表（亲和度高的在前）
-        def get_skill_priority(skill_name):
-            # 检查是否是当前职业的专属技能
-            for skill_key in class_skills:
-                if skill_name == self.game.lang.get_text(f"{skill_key}_skill"):
-                    return 0  # 职业专属技能最高优先级
-            
-            # 检查是否是职业亲和技能
-            for skill_key in skill_affinity:
-                if skill_name == self.game.lang.get_text(f"{skill_key}_skill"):
-                    return 1  # 职业亲和技能中等优先级
-            
-            return 2  # 普通技能最低优先级
-        
-        available_skills.sort(key=get_skill_priority)
-
-        if not available_skills:
-            print(f"\n{self.game.lang.get_text('all_skills_learned')}")
-            return
-
-        # 如果不是升级时学习，给玩家选择
-        if not level_up:
-            print()
-            print(f"{self.game.lang.get_text('mysterious_teacher')}")
-            for i, skill in enumerate(available_skills):
-                print(f"{i+1}. {skill}")
-
-            while True:
-                choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
-                try:
-                    skill_index = int(choice) - 1
-                    if 0 <= skill_index < len(available_skills):
-                        skill = available_skills[skill_index]
-                        self.game.hero_skills.append(skill)
-                        # 使用统一的多语言格式化函数处理技能括号
-                        bracket_start, bracket_end = self.game.lang.format_text("skill_brackets")
-                        print(f"\n{self.game.lang.get_text('learn_skill_success')}{bracket_start}{skill}{bracket_end}!")
-                        self.game.events_encountered.append(f"{self.game.lang.get_text('learned_skill_event')}{skill}")
-                        # 记录学习技能
-                        self.game.statistics.record_skill_learned(skill)
-                        break
-                    else:
-                        print(self.game.lang.get_text("invalid_choice"))
-                except ValueError:
-                    print(self.game.lang.get_text("invalid_choice"))
-        else:
-            # 升级时随机学习一个技能
-            skill = random.choice(available_skills)
-            self.game.hero_skills.append(skill)
-            # 使用统一的多语言格式化函数处理技能括号
-            bracket_start, bracket_end = self.game.lang.format_text("skill_brackets")
-            print(f"\n{self.game.lang.get_text('learn_skill_success')}{bracket_start}{skill}{bracket_end}!")
-            # 记录学习技能
-            self.game.statistics.record_skill_learned(skill)
 
     def merchant_event(self, gold_multiplier=1.0):
         """商人事件"""
@@ -146,9 +41,8 @@ class EventSystem:
         skill_teach_price = int(50 / gold_multiplier)
 
         print(f"1. {self.game.lang.get_text('buy_potion')} - {potions_price} {self.game.lang.get_text('gold')}")
-        print(f"2. {self.game.lang.get_text('learn_skill')} - {skill_teach_price} {self.game.lang.get_text('gold')}")
-        print(f"3. {self.game.lang.get_text('buy_equipment_short')} - {self.game.lang.get_text('equipment_shop')}")
-        print(f"4. {self.game.lang.get_text('leave_merchant')}")
+        print(f"2. {self.game.lang.get_text('buy_equipment_short')} - {self.game.lang.get_text('equipment_shop')}")
+        print(f"3. {self.game.lang.get_text('leave_merchant')}")
 
         while True:
             choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
@@ -175,19 +69,9 @@ class EventSystem:
                 input(f"{self.game.lang.get_text('continue_prompt')}")
                 break
             elif choice == "2":
-                if self.game.hero_gold >= skill_teach_price:
-                    self.game.hero_gold -= skill_teach_price
-                    # 记录花费金币
-                    self.game.statistics.record_gold_spent(skill_teach_price)
-                    self.learn_skill()
-                else:
-                    print(self.game.lang.get_text("not_enough_gold"))
-                input(f"{self.game.lang.get_text('continue_prompt')}")
-                break
-            elif choice == "3":
                 equip_system.equipment_shop(gold_multiplier)
                 break
-            elif choice == "4":
+            elif choice == "3":
                 break
             else:
                 print(self.game.lang.get_text("invalid_choice"))
@@ -442,9 +326,8 @@ class EventSystem:
         skill_teach_price = int(40 / gold_multiplier)
 
         print(f"1. {self.game.lang.get_text('buy_potion')} - {potions_price} {self.game.lang.get_text('gold')}")
-        print(f"2. {self.game.lang.get_text('learn_skill')} - {skill_teach_price} {self.game.lang.get_text('gold')}")
-        print(f"3. {self.game.lang.get_text('buy_equipment_short')} - {self.game.lang.get_text('equipment_shop')}")
-        print(f"4. {self.game.lang.get_text('leave_merchant')}")
+        print(f"2. {self.game.lang.get_text('buy_equipment_short')} - {self.game.lang.get_text('equipment_shop')}")
+        print(f"3. {self.game.lang.get_text('leave_merchant')}")
 
         while True:
             choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
@@ -471,19 +354,9 @@ class EventSystem:
                 input(f"{self.game.lang.get_text('continue_prompt')}")
                 break
             elif choice == "2":
-                if self.game.hero_gold >= skill_teach_price:
-                    self.game.hero_gold -= skill_teach_price
-                    # 记录花费金币
-                    self.game.statistics.record_gold_spent(skill_teach_price)
-                    self.learn_skill()
-                else:
-                    print(self.game.lang.get_text("not_enough_gold"))
-                input(f"{self.game.lang.get_text('continue_prompt')}")
-                break
-            elif choice == "3":
                 equip_system.equipment_shop(gold_multiplier * 1.2)  # 装备有折扣但不如神秘商人
                 break
-            elif choice == "4":
+            elif choice == "3":
                 break
             else:
                 print(self.game.lang.get_text("invalid_choice"))

@@ -47,8 +47,8 @@ SKILL_TREES = {
     "warrior": {
         # 战士核心技能
         "power_strike": {
-            "name": "力量打击",
-            "description": "基础攻击技能，造成额外伤害",
+            "name_key": "skill_power_strike",
+            "description_key": "skill_power_strike_desc",
             "category": "core",
             "max_level": 5,
             "cost_per_level": 1,
@@ -57,8 +57,8 @@ SKILL_TREES = {
             "class_requirement": "warrior"
         },
         "shield_bash": {
-            "name": "盾击",
-            "description": "用盾牌攻击敌人并降低其攻击力",
+            "name_key": "skill_shield_bash",
+            "description_key": "skill_shield_bash_desc",
             "category": "combat",
             "max_level": 5,
             "cost_per_level": 1,
@@ -67,8 +67,8 @@ SKILL_TREES = {
             "class_requirement": "warrior"
         },
         "battle_cry": {
-            "name": "战吼",
-            "description": "提升自身攻击和防御力",
+            "name_key": "skill_battle_cry",
+            "description_key": "skill_battle_cry_desc",
             "category": "combat",
             "max_level": 3,
             "cost_per_level": 2,
@@ -77,8 +77,8 @@ SKILL_TREES = {
             "class_requirement": "warrior"
         },
         "iron_will": {
-            "name": "钢铁意志",
-            "description": "永久提升防御力和生命值上限",
+            "name_key": "skill_iron_will",
+            "description_key": "skill_iron_will_desc",
             "category": "passive",
             "max_level": 5,
             "cost_per_level": 2,
@@ -87,8 +87,8 @@ SKILL_TREES = {
             "class_requirement": "warrior"
         },
         "counter_attack": {
-            "name": "反击",
-            "description": "受击时有概率反击敌人",
+            "name_key": "skill_counter_attack",
+            "description_key": "skill_counter_attack_desc",
             "category": "passive",
             "max_level": 3,
             "cost_per_level": 2,
@@ -97,8 +97,8 @@ SKILL_TREES = {
             "class_requirement": "warrior"
         },
         "berserker_rage": {
-            "name": "狂暴之怒",
-            "description": "进入狂暴状态，大幅提升攻击力但降低防御",
+            "name_key": "skill_berserker_rage",
+            "description_key": "skill_berserker_rage_desc",
             "category": "ultimate",
             "max_level": 3,
             "cost_per_level": 3,
@@ -110,8 +110,8 @@ SKILL_TREES = {
     "mage": {
         # 法师核心技能
         "fireball": {
-            "name": "火球术",
-            "description": "发射火球攻击敌人",
+            "name_key": "skill_fireball",
+            "description_key": "skill_fireball_desc",
             "category": "core",
             "max_level": 5,
             "cost_per_level": 1,
@@ -120,8 +120,8 @@ SKILL_TREES = {
             "class_requirement": "mage"
         },
         "frost_armor": {
-            "name": "冰霜护甲",
-            "description": "提升防御力并反弹部分伤害",
+            "name_key": "skill_frost_armor",
+            "description_key": "skill_frost_armor_desc",
             "category": "combat",
             "max_level": 5,
             "cost_per_level": 1,
@@ -130,8 +130,8 @@ SKILL_TREES = {
             "class_requirement": "mage"
         },
         "mana_burn": {
-            "name": "法力燃烧",
-            "description": "燃烧敌人法力值并造成额外伤害",
+            "name_key": "skill_mana_burn",
+            "description_key": "skill_mana_burn_desc",
             "category": "combat",
             "max_level": 3,
             "cost_per_level": 2,
@@ -140,8 +140,8 @@ SKILL_TREES = {
             "class_requirement": "mage"
         },
         "meditation": {
-            "name": "冥想",
-            "description": "每回合恢复额外法力值",
+            "name_key": "skill_meditation",
+            "description_key": "skill_meditation_desc",
             "category": "passive",
             "max_level": 5,
             "cost_per_level": 2,
@@ -150,8 +150,8 @@ SKILL_TREES = {
             "class_requirement": "mage"
         },
         "arcane_power": {
-            "name": "奥术之力",
-            "description": "永久提升法术强度和最大法力值",
+            "name_key": "skill_arcane_power",
+            "description_key": "skill_arcane_power_desc",
             "category": "passive",
             "max_level": 3,
             "cost_per_level": 2,
@@ -160,8 +160,8 @@ SKILL_TREES = {
             "class_requirement": "mage"
         },
         "meteor": {
-            "name": "陨石术",
-            "description": "召唤陨石攻击敌人，造成大量伤害",
+            "name_key": "skill_meteor",
+            "description_key": "skill_meteor_desc",
             "category": "ultimate",
             "max_level": 3,
             "cost_per_level": 3,
@@ -173,8 +173,8 @@ SKILL_TREES = {
     "assassin": {
         # 刺客核心技能
         "backstab": {
-            "name": "背刺",
-            "description": "从背后攻击敌人造成额外伤害",
+            "name_key": "skill_backstab",
+            "description_key": "skill_backstab_desc",
             "category": "core",
             "max_level": 5,
             "cost_per_level": 1,
@@ -183,8 +183,8 @@ SKILL_TREES = {
             "class_requirement": "assassin"
         },
         "shadow_strike": {
-            "name": "影袭",
-            "description": "快速连续攻击敌人多次",
+            "name_key": "skill_shadow_strike",
+            "description_key": "skill_shadow_strike_desc",
             "category": "combat",
             "max_level": 5,
             "cost_per_level": 1,
@@ -193,8 +193,8 @@ SKILL_TREES = {
             "class_requirement": "assassin"
         },
         "poison_blade": {
-            "name": "毒刃",
-            "description": "为武器涂毒，攻击时造成持续伤害",
+            "name_key": "skill_poison_blade",
+            "description_key": "skill_poison_blade_desc",
             "category": "combat",
             "max_level": 3,
             "cost_per_level": 2,
@@ -203,8 +203,8 @@ SKILL_TREES = {
             "class_requirement": "assassin"
         },
         "evasion": {
-            "name": "闪避",
-            "description": "提升闪避率和暴击率",
+            "name_key": "skill_evasion",
+            "description_key": "skill_evasion_desc",
             "category": "passive",
             "max_level": 5,
             "cost_per_level": 2,
@@ -213,8 +213,8 @@ SKILL_TREES = {
             "class_requirement": "assassin"
         },
         "stealth": {
-            "name": "潜行",
-            "description": "提升第一回合伤害和闪避率",
+            "name_key": "skill_stealth",
+            "description_key": "skill_stealth_desc",
             "category": "passive",
             "max_level": 3,
             "cost_per_level": 2,
@@ -223,8 +223,8 @@ SKILL_TREES = {
             "class_requirement": "assassin"
         },
         "shadow_clone": {
-            "name": "影分身",
-            "description": "创建影分身协助攻击",
+            "name_key": "skill_shadow_clone",
+            "description_key": "skill_shadow_clone_desc",
             "category": "ultimate",
             "max_level": 3,
             "cost_per_level": 3,
@@ -651,13 +651,12 @@ CLASS_DEFINITIONS = {
             "max_hp": 1.2    # 升级时血量上限+20%
         },
         "starting_skills": ["power_strike"],  # 初始技能
-        "skill_affinity": ["power_strike", "shield_bash", "berserk", "whirlwind", "battle_cry"],  # 容易学习的技能
         "equipment_preference": {
             "weapon": "sword",
             "armor": "heavy_armor",
             "accessory": "shield"
         },
-        "class_skills": ["shield_bash", "battle_cry"],  # 职业专属技能
+        "class_skills": ["shield_bash", "battle_cry", "iron_will", "counter_attack", "berserker_rage"],  # 职业专属技能
         "passive_effects": {
             "damage_reduction": 0.1,  # 受到伤害减少10%
             "hp_regen_per_turn": 0.05,  # 每回合恢复5%最大生命值
@@ -678,13 +677,12 @@ CLASS_DEFINITIONS = {
             "max_hp": 0.9    # 升级时血量上限+9%
         },
         "starting_skills": ["fireball"],  # 初始技能
-        "skill_affinity": ["fireball", "frost_armor", "teleport", "meteor"],  # 容易学习的技能
         "equipment_preference": {
             "weapon": "staff",
             "armor": "robe",
             "accessory": "amulet"
         },
-        "class_skills": ["fireball", "frost_armor"],  # 职业专属技能
+        "class_skills": ["frost_armor", "mana_burn", "meditation", "arcane_power", "meteor"],  # 职业专属技能
         "passive_effects": {
             "spell_power": 0.2,  # 法术伤害提升20%
             "mana_regen": 5,  # 每回合恢复5点法力值
@@ -706,13 +704,12 @@ CLASS_DEFINITIONS = {
             "max_hp": 1.0    # 升级时血量上限+10%
         },
         "starting_skills": ["backstab"],  # 初始技能
-        "skill_affinity": ["backstab", "poison_blade", "shadow_step", "critical_strike", "shadow_strike"],  # 容易学习的技能
         "equipment_preference": {
             "weapon": "dagger",
             "armor": "leather_armor",
             "accessory": "ring"
         },
-        "class_skills": ["backstab", "shadow_strike"],  # 职业专属技能
+        "class_skills": ["shadow_strike", "poison_blade", "evasion", "stealth", "shadow_clone"],  # 职业专属技能
         "passive_effects": {
             "crit_rate": 0.15,  # 暴击率15%
             "dodge_chance": 0.2,  # 闪避率20%

@@ -37,6 +37,8 @@ class TestEventSystem(unittest.TestCase):
         self.mock_game.hero_skills = []
         self.mock_game.inventory = []
         self.mock_game.events_encountered = []
+        self.mock_game.hero_class = "warrior"  # 设置职业
+        self.mock_game.skill_tree = None  # 初始化技能树
         self.mock_game.lang = Mock()
         self.mock_game.lang.get_text.return_value = "test_text"
         self.mock_game.lang.format_text.return_value = ("【", "】")
@@ -55,7 +57,7 @@ class TestEventSystem(unittest.TestCase):
     def test_event_system_initialization(self):
         """测试事件系统初始化"""
         self.assertEqual(self.event_system.game, self.mock_game)
-        self.assertTrue(hasattr(self.event_system, 'learn_skill'))
+        self.assertTrue(hasattr(self.event_system, 'merchant_event'))
         self.assertTrue(hasattr(self.event_system, 'merchant_event'))
         self.assertTrue(hasattr(self.event_system, 'mysterious_merchant'))
         self.assertTrue(hasattr(self.event_system, 'treasure_chest_with_equipment'))
@@ -107,67 +109,7 @@ class TestEventSystem(unittest.TestCase):
         # 药剂仍然被消耗
         self.assertEqual(self.mock_game.hero_potions, initial_potions - 1)
     
-    def test_learn_skill_with_available_skills(self):
-        """测试有可用技能时学习"""
-        # 设置已学习一个技能
-        self.mock_game.hero_skills = ["火球术"]
-        
-        # 设置get_text返回不同技能名称
-        skill_names = ["火球术", "治疗术", "暴击技能", "生命偷取", "闪避技能"]
-        self.mock_game.lang.get_text.side_effect = lambda x: skill_names[0] if "fireball" in x else (skill_names[1] if "healing" in x else skill_names[2] if "critical" in x else skill_names[3] if "lifesteal" in x else skill_names[4])
-        
-        captured_output = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured_output
-        
-        try:
-            with patch('builtins.input', return_value='1'):  # 选择第一个可用技能
-                self.event_system.learn_skill()
-        finally:
-            sys.stdout = old_stdout
-        
-        # 验证技能被学习
-        self.assertEqual(len(self.mock_game.hero_skills), 2)
-        # 验证事件被记录
-        self.assertEqual(len(self.mock_game.events_encountered), 1)
-    
-    def test_learn_skill_no_available_skills(self):
-        """测试没有可用技能时学习"""
-        # 设置已学习所有技能
-        self.mock_game.hero_skills = ["火球术", "治疗术", "暴击技能", "生命偷取", "闪避技能"]
-        
-        # 当没有可用技能时，方法会直接返回
-        # 由于实际代码会调用input()，我们只测试方法存在性和接口
-        # 这个测试主要验证learn_skill方法可以被调用
-        self.assertTrue(callable(self.event_system.learn_skill))
-        
-        # 验证技能列表没有变化（因为已经学习了所有技能）
-        initial_skills = list(self.mock_game.hero_skills)
-        self.event_system.learn_skill(level_up=True)  # 升级模式，直接选择
-        # 升级模式下会随机选择一个技能，但我们已经全部学会了
-        # 所以技能数量应该不变或增加一个重复（如果允许重复）
-    
-    def test_learn_skill_on_level_up(self):
-        """测试升级时学习技能"""
-        # 设置一个可用技能
-        self.mock_game.hero_skills = ["火球术"]
-        
-        skill_names = ["火球术", "治疗术", "暴击技能", "生命偷取", "闪避技能"]
-        self.mock_game.lang.get_text.side_effect = lambda x: skill_names[0] if "fireball" in x else (skill_names[1] if "healing" in x else skill_names[2] if "critical" in x else skill_names[3] if "lifesteal" in x else skill_names[4])
-        
-        # 设置random.choice
-        with patch('random.choice', return_value="治疗术"):
-            captured_output = StringIO()
-            old_stdout = sys.stdout
-            sys.stdout = captured_output
-            
-            try:
-                self.event_system.learn_skill(level_up=True)
-            finally:
-                sys.stdout = old_stdout
-        
-        # 验证随机技能被学习
-        self.assertIn("治疗术", self.mock_game.hero_skills)
+
     
     def test_merchant_event_exists(self):
         """测试商人事件存在"""

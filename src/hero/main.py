@@ -336,9 +336,9 @@ class HeroGame:
                     # 初始化技能树系统
                     self.skill_tree = SkillTree(selected_class, self.lang)
                     
-                    # 添加职业初始技能
+                    # 添加职业初始技能（使用 skill_id）
                     for skill in class_info['starting_skills']:
-                        self.hero_skills.append(self.lang.get_text(f"{skill}_skill"))
+                        self.hero_skills.append(skill)  # 存储 skill_id 而不是技能名称
                         # 学习初始技能
                         if skill in self.skill_tree.skill_nodes:
                             self.skill_tree.learned_skills[skill] = 1
@@ -417,9 +417,40 @@ class HeroGame:
         print(f"🛡️  {self.lang.get_text('armor')}{self.lang.get_text('item_separator')}{armor_name}")
         print(f"💍  {self.lang.get_text('accessory')}{self.lang.get_text('item_separator')}{accessory_name}")
 
-        # 显示技能
+        # 显示技能（使用 skill_id 从 hero_skills 获取技能名称和等级）
         if self.hero_skills:
-            print(f"🔥  {self.lang.get_text('skills')}{self.lang.get_text('item_separator')}{', '.join(self.hero_skills)}")
+            skill_info = []
+            # 按技能类别和优先级排序
+            from hero.game_config import SKILL_TREES
+            def get_skill_priority(skill_id):
+                if not self.hero_class or self.hero_class not in SKILL_TREES:
+                    return 0
+                skill_category = SKILL_TREES[self.hero_class].get(skill_id, {}).get("category", "core")
+                category_priority = {"core": 0, "combat": 1, "passive": 2, "ultimate": 3}
+                return category_priority.get(skill_category, 0)
+            
+            # 对技能列表进行排序
+            sorted_skills = sorted(self.hero_skills, key=get_skill_priority)
+            
+            for skill_id in sorted_skills:
+                # 获取技能名称
+                # 检查技能ID是否已经包含"_skill"后缀
+                if skill_id.endswith("_skill"):
+                    skill_name_key = skill_id
+                else:
+                    skill_name_key = f"{skill_id}_skill"
+                skill_name = self.lang.get_text(skill_name_key)
+                # 从技能树获取技能等级
+                skill_level = 0
+                if self.skill_tree and skill_id in self.skill_tree.learned_skills:
+                    skill_level = self.skill_tree.learned_skills[skill_id]
+                # 显示技能等级
+                if skill_level > 0:
+                    skill_info.append(f"{skill_name} Lv.{skill_level}")
+                else:
+                    skill_info.append(skill_name)
+                
+            print(f"🔥  {self.lang.get_text('skills')}{self.lang.get_text('item_separator')}{', '.join(skill_info)}")
         print()
 
     def draw_map(self):
@@ -799,7 +830,12 @@ class HeroGame:
                 print(f"\n{self.lang.get_text('select_skill_to_upgrade')}:")
                 for i, skill_id in enumerate(upgradeable_skills, 1):
                     skill_node = self.skill_tree.skill_nodes[skill_id]
-                    skill_name = self.lang.get_text(f"skill_{skill_id}")
+                    # 检查技能ID是否已经包含"_skill"后缀
+                    if skill_id.endswith("_skill"):
+                        skill_name_key = skill_id
+                    else:
+                        skill_name_key = f"skill_{skill_id}"
+                    skill_name = self.lang.get_text(skill_name_key)
                     cost = skill_node.cost_per_level
                     print(f"{i}. {skill_name} (Lv.{skill_node.current_level}/{skill_node.max_level}) - {self.lang.get_text('skill_points')}: {cost}")
                 
@@ -811,7 +847,15 @@ class HeroGame:
                     
                     if success:
                         self.skill_points = remaining_points
-                        skill_name = self.lang.get_text(f"skill_{selected_skill_id}")
+                        # 如果技能不在hero_skills列表中，则添加
+                        if selected_skill_id not in self.hero_skills:
+                            self.hero_skills.append(selected_skill_id)
+                        # 检查技能ID是否已经包含"_skill"后缀
+                        if selected_skill_id.endswith("_skill"):
+                            skill_name_key = selected_skill_id
+                        else:
+                            skill_name_key = f"skill_{selected_skill_id}"
+                        skill_name = self.lang.get_text(skill_name_key)
                         print(f"\n{self.lang.get_text('skill_upgrade_success')} - {skill_name}")
                         input(self.lang.get_text('continue_prompt'))
                     else:
@@ -897,12 +941,9 @@ class HeroGame:
                 self.handle_quest_completions(completed_quests)
                 
                 self.show_hero_info()
-            elif event_num <= 13:  # 遇到商人
+            elif event_num <= 15:  # 遇到商人
                 self.statistics.record_event_triggered("merchant")
                 self.event_system.merchant_event(gold_multiplier)
-            elif event_num <= 15:  # 获得技能
-                self.statistics.record_event_triggered("learn_skill")
-                self.event_system.learn_skill()
             elif event_num <= 17:  # 发现药剂
                 self.hero_potions += 1
                 print("🧪 " + self.lang.get_text("find_potion"))

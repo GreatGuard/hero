@@ -13,6 +13,15 @@ class CombatSystem:
 
     def __init__(self, game):
         self.game = game
+    
+    def get_skill_name(self, skill_id):
+        """获取技能名称，处理多语言问题"""
+        # 检查技能ID是否已经包含"_skill"后缀
+        if skill_id.endswith("_skill"):
+            skill_name_key = skill_id
+        else:
+            skill_name_key = f'{skill_id}_skill'
+        return self.game.lang.get_text(skill_name_key)
 
     def apply_class_passives(self):
         """应用职业被动效果"""
@@ -44,6 +53,237 @@ class CombatSystem:
                 self.game.special_effects["crit_rate"] += passive_effects["crit_rate"]
             if passive_effects.get("dodge_chance", 0) > 0:
                 self.game.special_effects["dodge_rate"] += passive_effects["dodge_chance"]
+
+    def handle_skill_by_id(self, skill_id, monster_name, monster_hp, combat_round, monster_defense=0):
+        """统一处理技能效果，根据skill_id处理所有技能"""
+        from .game_config import CLASS_DEFINITIONS, SKILL_TREES
+        
+        # 获取技能名称用于显示
+        skill_name = self.get_skill_name(skill_id)
+        
+        # 处理药剂
+        if skill_id == "use_potion":
+            if self.game.hero_potions > 0:
+                heal_amount = random.randint(20, 40)
+                self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
+                self.game.hero_potions -= 1
+                print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
+                # 记录使用药剂
+                self.game.statistics.record_potion_used()
+            else:
+                print(self.game.lang.get_text("no_potion"))
+            return monster_hp
+        
+        # 处理职业技能
+        class_info = CLASS_DEFINITIONS.get(self.game.hero_class, {})
+        class_skills = class_info.get("class_skills", [])
+        
+        if skill_id in class_skills:
+            return self.handle_class_skill(skill_id, monster_name, monster_hp, combat_round)
+        
+        # 获取技能效果
+        if self.game.skill_tree and skill_id in self.game.skill_tree.skill_nodes:
+            skill_node = self.game.skill_tree.skill_nodes[skill_id]
+            skill_level = self.game.skill_tree.learned_skills.get(skill_id, 0)
+            skill_data = SKILL_TREES.get(self.game.hero_class, {}).get(skill_id, {})
+            skill_category = skill_data.get("category", "core")
+            
+            # 处理不同类别的技能
+            if skill_category == "combat":
+                return self._handle_combat_skill(skill_id, skill_node, skill_level, monster_name, monster_hp, combat_round, monster_defense)
+            elif skill_category == "passive":
+                return self._handle_passive_skill(skill_id, skill_node, skill_level, monster_name, monster_hp, combat_round, monster_defense)
+            elif skill_category == "ultimate":
+                return self._handle_ultimate_skill(skill_id, skill_node, skill_level, monster_name, monster_hp, combat_round, monster_defense)
+            else:  # core技能
+                return self._handle_core_skill(skill_id, skill_node, skill_level, monster_name, monster_hp, combat_round, monster_defense)
+        
+        # 对于未知技能，不造成伤害
+        print(self.game.lang.get_text("invalid_action"))
+        return monster_hp
+
+    def _handle_core_skill(self, skill_id, skill_node, skill_level, monster_name, monster_hp, combat_round, monster_defense=0):
+        """处理核心技能"""
+        from .game_config import SKILL_TREES
+        
+        skill_data = SKILL_TREES.get(self.game.hero_class, {}).get(skill_id, {})
+        skill_name = self.get_skill_name(skill_id)
+        
+        # 计算基础伤害
+        base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+        
+        # 应用技能效果
+        effects_per_level = skill_data.get("effects_per_level", [])
+        if effects_per_level:
+            # 核心技能通常是增加基础属性
+            effect_value = effects_per_level[0] * skill_level
+            if skill_id == "power_strike":  # 战士力量打击
+                base_damage += int(effect_value)
+            elif skill_id == "fireball":    # 法师火球术
+                base_damage = int(base_damage * 1.2) + int(effect_value)
+            elif skill_id == "backstab":    # 刺客背刺
+                backstab_bonus = int(base_damage * (0.2 + effect_value))
+                base_damage += backstab_bonus
+        
+        # 应用暴击效果
+        if random.random() < self.game.special_effects["crit_rate"]:
+            hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
+            print(f"💥 {self.game.lang.get_text('critical_hit')} {skill_name} {monster_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
+        else:
+            hero_damage = base_damage
+            print(f"⚔️ {skill_name} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}!")
+        
+        monster_hp -= hero_damage
+        
+        # 记录技能使用
+        self.game.statistics.record_skill_used(skill_name)
+        return monster_hp
+
+    def _handle_combat_skill(self, skill_id, skill_node, skill_level, monster_name, monster_hp, combat_round, monster_defense=0):
+        """处理战斗技能"""
+        from .game_config import SKILL_TREES
+        
+        skill_data = SKILL_TREES.get(self.game.hero_class, {}).get(skill_id, {})
+        skill_name = self.get_skill_name(skill_id)
+        effects_per_level = skill_data.get("effects_per_level", [])
+        
+        if skill_id == "shield_bash":  # 战士盾击
+            base_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - monster_defense)
+            
+            # 应用技能效果
+            if effects_per_level:
+                damage_multiplier = effects_per_level[0]
+                attack_reduction = effects_per_level[1] * skill_level
+                hero_damage = int(base_damage * damage_multiplier)
+                
+                # 降低敌人攻击力
+                self.game.enemy_attack_debuff = attack_reduction
+                print(f"🔻 {monster_name} {self.game.lang.get_text('attack_reduced_percent')} {int(attack_reduction * 100)}%!")
+            
+            print(f"🛡️ {skill_name} {hero_damage}{self.game.lang.get_text('point_damage')}!")
+            monster_hp -= hero_damage
+            
+        elif skill_id == "frost_armor":  # 法师冰霜护甲
+            if effects_per_level:
+                duration = effects_per_level[0]
+                defense_multiplier = effects_per_level[1] * skill_level
+                self.game.frost_armor_active = duration
+                print(f"❄️ {skill_name} {self.game.lang.get_text('defense_reduced')} {int(defense_multiplier * 100)}%!")
+            
+        elif skill_id == "shadow_strike":  # 刺客影袭
+            total_damage = 0
+            base_hits = 2
+            
+            if effects_per_level:
+                damage_multiplier = effects_per_level[0]
+                extra_hits = int(effects_per_level[1] * skill_level)
+                hits = base_hits + extra_hits
+            
+            for i in range(hits):
+                base_damage = max(1, int(random.randint(self.game.hero_attack // 3, self.game.hero_attack // 2)) - monster_defense)
+                hero_damage = int(base_damage * damage_multiplier)
+                
+                # 高暴击率
+                if random.random() < (self.game.special_effects["crit_rate"] + 0.2):
+                    hero_damage = int(hero_damage * 2)
+                    print(f"💥 {skill_name} {hero_damage}{self.game.lang.get_text('point_damage')}!")
+                else:
+                    print(f"🔪 {skill_name} {hero_damage}{self.game.lang.get_text('point_damage')}!")
+                
+                monster_hp -= hero_damage
+                total_damage += hero_damage
+                
+                if monster_hp <= 0:
+                    break
+            
+            print(f"⚔️ {self.game.lang.get_text('shadow_strike_hits')} {total_damage}{self.game.lang.get_text('point_damage')}!")
+        
+        # 记录技能使用
+        self.game.statistics.record_skill_used(skill_name)
+        return monster_hp
+
+    def _handle_passive_skill(self, skill_id, skill_node, skill_level, monster_name, monster_hp, combat_round, monster_defense=0):
+        """处理被动技能"""
+        from .game_config import SKILL_TREES
+        
+        skill_data = SKILL_TREES.get(self.game.hero_class, {}).get(skill_id, {})
+        skill_name = self.get_skill_name(skill_id)
+        effects_per_level = skill_data.get("effects_per_level", [])
+        
+        if skill_id == "iron_will":  # 战士钢铁意志
+            if effects_per_level:
+                defense_bonus = effects_per_level[0] * skill_level
+                hp_bonus = effects_per_level[1] * skill_level
+                
+                # 永久增加防御和生命值上限
+                self.game.base_defense += defense_bonus
+                self.game.base_max_hp += hp_bonus
+                self.game.update_attributes()
+                print(f"🛡️ {skill_name} {self.game.lang.get_text('defense_reduced')} {defense_bonus}, {self.game.lang.get_text('max_hp')} +{hp_bonus}!")
+        
+        elif skill_id == "counter_attack":  # 战士反击
+            if effects_per_level:
+                counter_rate = effects_per_level[0] * skill_level
+                self.game.special_effects["counter_attack_rate"] += counter_rate
+                print(f"🔄 {skill_name} {self.game.lang.get_text('counter_attack_rate')} +{int(counter_rate * 100)}%!")
+        
+        elif skill_id == "meditation":  # 法师冥想
+            if effects_per_level:
+                mana_regen = effects_per_level[0] * skill_level
+                self.game.special_effects["mana_regen"] += mana_regen
+                print(f"✨ {skill_name} {self.game.lang.get_text('mana_regen')} +{mana_regen}!")
+        
+        elif skill_id == "arcane_power":  # 法师奥术能量
+            if effects_per_level:
+                spell_power = effects_per_level[0] * skill_level
+                max_mana = effects_per_level[1] * skill_level
+                self.game.special_effects["spell_power"] += spell_power
+                self.game.class_max_mana += max_mana
+                print(f"✨ {skill_name} {self.game.lang.get_text('spell_power')} +{int(spell_power * 100)}%, {self.game.lang.get_text('max_mana')} +{max_mana}!")
+        
+        # 被动技能不造成伤害，只应用效果
+        print(f"✨ {skill_name} {self.game.lang.get_text('passive_skill_activated')}!")
+        
+        # 记录技能使用
+        self.game.statistics.record_skill_used(skill_name)
+        return monster_hp
+
+    def _handle_ultimate_skill(self, skill_id, skill_node, skill_level, monster_name, monster_hp, combat_round, monster_defense=0):
+        """处理终极技能"""
+        from .game_config import SKILL_TREES
+        
+        skill_data = SKILL_TREES.get(self.game.hero_class, {}).get(skill_id, {})
+        skill_name = self.get_skill_name(skill_id)
+        effects_per_level = skill_data.get("effects_per_level", [])
+        
+        if skill_id == "berserker_rage":  # 战士狂暴之怒
+            if effects_per_level:
+                duration = effects_per_level[0]
+                attack_multiplier = effects_per_level[1] * skill_level
+                defense_reduction = effects_per_level[2]
+                
+                self.game.berserk_turns = duration
+                self.game.special_effects["berserk_attack"] = attack_multiplier
+                self.game.special_effects["berserk_defense"] = defense_reduction
+                
+                print(f"🔥 {skill_name} {self.game.lang.get_text('berserk_activated')}!")
+                print(f"⚔️ {self.game.lang.get_text('attack_reduced_percent')} {int(attack_multiplier * 100)}%!")
+                print(f"🛡️ {self.game.lang.get_text('defense_reduced')} {int(defense_reduction * 100)}%!")
+        
+        elif skill_id == "meteor":  # 法师陨石术
+            base_damage = max(1, random.randint(self.game.hero_attack, int(self.game.hero_attack * 2)) - monster_defense)
+            
+            if effects_per_level:
+                damage_multiplier = effects_per_level[0] * skill_level
+                hero_damage = int(base_damage * damage_multiplier)
+                
+                # 陨石术造成巨大伤害
+                print(f"🌋 {skill_name} {hero_damage}{self.game.lang.get_text('point_damage')}!")
+                monster_hp -= hero_damage
+        
+        # 记录技能使用
+        self.game.statistics.record_skill_used(skill_name)
+        return monster_hp
 
     def handle_class_skill(self, skill_key, monster_name, monster_hp, combat_round):
         """处理职业技能"""
@@ -217,20 +457,44 @@ class CombatSystem:
         class_info = CLASS_DEFINITIONS.get(self.game.hero_class, {})
         class_skills = class_info.get("class_skills", [])
         
-        # 显示职业专属技能（已学习的）
-        for skill_key in class_skills:
-            skill_name = self.game.lang.get_text(f"{skill_key}_skill")
-            if skill_name in self.game.hero_skills:
-                print(f"{option_index}. {self.game.lang.get_text(f'cast_{skill_key}')}")
-                option_index += 1
-        
-        # 显示通用技能（已学习的技能）
-        general_skills = ["fireball", "healing", "combo", "shield", "berserk", "focus"]
-        
-        for skill_key in general_skills:
-            skill_name = self.game.lang.get_text(f"{skill_key}_skill")
-            if skill_name in self.game.hero_skills and skill_key not in class_skills:
-                print(f"{option_index}. {self.game.lang.get_text(f'cast_{skill_key}')}")
+        # 显示已学习的技能（从技能树中获取）
+        if self.game.skill_tree:
+            # 按技能类别排序显示
+            learned_skills = []
+            for skill_id, level in self.game.skill_tree.learned_skills.items():
+                if level > 0:
+                    learned_skills.append(skill_id)
+            
+            # 按技能类别排序
+            def get_skill_priority(skill_id):
+                from .game_config import SKILL_TREES
+                skill_data = SKILL_TREES.get(self.game.hero_class, {}).get(skill_id, {})
+                category = skill_data.get("category", "core")
+                
+                if category == "core":
+                    return 0
+                elif category == "combat":
+                    return 1
+                elif category == "passive":
+                    return 2
+                else:  # ultimate
+                    return 3
+            
+            learned_skills.sort(key=get_skill_priority)
+            
+            # 显示技能
+            for skill_id in learned_skills:
+                # 获取技能名称
+                skill_name = self.get_skill_name(skill_id)
+                
+                # 获取技能等级
+                skill_level = self.game.skill_tree.learned_skills.get(skill_id, 0)
+                
+                # 显示技能名称和等级
+                if skill_level > 0:
+                    print(f"{option_index}. {skill_name} (Lv.{skill_level})")
+                else:
+                    print(f"{option_index}. {skill_name}")
                 option_index += 1
 
         return input(f"{self.game.lang.get_text('enter_choice')} (1): ").strip()
@@ -244,29 +508,38 @@ class CombatSystem:
         
         # 构建技能映射表
         skill_mapping = {
-            "2": "use_potion",
-            "3": "fireball",
-            "4": "healing", 
-            "5": "combo",
-            "6": "shield",
-            "7": "berserk",
-            "8": "focus"
+            "2": "use_potion"
         }
         
-        # 动态添加职业技能到映射表
+        # 动态添加已学习的技能到映射表
         option_index = 3  # 从第3个选项开始是技能
-        for skill_key in class_skills:
-            skill_name = self.game.lang.get_text(f"{skill_key}_skill")
-            if skill_name in self.game.hero_skills:
-                skill_mapping[str(option_index)] = skill_key
-                option_index += 1
-        
-        # 添加通用技能
-        general_skills = ["fireball", "healing", "combo", "shield", "berserk", "focus"]
-        for skill_key in general_skills:
-            skill_name = self.game.lang.get_text(f"{skill_key}_skill")
-            if skill_name in self.game.hero_skills and skill_key not in class_skills:
-                skill_mapping[str(option_index)] = skill_key
+        if self.game.skill_tree:
+            # 按技能类别排序显示
+            learned_skills = []
+            for skill_id, level in self.game.skill_tree.learned_skills.items():
+                if level > 0:
+                    learned_skills.append(skill_id)
+            
+            # 按技能类别排序
+            def get_skill_priority(skill_id):
+                from .game_config import SKILL_TREES
+                skill_data = SKILL_TREES.get(self.game.hero_class, {}).get(skill_id, {})
+                category = skill_data.get("category", "core")
+                
+                if category == "core":
+                    return 0
+                elif category == "combat":
+                    return 1
+                elif category == "passive":
+                    return 2
+                else:  # ultimate
+                    return 3
+            
+            learned_skills.sort(key=get_skill_priority)
+            
+            # 添加技能到映射表
+            for skill_id in learned_skills:
+                skill_mapping[str(option_index)] = skill_id
                 option_index += 1
         
         # 处理技能
@@ -287,156 +560,9 @@ class CombatSystem:
                     return self.handle_normal_attack(monster_name, monster_hp, combat_round)
                 return monster_hp
             
-            # 处理职业技能
-            elif skill_key in class_skills:
-                return self.handle_class_skill(skill_key, monster_name, monster_hp, combat_round)
-            
-            # 处理通用技能
-            elif skill_key == "fireball":
-                fireball_skill = self.game.lang.get_text('fireball_skill')
-                if fireball_skill in self.game.hero_skills:
-                    base_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.8))
-                    base_damage = int(base_damage * (1.0 + self.game.special_effects["spell_power"]))
-                    
-                    # 应用暴击效果
-                    if random.random() < self.game.special_effects["crit_rate"]:
-                        hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
-                        print(f"🔥💥 {self.game.lang.get_text('fireball_critical')} {monster_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
-                    else:
-                        hero_damage = base_damage
-                        print(f"🔥 {self.game.lang.get_text('fireball')} {monster_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
-                    
-                    # 应用元素伤害（火球术应该增强火元素伤害）
-                    if self.game.special_effects["fire_damage"] > 0:
-                        fire_enhancement = int(self.game.special_effects["fire_damage"] * 0.5)  # 火球术增强50%火元素伤害
-                        hero_damage += fire_enhancement
-                        print(f"🔥 {self.game.lang.get_text('fire_enhancement')} +{fire_enhancement}!")
-                    
-                    monster_hp -= hero_damage
-                    # 记录使用技能
-                    self.game.statistics.record_skill_used(fireball_skill)
-                    
-                    # 应用吸血效果
-                    if self.game.special_effects["lifesteal_rate"] > 0:
-                        heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
-                        self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
-                        print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
-                else:
-                    return self.handle_normal_attack(monster_name, monster_hp, combat_round)
-                return monster_hp
-            
-            elif skill_key == "healing":
-                healing_skill = self.game.lang.get_text('healing_skill')
-                if healing_skill in self.game.hero_skills:
-                    if self.game.hero_hp >= self.game.hero_max_hp:
-                        print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
-                    else:
-                        heal_amount = random.randint(100, 200)
-                        heal_amount = int(heal_amount * (1.0 + self.game.special_effects["healing_rate"]))
-                        self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
-                        print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
-                        # 记录使用技能
-                        self.game.statistics.record_skill_used(healing_skill)
-                else:
-                    return self.handle_normal_attack(monster_name, monster_hp, combat_round)
-                return monster_hp
-            
-            # 处理其他通用技能
-            elif skill_key == "combo":
-                combo_skill = self.game.lang.get_text('combo_skill')
-                if combo_skill in self.game.hero_skills:
-                    total_damage = 0
-                    for i in range(2):  # 连续攻击2次
-                        base_damage = max(1, int(random.randint(self.game.hero_attack // 2, self.game.hero_attack) * 0.5) - monster_defense)
-                        
-                        # 应用专注状态（第一次攻击必中且暴击）
-                        if self.game.focus_active and i == 0:
-                            hero_damage = int(base_damage * 2)
-                            print(f"🎯 {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}!")
-                            print(f"⚡ {self.game.lang.get_text('focus_critical')}!")
-                            self.game.focus_active = False  # 使用后取消专注状态
-                        # 应用暴击效果
-                        elif random.random() < self.game.special_effects["crit_rate"]:
-                            hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
-                            print(f"💥 {self.game.lang.get_text('critical_hit')} {monster_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
-                        else:
-                            hero_damage = base_damage
-                            print(f"🗡️ {self.game.lang.get_text('you_attack')} {monster_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
-                        
-                        # 应用背刺效果（首回合，仅第一次攻击）
-                        if combat_round == 1 and i == 0 and self.game.special_effects["backstab_damage"] > 0:
-                            backstab_bonus = int(hero_damage * self.game.special_effects["backstab_damage"])
-                            hero_damage += backstab_bonus
-                            print(f"🔪 {self.game.lang.get_text('backstab')} +{backstab_bonus}!")
-                        
-                        # 应用元素伤害
-                        if self.game.special_effects["ice_damage"] > 0:
-                            hero_damage += self.game.special_effects["ice_damage"]
-                            print(f"❄️ {self.game.lang.get_text('ice_damage')} +{self.game.special_effects['ice_damage']}!")
-                        
-                        if self.game.special_effects["fire_damage"] > 0:
-                            hero_damage += self.game.special_effects["fire_damage"]
-                            print(f"🔥 {self.game.lang.get_text('fire_damage')} +{self.game.special_effects['fire_damage']}!")
-                        
-                        monster_hp -= hero_damage
-                        total_damage += hero_damage
-                        
-                        if monster_hp <= 0:  # 如果怪物死了，第二次攻击不执行
-                            break
-                            
-                        # 应用吸血效果
-                        if self.game.special_effects["lifesteal_rate"] > 0:
-                            heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
-                            self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
-                            print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
-                    
-                    print(f"⚔️ {self.game.lang.get_text('combo_total_damage')} {total_damage}{self.game.lang.get_text('point_damage')}!")
-                    # 记录使用技能
-                    self.game.statistics.record_skill_used(combo_skill)
-                else:
-                    return self.handle_normal_attack(monster_name, monster_hp, combat_round)
-                return monster_hp
-            
-            elif skill_key == "shield":
-                shield_skill = self.game.lang.get_text('shield_skill')
-                if shield_skill in self.game.hero_skills:
-                    self.game.shield_active = True
-                    print(f"🛡️ {self.game.lang.get_text('shield_activated')}!")
-                    # 记录使用技能
-                    self.game.statistics.record_skill_used(shield_skill)
-                else:
-                    return self.handle_normal_attack(monster_name, monster_hp, combat_round)
-                return monster_hp
-            
-            elif skill_key == "berserk":
-                berserk_skill = self.game.lang.get_text('berserk_skill')
-                if berserk_skill in self.game.hero_skills:
-                    self.game.berserk_turns = 3  # 持续3回合
-                    print(f"🔥 {self.game.lang.get_text('berserk_activated')}!")
-                    print(f"⚔️ {self.game.lang.get_text('berserk_attack_up')}!")
-                    print(f"🛡️ {self.game.lang.get_text('berserk_defense_down')}!")
-                    # 记录使用技能
-                    self.game.statistics.record_skill_used(berserk_skill)
-                else:
-                    return self.handle_normal_attack(monster_name, monster_hp, combat_round)
-                return monster_hp
-            
-            elif skill_key == "focus":
-                focus_skill = self.game.lang.get_text('focus_skill')
-                if focus_skill in self.game.hero_skills:
-                    self.game.focus_active = True
-                    print(f"🎯 {self.game.lang.get_text('focus_activated')}!")
-                    print(f"⚡ {self.game.lang.get_text('focus_next_attack')}!")
-                    # 记录使用技能
-                    self.game.statistics.record_skill_used(focus_skill)
-                else:
-                    return self.handle_normal_attack(monster_name, monster_hp, combat_round)
-                return monster_hp
-            
+            # 处理技能（统一处理所有技能，包括职业技能和通用技能）
             else:
-                # 对于未知技能，使用普通攻击
-                return self.handle_normal_attack(monster_name, monster_hp, combat_round)
-        
+                return self.handle_skill_by_id(skill_key, monster_name, monster_hp, combat_round)
         else:
             # 无效选择，使用普通攻击
             print(self.game.lang.get_text("invalid_action"))
@@ -557,6 +683,7 @@ class CombatSystem:
                 self.check_level_up()
 
                 input(f"\n{self.game.lang.get_text('continue_prompt')}")
+
                 break
 
             # 怪物反击
@@ -623,6 +750,14 @@ class CombatSystem:
 
         self.game.show_hero_info()
 
+
+
+
+
+
+
+
+
     def handle_boss_normal_attack(self, boss_name, boss_hp, combat_round, boss_defense):
         """处理Boss战的普通攻击"""
         # 计算基础伤害
@@ -644,9 +779,11 @@ class CombatSystem:
             hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
             print(f"💥 {self.game.lang.get_text('critical_hit')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
         else:
-            # 如果没有装备暴击，检查技能暴击
-            critical_skill = self.game.lang.get_text('critical_skill')
-            if critical_skill in self.game.hero_skills and random.random() < 0.15:
+            # 如果没有装备暴击，检查技能暴击（通过技能树系统）
+            has_critical_skill = False
+            if self.game.skill_tree:
+                has_critical_skill = self.game.skill_tree.learned_skills.get("critical", 0) > 0
+            if has_critical_skill and random.random() < 0.15:
                 hero_damage = int(base_damage * 2)  # 修复bug：添加int()转换
                 print(f"💥 {self.game.lang.get_text('critical_hit')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
             else:
@@ -678,9 +815,11 @@ class CombatSystem:
             self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
             print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
         else:
-            # 如果没有装备吸血，检查技能吸血
-            lifesteal_skill = self.game.lang.get_text('lifesteal_skill')
-            if lifesteal_skill in self.game.hero_skills:
+            # 如果没有装备吸血，检查技能吸血（通过技能树系统）
+            has_lifesteal_skill = False
+            if self.game.skill_tree:
+                has_lifesteal_skill = self.game.skill_tree.learned_skills.get("lifesteal", 0) > 0
+            if has_lifesteal_skill:
                 heal = int(hero_damage * 0.3)
                 self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
                 print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
@@ -703,150 +842,18 @@ class CombatSystem:
                 return self.handle_boss_normal_attack(boss_name, boss_hp, combat_round, boss_defense)
             return boss_hp
         
-        # 处理职业技能
+        # 处理职业技能和技能树技能
         from .game_config import CLASS_DEFINITIONS
         class_info = CLASS_DEFINITIONS.get(self.game.hero_class, {})
         class_skills = class_info.get("class_skills", [])
         
-        if skill_key in class_skills:
-            return self.handle_class_skill(skill_key, boss_name, boss_hp, combat_round)
+        # 职业技能和技能树技能统一处理
+        if skill_key in class_skills or (self.game.skill_tree and skill_key in self.game.skill_tree.learned_skills and self.game.skill_tree.learned_skills[skill_key] > 0):
+            return self.handle_skill_by_id(skill_key, boss_name, boss_hp, combat_round, boss_defense)
         
-        # 处理通用技能
-        if skill_key == "fireball":
-            fireball_skill = self.game.lang.get_text('fireball_skill')
-            if fireball_skill not in self.game.hero_skills:
-                print(self.game.lang.get_text("invalid_action"))
-                return self.handle_boss_normal_attack(boss_name, boss_hp, combat_round, boss_defense)
-            
-            base_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.8))
-            base_damage = int(base_damage * (1.0 + self.game.special_effects["spell_power"]))
-
-            # 应用暴击效果（优先使用装备的暴击率）
-            if random.random() < self.game.special_effects["crit_rate"]:
-                hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
-                print(f"🔥💥 {self.game.lang.get_text('fireball_critical')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
-            else:
-                # 如果没有装备暴击，检查技能暴击
-                critical_skill = self.game.lang.get_text('critical_skill')
-                if critical_skill in self.game.hero_skills and random.random() < 0.15:
-                    hero_damage = int(base_damage * 1.5)
-                    print(f"🔥💥 {self.game.lang.get_text('fireball_critical')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
-                else:
-                    hero_damage = base_damage
-                    print(f"🔥 {self.game.lang.get_text('fireball')} {boss_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
-
-            boss_hp -= hero_damage
-            # 记录使用火球术技能
-            self.game.statistics.record_skill_used(fireball_skill)
-
-            # 应用吸血效果（优先使用装备的吸血）
-            if self.game.special_effects["lifesteal_rate"] > 0:
-                heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
-                self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
-                print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
-            return boss_hp
-        
-        elif skill_key == "healing":
-            healing_skill = self.game.lang.get_text('healing_skill')
-            if healing_skill not in self.game.hero_skills:
-                print(self.game.lang.get_text("invalid_action"))
-                return self.handle_boss_normal_attack(boss_name, boss_hp, combat_round, boss_defense)
-            
-            if self.game.hero_hp >= self.game.hero_max_hp:
-                print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
-            else:
-                heal_amount = random.randint(100, 200)
-                heal_amount = int(heal_amount * (1.0 + self.game.special_effects["healing_rate"]))
-                self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
-                print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
-                # 记录使用治疗术技能
-                self.game.statistics.record_skill_used(healing_skill)
-            return boss_hp
-        
-        elif skill_key == "combo":
-            combo_skill = self.game.lang.get_text('combo_skill')
-            if combo_skill not in self.game.hero_skills:
-                print(self.game.lang.get_text("invalid_action"))
-                return self.handle_boss_normal_attack(boss_name, boss_hp, combat_round, boss_defense)
-            
-            total_damage = 0
-            for i in range(2):  # 连续攻击2次
-                base_damage = max(1, int(random.randint(self.game.hero_attack // 2, self.game.hero_attack) * 0.5) - boss_defense)
-                
-                # 应用专注状态（第一次攻击必中且暴击）
-                if self.game.focus_active and i == 0:
-                    hero_damage = int(base_damage * 2)
-                    print(f"🎯 {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}!")
-                    print(f"⚡ {self.game.lang.get_text('focus_critical')}!")
-                    self.game.focus_active = False  # 使用后取消专注状态
-                # 应用暴击效果
-                elif random.random() < self.game.special_effects["crit_rate"]:
-                    hero_damage = int(base_damage * (1.5 + self.game.special_effects["crit_damage"]))
-                    print(f"💥 {self.game.lang.get_text('critical_hit')} {boss_name}{self.game.lang.get_text('caused_damage')}{hero_damage}{self.game.lang.get_text('point_damage')}!")
-                else:
-                    hero_damage = base_damage
-                    print(f"🗡️ {self.game.lang.get_text('you_attack')} {boss_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
-                
-                boss_hp -= hero_damage
-                total_damage += hero_damage
-                
-                if boss_hp <= 0:  # 如果Boss死了，第二次攻击不执行
-                    break
-                    
-                # 应用吸血效果
-                if self.game.special_effects["lifesteal_rate"] > 0:
-                    heal = int(hero_damage * self.game.special_effects["lifesteal_rate"])
-                    self.game.hero_hp = min(self.game.hero_hp + heal, self.game.hero_max_hp)
-                    print(f"🩸 {self.game.lang.get_text('lifesteal_effect')}{heal}{self.game.lang.get_text('point_hp')}!")
-            
-            print(f"⚔️ {self.game.lang.get_text('combo_total_damage')} {total_damage}{self.game.lang.get_text('point_damage')}!")
-            # 记录使用技能
-            self.game.statistics.record_skill_used(combo_skill)
-            return boss_hp
-        
-        elif skill_key == "shield":
-            shield_skill = self.game.lang.get_text('shield_skill')
-            if shield_skill not in self.game.hero_skills:
-                print(self.game.lang.get_text("invalid_action"))
-                return self.handle_boss_normal_attack(boss_name, boss_hp, combat_round, boss_defense)
-            
-            self.game.shield_active = True
-            print(f"🛡️ {self.game.lang.get_text('shield_activated')}!")
-            # 记录使用技能
-            self.game.statistics.record_skill_used(shield_skill)
-            return boss_hp
-        
-        elif skill_key == "berserk":
-            berserk_skill = self.game.lang.get_text('berserk_skill')
-            if berserk_skill not in self.game.hero_skills:
-                print(self.game.lang.get_text("invalid_action"))
-                return self.handle_boss_normal_attack(boss_name, boss_hp, combat_round, boss_defense)
-            
-            self.game.berserk_turns = 3  # 持续3回合
-            print(f"🔥 {self.game.lang.get_text('berserk_activated')}!")
-            print(f"⚔️ {self.game.lang.get_text('berserk_attack_up')}!")
-            print(f"🛡️ {self.game.lang.get_text('berserk_defense_down')}!")
-            # 记录使用技能
-            self.game.statistics.record_skill_used(berserk_skill)
-            return boss_hp
-        
-        elif skill_key == "focus":
-            focus_skill = self.game.lang.get_text('focus_skill')
-            if focus_skill not in self.game.hero_skills:
-                print(self.game.lang.get_text("invalid_action"))
-                return self.handle_boss_normal_attack(boss_name, boss_hp, combat_round, boss_defense)
-            
-            self.game.focus_active = True
-            print(f"🎯 {self.game.lang.get_text('focus_activated')}!")
-            print(f"⚡ {self.game.lang.get_text('focus_next_attack')}!")
-            # 记录使用技能
-            self.game.statistics.record_skill_used(focus_skill)
-            return boss_hp
-        
-        else:
-            # 对于未知技能，使用普通攻击
-            print(self.game.lang.get_text("invalid_action"))
-            return self.handle_boss_normal_attack(boss_name, boss_hp, combat_round, boss_defense)
+        # 对于未知技能，使用普通攻击
+        print(self.game.lang.get_text("invalid_action"))
+        return self.handle_boss_normal_attack(boss_name, boss_hp, combat_round, boss_defense)
 
     def boss_combat(self, enemy_multiplier=1.0):
         """Boss战斗系统"""
@@ -922,8 +929,7 @@ class CombatSystem:
                     "4": "healing", 
                     "5": "combo",
                     "6": "shield",
-                    "7": "berserk",
-                    "8": "focus"
+                    "7": "focus"
                 }
                 
                 # 动态添加职业技能到映射表
@@ -932,18 +938,46 @@ class CombatSystem:
                 class_skills = class_info.get("class_skills", [])
                 
                 option_index = 3  # 从第3个选项开始是技能
+                
+                # 添加职业技能
                 for skill_key in class_skills:
-                    skill_name = self.game.lang.get_text(f"{skill_key}_skill")
-                    if skill_name in self.game.hero_skills:
+                    # 检查是否学会了该技能（通过技能树系统）
+                    has_skill = False
+                    if self.game.skill_tree:
+                        has_skill = self.game.skill_tree.learned_skills.get(skill_key, 0) > 0
+                    
+                    if has_skill:
                         skill_mapping[str(option_index)] = skill_key
                         option_index += 1
                 
-                # 添加通用技能
-                general_skills = ["fireball", "healing", "combo", "shield", "berserk", "focus"]
-                for skill_key in general_skills:
-                    skill_name = self.game.lang.get_text(f"{skill_key}_skill")
-                    if skill_name in self.game.hero_skills and skill_key not in class_skills:
-                        skill_mapping[str(option_index)] = skill_key
+                # 添加技能树中的技能
+                if self.game.skill_tree:
+                    # 按技能类别排序显示
+                    learned_skills = []
+                    for skill_id, level in self.game.skill_tree.learned_skills.items():
+                        if level > 0 and skill_id not in class_skills:
+                            learned_skills.append(skill_id)
+                    
+                    # 按技能类别排序
+                    def get_skill_priority(skill_id):
+                        from .game_config import SKILL_TREES
+                        skill_data = SKILL_TREES.get(self.game.hero_class, {}).get(skill_id, {})
+                        category = skill_data.get("category", "core")
+                        
+                        if category == "core":
+                            return 0
+                        elif category == "combat":
+                            return 1
+                        elif category == "passive":
+                            return 2
+                        else:  # ultimate
+                            return 3
+                    
+                    learned_skills.sort(key=get_skill_priority)
+                    
+                    # 添加技能到映射表
+                    for skill_id in learned_skills:
+                        skill_mapping[str(option_index)] = skill_id
                         option_index += 1
                 
                 # 处理技能
@@ -970,8 +1004,12 @@ class CombatSystem:
 
                 self.check_level_up()
 
-                lifesteal_skill = self.game.lang.get_text('lifesteal_skill_name')
-                if lifesteal_skill not in self.game.hero_skills:
+                # 检查是否学会了吸血技能（通过技能树系统）
+                has_lifesteal_skill = False
+                if self.game.skill_tree:
+                    has_lifesteal_skill = self.game.skill_tree.learned_skills.get("lifesteal", 0) > 0
+                
+                if not has_lifesteal_skill:
                     self.game.hero_hp = self.game.hero_max_hp
                     print(self.game.lang.get_text("victory_full_restore"))
                 else:
@@ -1065,9 +1103,11 @@ class CombatSystem:
                 if random.random() < self.game.special_effects["dodge_rate"]:
                     print(f"💨 {self.game.lang.get_text('dodge_attack')} {boss_name} {self.game.lang.get_text('dodge_success')}")
                 else:
-                    # 如果没有装备闪避，检查技能闪避
-                    dodge_skill = self.game.lang.get_text('dodge_skill')
-                    if dodge_skill in self.game.hero_skills and random.random() < 0.2:
+                    # 如果没有装备闪避，检查技能闪避（通过技能树系统）
+                    has_dodge_skill = False
+                    if self.game.skill_tree:
+                        has_dodge_skill = self.game.skill_tree.learned_skills.get("dodge", 0) > 0
+                    if has_dodge_skill and random.random() < 0.2:
                         print(f"💨 {self.game.lang.get_text('dodge_attack')} {boss_name} {self.game.lang.get_text('dodge_success')}")
                     else:
                         # 应用反击效果
@@ -1107,6 +1147,14 @@ class CombatSystem:
 
         self.game.show_hero_info()
 
+
+
+
+
+
+
+
+                
     def ghost_combat(self, enemy_multiplier=1.0):
         """鬼魂战斗（无经验奖励，有特殊掉落）"""
         ghost_names = [
@@ -1148,8 +1196,7 @@ class CombatSystem:
                 # 记录使用药剂
                 self.game.statistics.record_potion_used()
             elif action == "3":
-                fireball_skill = self.game.lang.get_text('fireball_skill')
-                if fireball_skill in self.game.hero_skills:
+                if "fireball" in self.game.hero_skills:
                     hero_damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.5))
                     ghost_hp -= hero_damage
                     print(f"🔥 {self.game.lang.get_text('fireball')} {ghost_name}{self.game.lang.get_text('fireball_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
@@ -1160,16 +1207,15 @@ class CombatSystem:
                     ghost_hp -= hero_damage
                     print(f"🗡️ {self.game.lang.get_text('you_attack')} {ghost_name}{self.game.lang.get_text('caused_damage')} {hero_damage}{self.game.lang.get_text('point_damage')}")
             elif action == "4":
-                healing_skill = self.game.lang.get_text('healing_skill')
-                if healing_skill in self.game.hero_skills:
+                if "healing" in self.game.hero_skills:
                     if self.game.hero_hp >= self.game.hero_max_hp:
                         print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
                     else:
                         heal_amount = random.randint(25, 40)
                         self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
                         print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
-                        # 记录使用技能
-                        self.game.statistics.record_skill_used(healing_skill)
+                        # 记录使用技能（使用 skill_id）
+                        self.game.statistics.record_skill_used("healing")
                 else:
                     hero_damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack) - ghost_defense)
                     ghost_hp -= hero_damage
@@ -1222,6 +1268,16 @@ class CombatSystem:
 
         self.game.show_hero_info()
 
+
+
+
+
+
+
+
+
+
+
     def check_level_up(self):
         """检查升级"""
         level_up_thresholds = {
@@ -1260,10 +1316,12 @@ class CombatSystem:
                 self.game.skill_points += skill_points_gained
                 print(f"{self.game.lang.get_text('skill_points_earned').format(points=skill_points_gained)}")
                 
-                # 升级时有概率学习新技能
-                if random.random() < 0.3:
-                    from .events import EventSystem
-                    event_system = EventSystem(self.game)
-                    event_system.learn_skill(level_up=True)
-
                 input(f"\n{self.game.lang.get_text('continue_prompt')}")
+
+
+
+
+
+
+
+

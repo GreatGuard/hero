@@ -30,10 +30,13 @@
   },
   "inventory": [],
   "hero_skills": [
-    "Fireball",
-    "Healing",
-    "Critical",
-    "Lifesteal"
+    "power_strike",
+    "shield",
+    "focus",
+    "battle_cry",
+    "shield_bash",
+    "healing",
+    "combo"
   ],
   "difficulty": "easy",
   "map_type": "plains",

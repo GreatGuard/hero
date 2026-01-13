@@ -367,13 +367,8 @@ class LanguageSupport:
             # 技能名称
             "fireball_skill": "火球术",
             "healing_skill": "治疗术",
-            "critical_skill": "暴击",
-            "lifesteal_skill": "吸血",
-            "dodge_skill": "闪避",
-            # 新增技能
             "combo_skill": "连斩",
             "shield_skill": "护盾",
-            "berserk_skill": "狂暴",
             "focus_skill": "专注",
             # 玩家技能名称（以_skill结尾）
             "power_strike_skill": "力量打击",
@@ -381,6 +376,9 @@ class LanguageSupport:
             "battle_cry_skill": "战吼",
             "frost_armor_skill": "冰霜护甲",
             "shadow_strike_skill": "影袭",
+            "iron_will_skill": "钢铁意志",
+            "counter_attack_skill": "反击",
+            "berserker_rage_skill": "狂暴之怒",
             "root_trap_skill": "根须陷阱",
             "nature_heal_skill": "自然愈合",
             "sandstorm_skill": "沙尘暴",
@@ -1114,13 +1112,8 @@ class LanguageSupport:
             # Skill names
             "fireball_skill": "Fireball",
             "healing_skill": "Healing",
-            "critical_skill": "Critical",
-            "lifesteal_skill": "Lifesteal",
-            "dodge_skill": "Dodge",
-            # New skills
             "combo_skill": "Dual Strike",
             "shield_skill": "Shield",
-            "berserk_skill": "Berserk",
             "focus_skill": "Focus",
             # Player skill names (ending with _skill)
             "power_strike_skill": "Power Strike",
@@ -1487,6 +1480,13 @@ class LanguageSupport:
             "skill_iron_will": "Iron Will",
             "skill_counter_attack": "Counter Attack",
             "skill_berserker_rage": "Berserker Rage",
+            # 以_skill结尾的技能名称
+            "power_strike_skill": "Power Strike",
+            "shield_bash_skill": "Shield Bash",
+            "battle_cry_skill": "Battle Cry",
+            "iron_will_skill": "Iron Will",
+            "counter_attack_skill": "Counter Attack",
+            "berserker_rage_skill": "Berserker Rage",
             "skill_fireball": "Fireball",
             "skill_frost_armor": "Frost Armor",
             "skill_mana_burn": "Mana Burn",

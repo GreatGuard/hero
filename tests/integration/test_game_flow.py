@@ -30,19 +30,44 @@ class TestGameFlow(unittest.TestCase):
             with patch.object(HeroGame, 'clear_screen'):
                 with patch.object(HeroGame, 'show_welcome'):
                     with patch.object(HeroGame, 'get_hero_name'):
-                        self.game = HeroGame()
-                        # 手动设置名字
-                        self.game.hero_name = "TestHero"
+                        with patch.object(HeroGame, 'select_hero_class'):  # 跳过职业选择
+                            self.game = HeroGame()
+                            # 手动设置名字和难度
+                            self.game.hero_name = "TestHero"
+                            self.game.difficulty = "normal"  # 手动设置难度
+                            self.game.map_type = "plains"  # 手动设置地图类型
+                            self.game.map_length = 100  # 手动设置地图长度
+                            self.game.hero_gold = 20  # 手动设置金币
+                            self.game.hero_potions = 2  # 手动设置药剂
     
     def create_test_game(self, difficulty='normal', map_type='plains'):
         """辅助方法：创建测试用的游戏对象"""
-        input_values = ['1', str(difficulty), str(map_type), '']
-        with patch('builtins.input', side_effect=input_values):
+        with patch('builtins.input', side_effect=['1']):
             with patch.object(HeroGame, 'clear_screen'):
                 with patch.object(HeroGame, 'show_welcome'):
                     with patch.object(HeroGame, 'get_hero_name'):
-                        game = HeroGame()
-                        game.hero_name = "TestHero"
+                        with patch.object(HeroGame, 'select_hero_class'):  # 跳过职业选择
+                            game = HeroGame()
+                            game.hero_name = "TestHero"
+                            
+                            # 设置难度
+                            difficulty_map = {'1': 'easy', '2': 'normal', '3': 'hard', '4': 'nightmare'}
+                            game.difficulty = difficulty_map.get(str(difficulty), difficulty)
+                            
+                            # 设置地图类型
+                            map_type_map = {'1': 'plains', '2': 'forest', '3': 'desert', '4': 'dungeon',
+                                           '5': 'mountain', '6': 'swamp', '7': 'snowfield'}
+                            game.map_type = map_type_map.get(str(map_type), map_type)
+                            
+                            # 根据难度设置游戏参数
+                            from hero.game_config import DIFFICULTY_SETTINGS, MAP_TYPES
+                            game.difficulty_settings = DIFFICULTY_SETTINGS
+                            game.map_types = MAP_TYPES
+                            
+                            settings = DIFFICULTY_SETTINGS[game.difficulty]
+                            game.map_length = settings["map_length"]
+                            game.hero_gold = settings["gold_start"]
+                            game.hero_potions = settings["potions_start"]
         return game
     
     def test_full_game_flow_easy_mode(self):
@@ -178,11 +203,26 @@ class TestGameFlow(unittest.TestCase):
         initial_gold = game.hero_gold
         initial_potions = game.hero_potions
         
-        with patch('builtins.input', side_effect=['1', '1', '1', '1', '']):
+        # 使用 mock 来模拟战斗输入（选择攻击1）和继续提示（空字符串）
+        # 使用循环返回值来模拟多个 input() 调用
+        from unittest.mock import MagicMock
+        def input_side_effect(*args, **kwargs):
+            # 模拟所有可能的 input() 调用
+            if not hasattr(input_side_effect, 'call_count'):
+                input_side_effect.call_count = 0
+            input_side_effect.call_count += 1
+            
+            # 返回值序列
+            values = ['1', '1', '1', '']
+            return values[min(input_side_effect.call_count - 1, len(values) - 1)]
+        
+        input_mock = MagicMock(side_effect=input_side_effect)
+        with patch('builtins.input', input_mock):
             with patch('random.randint', return_value=15):
-                with patch('builtins.print'):
-                    with patch('time.sleep'):
-                        game.newbie_village.practice_combat()
+                with patch('random.random', return_value=0.5):  # 避免学习技能
+                    with patch('builtins.print'):
+                        with patch('time.sleep'):
+                            game.newbie_village.practice_combat()
         
         self.assertGreaterEqual(game.hero_exp, initial_exp)
         
@@ -195,9 +235,7 @@ class TestGameFlow(unittest.TestCase):
     
     def test_random_events_plains_integration(self):
         """测试平原地图随机事件集成流程"""
-        game = self.game
-        game.map_type = "plains"
-        game.difficulty = "normal"
+        game = self.create_test_game(difficulty='2', map_type='1')  # normal, plains
         
         initial_hp = game.hero_hp
         initial_gold = game.hero_gold
@@ -220,9 +258,7 @@ class TestGameFlow(unittest.TestCase):
     
     def test_random_events_forest_integration(self):
         """测试森林地图随机事件集成流程"""
-        game = self.game
-        game.map_type = "forest"
-        game.difficulty = "normal"
+        game = self.create_test_game(difficulty='2', map_type='2')  # normal, forest
         
         initial_hp = game.hero_hp
         
@@ -235,9 +271,7 @@ class TestGameFlow(unittest.TestCase):
     
     def test_random_events_desert_integration(self):
         """测试沙漠地图随机事件集成流程"""
-        game = self.game
-        game.map_type = "desert"
-        game.difficulty = "normal"
+        game = self.create_test_game(difficulty='2', map_type='3')  # normal, desert
         
         initial_hp = game.hero_hp
         
@@ -250,9 +284,7 @@ class TestGameFlow(unittest.TestCase):
     
     def test_random_events_dungeon_integration(self):
         """测试地牢地图随机事件集成流程"""
-        game = self.game
-        game.map_type = "dungeon"
-        game.difficulty = "normal"
+        game = self.create_test_game(difficulty='2', map_type='4')  # normal, dungeon
         
         initial_hp = game.hero_hp
         
@@ -265,9 +297,7 @@ class TestGameFlow(unittest.TestCase):
     
     def test_random_events_mountain_integration(self):
         """测试山脉地图随机事件集成流程"""
-        game = self.game
-        game.map_type = "mountain"
-        game.difficulty = "normal"
+        game = self.create_test_game(difficulty='2', map_type='5')  # normal, mountain
         
         initial_gold = game.hero_gold
         

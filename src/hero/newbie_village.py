@@ -61,8 +61,7 @@ class NewbieVillage:
         print()
 
         print(f"1. {self.game.lang.get_text('practice_combat')}")
-        print(f"2. {self.game.lang.get_text('learn_skill_short')}")
-        print(f"3. {self.game.lang.get_text('return_to_village')}")
+        print(f"2. {self.game.lang.get_text('return_to_village')}")
 
         while True:
             choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
@@ -71,9 +70,6 @@ class NewbieVillage:
                 self.practice_combat()
                 break
             elif choice == "2":
-                self.learn_skill_training()
-                break
-            elif choice == "3":
                 break
             else:
                 print(self.game.lang.get_text("invalid_choice"))
@@ -102,27 +98,86 @@ class NewbieVillage:
                 self.game.hero_potions -= 1
                 print(f"🧪 {self.game.lang.get_text('poison')} {heal_amount}{self.game.lang.get_text('point_hp')}")
 
-            elif action == "3":
-                fireball_skill = self.game.lang.get_text('fireball_skill')
-                if fireball_skill in self.game.hero_skills:
-                    damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.5))
-                    opponent_hp -= damage
-                    print(f"🔥 {self.game.lang.get_text('fireball')} {opponent_name}{self.game.lang.get_text('fireball_damage')} {damage}{self.game.lang.get_text('point_damage')}")
-                else:
-                    damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack))
-                    opponent_hp -= damage
-                    print(f"🗡️ {self.game.lang.get_text('you_attack')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
-
-            elif action == "4":
-                healing_skill = self.game.lang.get_text('healing_skill')
-                if healing_skill in self.game.hero_skills:
-                    if self.game.hero_hp >= self.game.hero_max_hp:
-                        print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
+            # 处理技能选择
+            elif action.isdigit() and int(action) > 2:
+                # 获取已学习的技能
+                if self.game.skill_tree:
+                    learned_skills = []
+                    for skill_id, level in self.game.skill_tree.learned_skills.items():
+                        if level > 0:
+                            learned_skills.append(skill_id)
+                    
+                    # 计算技能选项的索引
+                    skill_index = int(action) - 3  # 减去普通攻击和药剂选项
+                    
+                    if 0 <= skill_index < len(learned_skills):
+                        skill_id = learned_skills[skill_index]
+                        
+                        # 处理技能效果
+                        if skill_id == "fireball":
+                            damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.5))
+                            opponent_hp -= damage
+                            print(f"🔥 {self.game.lang.get_text('fireball_skill')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
+                        
+                        elif skill_id == "healing":
+                            if self.game.hero_hp >= self.game.hero_max_hp:
+                                print("✨ " + self.game.lang.get_text("full_hp_no_heal"))
+                            else:
+                                heal_amount = random.randint(25, 40)
+                                self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
+                                print(f"✨ {self.game.lang.get_text('healing_skill')}{heal_amount}{self.game.lang.get_text('point_hp')}")
+                        
+                        elif skill_id == "power_strike":
+                            damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.4))
+                            opponent_hp -= damage
+                            print(f"⚔️ {self.game.lang.get_text('power_strike_skill')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
+                        
+                        elif skill_id == "shield_bash":
+                            damage = random.randint(int(self.game.hero_attack * 0.8), self.game.hero_attack)
+                            opponent_hp -= damage
+                            print(f"🛡️ {self.game.lang.get_text('shield_bash_skill')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
+                        
+                        elif skill_id == "battle_cry":
+                            print(f"📣 {self.game.lang.get_text('battle_cry_skill')}!")
+                            damage = random.randint(int(self.game.hero_attack * 0.9), int(self.game.hero_attack * 1.1))
+                            opponent_hp -= damage
+                            print(f"🗡️ {self.game.lang.get_text('you_attack')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
+                        
+                        elif skill_id == "backstab":
+                            damage = random.randint(int(self.game.hero_attack * 1.2), int(self.game.hero_attack * 1.5))
+                            opponent_hp -= damage
+                            print(f"🗡️ {self.game.lang.get_text('backstab_skill')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
+                        
+                        elif skill_id == "shadow_strike":
+                            damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.3))
+                            opponent_hp -= damage
+                            print(f"🌑 {self.game.lang.get_text('shadow_strike_skill')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
+                        
+                        elif skill_id == "frost_armor":
+                            print(f"❄️ {self.game.lang.get_text('frost_armor_skill')}!")
+                            damage = random.randint(int(self.game.hero_attack * 0.7), int(self.game.hero_attack * 0.9))
+                            opponent_hp -= damage
+                            print(f"🗡️ {self.game.lang.get_text('you_attack')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
+                        
+                        # 其他技能可以在这里添加
+                        else:
+                            # 默认技能处理
+                            damage = random.randint(self.game.hero_attack, int(self.game.hero_attack * 1.2))
+                            opponent_hp -= damage
+                            # 检查技能ID是否已经包含"_skill"后缀
+                            if skill_id.endswith("_skill"):
+                                skill_name_key = skill_id
+                            else:
+                                skill_name_key = f"{skill_id}_skill"
+                            skill_name = self.game.lang.get_text(skill_name_key)
+                            print(f"⚔️ {skill_name} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
                     else:
-                        heal_amount = random.randint(25, 40)
-                        self.game.hero_hp = min(self.game.hero_hp + heal_amount, self.game.hero_max_hp)
-                        print(f"✨ {self.game.lang.get_text('healing_spell')}{heal_amount}{self.game.lang.get_text('point_hp')}")
+                        # 无效技能选择
+                        damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack))
+                        opponent_hp -= damage
+                        print(f"🗡️ {self.game.lang.get_text('you_attack')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
                 else:
+                    # 没有技能树，使用普通攻击
                     damage = max(1, random.randint(self.game.hero_attack // 2, self.game.hero_attack))
                     opponent_hp -= damage
                     print(f"🗡️ {self.game.lang.get_text('you_attack')} {opponent_name}{self.game.lang.get_text('caused_damage')} {damage}{self.game.lang.get_text('point_damage')}")
@@ -157,53 +212,62 @@ class NewbieVillage:
         """获取战斗动作（简化版）"""
         print(f"\n{self.game.lang.get_text('choose_action')}")
         print(f"1. {self.game.lang.get_text('normal_attack')}")
+        
+        option_index = 2
+        
+        # 药剂选项
         if self.game.hero_potions > 0:
-            print(f"2. {self.game.lang.get_text('use_potion_short')}")
+            print(f"{option_index}. {self.game.lang.get_text('use_potion_short')}")
         else:
-            print(f"2. {self.game.lang.get_text('no_potion')}")
-
-        # 只在学会火球术时显示选项
-        fireball_skill = self.game.lang.get_text('fireball_skill')
-        if fireball_skill in self.game.hero_skills:
-            print(f"3. {self.game.lang.get_text('cast_fireball')}")
-        else:
-            print(f"3. ({self.game.lang.get_text('locked')}) {self.game.lang.get_text('cast_fireball')}")
-
-        # 只在学会治疗术时显示选项
-        healing_skill = self.game.lang.get_text('healing_skill')
-        if healing_skill in self.game.hero_skills:
-            print(f"4. {self.game.lang.get_text('healing_spell_short')}")
-        else:
-            print(f"4. ({self.game.lang.get_text('locked')}) {self.game.lang.get_text('healing_spell_short')}")
+            print(f"{option_index}. {self.game.lang.get_text('no_potion')}")
+        option_index += 1
+        
+        # 显示已学习的技能
+        if self.game.skill_tree:
+            # 获取已学习的技能
+            learned_skills = []
+            for skill_id, level in self.game.skill_tree.learned_skills.items():
+                if level > 0:
+                    learned_skills.append(skill_id)
+            
+            # 显示技能（按技能类别排序）
+            def get_skill_priority(skill_id):
+                from .game_config import SKILL_TREES
+                skill_data = SKILL_TREES.get(self.game.hero_class, {}).get(skill_id, {})
+                category = skill_data.get("category", "core")
+                
+                if category == "core":
+                    return 0
+                elif category == "combat":
+                    return 1
+                elif category == "passive":
+                    return 2
+                else:  # ultimate
+                    return 3
+            
+            learned_skills.sort(key=get_skill_priority)
+            
+            # 显示技能
+            for skill_id in learned_skills:
+                # 获取技能名称
+                # 检查技能ID是否已经包含"_skill"后缀
+                if skill_id.endswith("_skill"):
+                    skill_name_key = skill_id
+                else:
+                    skill_name_key = f"{skill_id}_skill"
+                skill_name = self.game.lang.get_text(skill_name_key)
+                
+                # 获取技能等级
+                skill_level = self.game.skill_tree.learned_skills.get(skill_id, 0)
+                
+                # 显示技能名称和等级
+                if skill_level > 0:
+                    print(f"{option_index}. {skill_name} (Lv.{skill_level})")
+                else:
+                    print(f"{option_index}. {skill_name}")
+                option_index += 1
 
         return input(f"{self.game.lang.get_text('enter_choice')} (1): ").strip()
-
-    def learn_skill_training(self):
-        """训练场学习技能"""
-        from events import EventSystem
-        event_system = EventSystem(self.game)
-
-        print()
-        print(f"{self.game.lang.get_text('trainer_introduction')}")
-
-        cost = 30
-        print(f"{self.game.lang.get_text('learn_skill_cost')} {cost} {self.game.lang.get_text('gold')}")
-
-        if self.game.hero_gold >= cost:
-            choice = input(f"{self.game.lang.get_text('confirm_learn')}: ").strip()
-            # 使用统一的多语言确认选项
-            yes_options = self.game.lang.get_text("yes_options")
-            confirm = choice in yes_options
-
-            if confirm:
-                self.game.hero_gold -= cost
-                event_system.learn_skill()
-            else:
-                print(f"{self.game.lang.get_text('cancel_learn')}")
-        else:
-            print(self.game.lang.get_text("not_enough_gold"))
-
-        input(f"\n{self.game.lang.get_text('continue_prompt')}")
 
     def village_shop(self):
         """村庄商店"""

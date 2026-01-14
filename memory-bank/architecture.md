@@ -24,7 +24,9 @@ HeroGame (主控制器)
 ├── SaveManager (存档管理) ⭐ NEW
 ├── QuestSystem (任务系统) ⭐ NEW
 ├── ClassSystem (职业系统) ⭐ NEW
-└── SkillTree (技能树系统) ⭐ NEW
+├── SkillTree (技能树系统) ⭐ NEW
+├── GameSettings (游戏设置系统) ⭐ NEW
+└── GameLog (游戏日志系统) ⭐ NEW
 ```
 
 **架构原则**:
@@ -249,7 +251,113 @@ get_text(key)  # 获取指定键的文本
 format_text(format_type, *args)  # 格式化文本
 ```
 
-### 5. 任务系统模块 (quest.py) ⭐ NEW
+### 5. 游戏设置模块 (settings.py) ⭐ NEW
+
+**类**: `GameSettings`
+
+**职责**: 管理玩家自定义游戏选项
+
+**支持的设置选项**:
+- **文本显示速度**: 控制文本显示速度（即时、快速、正常、慢速、很慢）
+- **自动存档设置**: 设置每N步自动存档（0表示关闭）
+- **事件提示详细程度**: 控制事件描述的详细程度（简单、标准、详细）
+- **战斗动画效果**: 开启或关闭战斗动画效果
+- **声音效果**: 开启或关闭声音效果（预留功能）
+- **战斗日志详细程度**: 控制战斗日志的详细程度（无、简要、详细）
+
+**核心方法**:
+```python
+# 设置管理
+to_dict()  # 将设置转换为字典，用于序列化
+from_dict(data)  # 从字典加载设置
+
+# 辅助方法
+get_text_delay()  # 获取文本显示延迟时间
+should_auto_save(step_count)  # 判断是否应该自动存档
+format_text_with_speed(text)  # 根据文本速度格式化文本
+```
+
+**集成方式**:
+- 在 HeroGame 初始化时创建 GameSettings 实例
+- 设置数据集成到存档系统，支持保存和加载
+- 在主菜单添加"设置"选项，提供设置修改界面
+- 游戏中所有文本显示可通过 print_with_speed() 方法应用文本速度设置
+
+### 6. 游戏日志系统模块 (game_log.py) ⭐ NEW
+
+**类**: `GameLog`
+
+**职责**: 记录和显示玩家在游戏中的各种活动，提供游戏历史记录功能
+
+**支持的日志类型**:
+- **战斗日志** (combat): 记录所有战斗相关事件
+- **事件日志** (event): 记录游戏事件触发
+- **物品日志** (item): 记录装备和物品获得/使用
+- **升级日志** (level): 记录角色升级
+- **移动日志** (movement): 记录位置移动
+- **成就日志** (achievement): 记录成就解锁
+
+**核心方法**:
+```python
+# 日志记录方法
+log_event(event_type, description, details=None)  # 记录日志事件
+
+# 日志查询方法
+get_logs()  # 获取所有日志条目
+get_logs_by_type(event_type)  # 按类型获取日志
+get_recent_logs(count=10, event_type=None)  # 获取最近日志
+get_statistics()  # 获取日志统计信息
+
+# 日志显示方法
+show_all_logs()  # 显示所有日志
+show_recent_logs(count=10)  # 显示最近日志
+show_logs_by_type(event_type)  # 按类型显示日志
+show_statistics()  # 显示统计信息
+
+# 日志管理方法
+clear_log()  # 清空所有日志
+
+# 序列化方法
+to_dict()  # 转换为字典（用于序列化）
+from_dict(data)  # 从字典创建实例（用于反序列化）
+```
+
+**日志条目结构**:
+```python
+{
+    "timestamp": "2026-01-14 15:55:36",  # 时间戳
+    "type": "combat",  # 日志类型
+    "description": "击败了森林狼",  # 日志描述
+    "details": {"monster": "森林狼", "gold": 10}  # 详细信息
+}
+```
+
+**统计信息结构**:
+```python
+{
+    "total_entries": 25,  # 总日志数
+    "event_types": {  # 按类型统计
+        "combat": 8,
+        "event": 5,
+        "item": 3,
+        "level": 2,
+        "movement": 5,
+        "achievement": 2
+    },
+    "recent_activity": {
+        "last_hour": 10  # 最近一小时活动数
+    }
+}
+```
+
+**集成方式**:
+- 在 HeroGame 初始化时创建 GameLog 实例
+- 在游戏的关键事件中调用 log_event() 方法记录日志
+- 在主菜单添加"查看游戏日志"选项（action 5）
+- 日志数据集成到存档系统，支持保存和加载
+- 支持多语言显示（中英文）
+
+### 7. 任务系统模块 (quest.py) ⭐ NEW
 
 **类**:
 - `Quest` - 单个任务容器
@@ -289,7 +397,42 @@ to_dict() / from_dict()  # 序列化支持
 - 在游戏内菜单添加"查看任务"选项（action 9）
 - 任务进度自动与游戏事件同步
 
-### 6. 其他模块
+### 7. 其他模块
+
+#### GameSettings (settings.py) ⭐ NEW
+
+游戏设置系统，管理玩家自定义游戏选项
+
+**职责**: 管理游戏的各种设置选项，提供设置修改界面
+
+**核心类**:
+```python
+class GameSettings:
+    """游戏设置类"""
+    
+    def __init__(self, language="zh")
+        # 初始化游戏设置
+        
+    def to_dict(self)
+        # 将设置转换为字典，用于序列化
+        
+    def from_dict(self, data)
+        # 从字典加载设置
+        
+    def get_text_delay(self)
+        # 获取文本显示延迟时间
+        
+    def should_auto_save(self, step_count)
+        # 判断是否应该自动存档
+```
+
+**设置选项**:
+- 文本显示速度 (毫秒/字符)
+- 自动存档间隔 (步数)
+- 事件提示详细程度
+- 战斗动画效果
+- 声音效果 (预留)
+- 战斗日志详细程度
 
 #### SkillTree (skill_tree.py) ⭐ NEW
 
@@ -880,7 +1023,9 @@ src/hero/
 ├── newbie_village.py    # 新手村
 ├── save_data.py         # 存档系统 ⭐ NEW
 ├── statistics.py        # 统计系统 ⭐ NEW
-└── quest.py            # 任务系统 ⭐ NEW
+├── quest.py            # 任务系统 ⭐ NEW
+├── settings.py         # 游戏设置系统 ⭐ NEW
+└── game_log.py         # 游戏日志系统 ⭐ NEW
 
 tests/
 ├── test_save_data.py    # 存档测试 ⭐ NEW
@@ -888,6 +1033,8 @@ tests/
 ├── test_new_features.py # 新功能测试套件 ⭐ NEW
 ├── test_quest.py        # 任务系统测试 ⭐ NEW
 ├── test_class.py        # 职业系统测试 ⭐ NEW
+├── test_settings.py     # 游戏设置系统测试 ⭐ NEW
+├── test_game_log.py     # 游戏日志系统测试 ⭐ NEW
 ├── test_combat.py
 ├── test_equipment.py
 ├── test_events.py

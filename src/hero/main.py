@@ -21,6 +21,8 @@ from hero.statistics import GameStatistics
 from hero.achievements import AchievementSystem
 from hero.quest import QuestSystem
 from hero.skill_tree import SkillTree
+from hero.settings import GameSettings
+from hero.game_log import GameLog
 
 
 class HeroGame:
@@ -30,6 +32,12 @@ class HeroGame:
         """初始化游戏"""
         self.language = "zh"  # 默认中文
         self.lang = LanguageSupport(self.language)
+        
+        # 初始化游戏设置系统
+        self.settings = GameSettings(self.language)
+        
+        # 初始化游戏日志系统
+        self.game_log = GameLog(self.language)
 
         # 先选择语言
         self.select_language()
@@ -544,7 +552,9 @@ class HeroGame:
             print(f"2. {self.lang.get_text('load_game')}")
             print(f"3. {self.lang.get_text('view_statistics')}")
             print(f"4. {self.lang.get_text('achievements')}")
-            print(f"5. {self.lang.get_text('exit_game')}")
+            print(f"5. {self.lang.get_text('view_game_log')}")
+            print(f"6. {self.lang.get_text('settings')}")
+            print(f"7. {self.lang.get_text('exit_game')}")
             print()
 
             choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
@@ -589,8 +599,16 @@ class HeroGame:
             elif choice == "4":
                 # 查看成就
                 self.achievements.show_achievements_menu()
-
+                
             elif choice == "5":
+                # 查看游戏日志
+                self.show_game_log_menu()
+                
+            elif choice == "6":
+                # 设置
+                self.show_settings_menu()
+
+            elif choice == "7":
                 # 退出游戏
                 print("\n" + self.lang.get_text("goodbye"))
                 sys.exit(0)
@@ -598,6 +616,292 @@ class HeroGame:
             else:
                 print(self.lang.get_text("invalid_choice"))
                 time.sleep(1)
+
+    def show_game_log_menu(self):
+        """显示游戏日志菜单"""
+        while True:
+            self.clear_screen()
+            print(self.lang.get_text("block_separator"))
+            print(f"          {self.lang.get_text('game_log_menu')}")
+            print(self.lang.get_text("block_separator"))
+            print()
+            
+            # 显示日志统计
+            stats = self.game_log.get_statistics()
+            print(f"{self.lang.get_text('total_log_entries')}: {stats['total_entries']}")
+            
+            # 显示选项
+            print(f"\n1. {self.lang.get_text('recent_logs')}")
+            print(f"2. {self.lang.get_text('all_logs')}")
+            print(f"3. {self.lang.get_text('filter_by_type')}")
+            print(f"4. {self.lang.get_text('log_statistics')}")
+            print(f"5. {self.lang.get_text('clear_log')}")
+            print(f"0. {self.lang.get_text('back_to_main')}")
+            print()
+
+            choice = input(f"{self.lang.get_text('enter_choice')} (0): ").strip()
+
+            if choice == "" or choice == "0":
+                break
+            elif choice == "1":
+                # 显示最近日志
+                self.game_log.show_recent_logs()
+            elif choice == "2":
+                # 显示所有日志
+                self.game_log.show_all_logs()
+            elif choice == "3":
+                # 按类型筛选
+                self.show_log_filter_menu()
+            elif choice == "4":
+                # 显示日志统计
+                self.game_log.show_statistics()
+            elif choice == "5":
+                # 清空日志
+                confirm = input(f"{self.lang.get_text('clear_log')}? (y/n): ").strip().lower()
+                if confirm in ['y', 'yes']:
+                    self.game_log.clear_log()
+                    print(f"\n{self.lang.get_text('log_cleared')}")
+                    time.sleep(1)
+            else:
+                print(f"\n{self.lang.get_text('invalid_choice')}")
+                time.sleep(1)
+
+    def show_log_filter_menu(self):
+        """显示日志筛选菜单"""
+        while True:
+            self.clear_screen()
+            print(self.lang.get_text("block_separator"))
+            print(f"          {self.lang.get_text('filter_by_type')}")
+            print(self.lang.get_text("block_separator"))
+            print()
+            
+            print(f"1. {self.lang.get_text('combat_logs')}")
+            print(f"2. {self.lang.get_text('event_logs')}")
+            print(f"3. {self.lang.get_text('item_logs')}")
+            print(f"4. {self.lang.get_text('level_logs')}")
+            print(f"5. {self.lang.get_text('movement_logs')}")
+            print(f"6. {self.lang.get_text('achievement_logs')}")
+            print(f"0. {self.lang.get_text('back')}")
+            print()
+
+            choice = input(f"{self.lang.get_text('enter_choice')} (0): ").strip()
+
+            if choice == "" or choice == "0":
+                break
+            elif choice == "1":
+                self.game_log.show_logs_by_type("combat")
+            elif choice == "2":
+                self.game_log.show_logs_by_type("event")
+            elif choice == "3":
+                self.game_log.show_logs_by_type("item")
+            elif choice == "4":
+                self.game_log.show_logs_by_type("level")
+            elif choice == "5":
+                self.game_log.show_logs_by_type("movement")
+            elif choice == "6":
+                self.game_log.show_logs_by_type("achievement")
+            else:
+                print(f"\n{self.lang.get_text('invalid_choice')}")
+                time.sleep(1)
+
+    def show_settings_menu(self):
+        """
+        显示游戏设置菜单
+        """
+        while True:
+            self.clear_screen()
+            print(self.lang.get_text("block_separator"))
+            print(f"          {self.lang.get_text('settings')}")
+            print(self.lang.get_text("block_separator"))
+            print()
+            print(f"1. {self.lang.get_text('text_speed')}: {self._get_speed_description()}")
+            print(f"2. {self.lang.get_text('auto_save')}: {self._get_auto_save_description()}")
+            print(f"3. {self.lang.get_text('event_detail')}: {self._get_event_detail_description()}")
+            print(f"4. {self.lang.get_text('combat_animations')}: {self.lang.get_text('on') if self.settings.combat_animations else self.lang.get_text('off')}")
+            print(f"5. {self.lang.get_text('combat_log_level')}: {self._get_combat_log_description()}")
+            print()
+            print(f"0. {self.lang.get_text('back_to_main')}")
+            print()
+
+            choice = input(f"{self.lang.get_text('enter_choice')} (0): ").strip()
+
+            if choice == "" or choice == "0":
+                break
+            elif choice == "1":
+                # 修改文本速度
+                self._change_text_speed()
+            elif choice == "2":
+                # 修改自动存档设置
+                self._change_auto_save()
+            elif choice == "3":
+                # 修改事件详细程度
+                self._change_event_detail()
+            elif choice == "4":
+                # 切换战斗动画
+                self.settings.combat_animations = not self.settings.combat_animations
+            elif choice == "5":
+                # 修改战斗日志详细程度
+                self._change_combat_log()
+            else:
+                print(f"\n{self.lang.get_text('invalid_choice')}")
+                time.sleep(1)
+
+    def _get_speed_description(self):
+        """获取文本速度描述"""
+        speed = self.settings.text_speed
+        if speed == 0:
+            return self.lang.get_text('instant')
+        elif speed <= 10:
+            return self.lang.get_text('fast')
+        elif speed <= 30:
+            return self.lang.get_text('normal')
+        elif speed <= 50:
+            return self.lang.get_text('slow')
+        else:
+            return self.lang.get_text('very_slow')
+    
+    def _get_auto_save_description(self):
+        """获取自动存档描述"""
+        interval = self.settings.auto_save_interval
+        if interval <= 0:
+            return self.lang.get_text('disabled')
+        else:
+            return f"{interval} {self.lang.get_text('steps')}"
+    
+    def _get_event_detail_description(self):
+        """获取事件详细程度描述"""
+        level = self.settings.event_detail_level
+        if level == 0:
+            return self.lang.get_text('simple')
+        elif level == 1:
+            return self.lang.get_text('standard')
+        else:
+            return self.lang.get_text('detailed')
+    
+    def _get_combat_log_description(self):
+        """获取战斗日志详细程度描述"""
+        level = self.settings.combat_log_level
+        if level == 0:
+            return self.lang.get_text('none')
+        elif level == 1:
+            return self.lang.get_text('brief')
+        else:
+            return self.lang.get_text('detailed')
+    
+    def _change_text_speed(self):
+        """修改文本速度设置"""
+        options = [
+            ("0", self.lang.get_text('instant'), 0),
+            ("1", self.lang.get_text('fast'), 10),
+            ("2", self.lang.get_text('normal'), 30),
+            ("3", self.lang.get_text('slow'), 50),
+            ("4", self.lang.get_text('very_slow'), 100)
+        ]
+        
+        self.clear_screen()
+        print(self.lang.get_text("block_separator"))
+        print(f"          {self.lang.get_text('text_speed')}")
+        print(self.lang.get_text("block_separator"))
+        print()
+        
+        for choice, description, value in options:
+            selected = "✓ " if self.settings.text_speed == value else "  "
+            print(f"{choice}. [{selected}] {description}")
+        
+        print()
+        choice = input(f"{self.lang.get_text('enter_choice')} (2): ").strip()
+        
+        for option_choice, description, value in options:
+            if choice == option_choice:
+                self.settings.text_speed = value
+                print(f"\n{self.lang.get_text('setting_updated')}")
+                time.sleep(1)
+                break
+
+    def _change_auto_save(self):
+        """修改自动存档设置"""
+        options = [
+            ("0", self.lang.get_text('disabled'), 0),
+            ("1", f"5 {self.lang.get_text('steps')}", 5),
+            ("2", f"10 {self.lang.get_text('steps')}", 10),
+            ("3", f"20 {self.lang.get_text('steps')}", 20)
+        ]
+        
+        self.clear_screen()
+        print(self.lang.get_text("block_separator"))
+        print(f"          {self.lang.get_text('auto_save')}")
+        print(self.lang.get_text("block_separator"))
+        print()
+        
+        for choice, description, value in options:
+            selected = "✓ " if self.settings.auto_save_interval == value else "  "
+            print(f"{choice}. [{selected}] {description}")
+        
+        print()
+        choice = input(f"{self.lang.get_text('enter_choice')} (0): ").strip()
+        
+        for option_choice, description, value in options:
+            if choice == option_choice:
+                self.settings.auto_save_interval = value
+                print(f"\n{self.lang.get_text('setting_updated')}")
+                time.sleep(1)
+                break
+
+    def _change_event_detail(self):
+        """修改事件详细程度设置"""
+        options = [
+            ("0", self.lang.get_text('simple'), 0),
+            ("1", self.lang.get_text('standard'), 1),
+            ("2", self.lang.get_text('detailed'), 2)
+        ]
+        
+        self.clear_screen()
+        print(self.lang.get_text("block_separator"))
+        print(f"          {self.lang.get_text('event_detail')}")
+        print(self.lang.get_text("block_separator"))
+        print()
+        
+        for choice, description, value in options:
+            selected = "✓ " if self.settings.event_detail_level == value else "  "
+            print(f"{choice}. [{selected}] {description}")
+        
+        print()
+        choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
+        
+        for option_choice, description, value in options:
+            if choice == option_choice:
+                self.settings.event_detail_level = value
+                print(f"\n{self.lang.get_text('setting_updated')}")
+                time.sleep(1)
+                break
+
+    def _change_combat_log(self):
+        """修改战斗日志详细程度设置"""
+        options = [
+            ("0", self.lang.get_text('none'), 0),
+            ("1", self.lang.get_text('brief'), 1),
+            ("2", self.lang.get_text('detailed'), 2)
+        ]
+        
+        self.clear_screen()
+        print(self.lang.get_text("block_separator"))
+        print(f"          {self.lang.get_text('combat_log_level')}")
+        print(self.lang.get_text("block_separator"))
+        print()
+        
+        for choice, description, value in options:
+            selected = "✓ " if self.settings.combat_log_level == value else "  "
+            print(f"{choice}. [{selected}] {description}")
+        
+        print()
+        choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
+        
+        for option_choice, description, value in options:
+            if choice == option_choice:
+                self.settings.combat_log_level = value
+                print(f"\n{self.lang.get_text('setting_updated')}")
+                time.sleep(1)
+                break
 
     def load_game_menu(self):
         """
@@ -759,6 +1063,10 @@ class HeroGame:
         if self.hero_hp <= 0:
             input(f"\n{self.lang.get_text('continue_prompt')}")
             self.game_over = True
+            
+            # 记录游戏失败日志
+            self.game_log.add_log("event", self.lang.get_text("game_over"))
+            
             self.clear_screen()
             print(self.lang.get_text("block_separator"))
             print(f"          {self.lang.get_text('game_over')}")
@@ -771,6 +1079,10 @@ class HeroGame:
             input(f"\n{self.lang.get_text('continue_prompt')}")
             self.victory = True
             self.game_over = True
+            
+            # 记录游戏胜利日志
+            self.game_log.add_log("event", self.lang.get_text("victory"))
+            
             self.clear_screen()
             print(self.lang.get_text("block_separator"))
             print(f"          {self.lang.get_text('victory')}")
@@ -807,6 +1119,9 @@ class HeroGame:
                     self.hero_position += 1
                     # 记录移动一步
                     self.statistics.record_step()
+                    
+                    # 记录移动日志
+                    self.game_log.add_log("movement", self.lang.get_text("moved_to_position", position=self.hero_position))
                     
                     # 更新状态效果
                     self.update_status_effects()
@@ -1680,6 +1995,24 @@ class HeroGame:
 
         # 更新语言设置
         self.lang.set_language(self.language)
+    
+    def print_with_speed(self, text, end_char='\n'):
+        """
+        根据设置的文本速度打印文本
+        
+        Args:
+            text (str): 要打印的文本
+            end_char (str): 行尾字符
+        """
+        if self.settings.text_speed == 0:
+            # 即时显示
+            print(text, end=end_char)
+        else:
+            # 逐字显示
+            for char in text:
+                print(char, end='', flush=True)
+                time.sleep(self.settings.get_text_delay())
+            print(end=end_char)
 
         # 统计数据
         self.monsters_defeated = save_data.monsters_defeated
@@ -1700,6 +2033,11 @@ class HeroGame:
         # 加载职业系统相关属性
         self.class_mana = getattr(save_data, 'class_mana', 0)
         self.class_max_mana = getattr(save_data, 'class_max_mana', 0)
+        
+        # 加载游戏设置
+        settings_data = getattr(save_data, 'settings_data', {})
+        if settings_data and hasattr(self, 'settings'):
+            self.settings.from_dict(settings_data)
         
         # 加载统计数据
         if hasattr(save_data, 'statistics_data') and save_data.statistics_data:
@@ -1722,6 +2060,15 @@ class HeroGame:
             self.quest_system.from_dict(save_data.quest_data)
         else:
             self.quest_system = QuestSystem()
+            
+        # 加载游戏日志
+        if hasattr(save_data, 'game_log_data') and save_data.game_log_data:
+            self.game_log.from_dict(save_data.game_log_data)
+        else:
+            # 确保游戏日志系统存在
+            if not hasattr(self, 'game_log') or self.game_log is None:
+                from .game_log import GameLog
+                self.game_log = GameLog(self.language)
 
     def show_quests(self):
         """显示当前任务列表"""

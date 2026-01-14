@@ -434,13 +434,62 @@
 
 ---
 
-## 阶段四：优化与完善 (⬜ 待开始)
+## 阶段四：优化与完善 (🔵 进行中)
 
 ### Task 4.1: 添加游戏设置系统
-**状态**: ⬜ 待开始
+**状态**: ✅ 已完成
+**完成日期**: 2026-01-14
+**文件**: `src/hero/settings.py`, `src/hero/main.py`, `src/hero/language.py`, `src/hero/save_data.py`, `tests/test_settings.py`
+**内容**:
+- 创建 `GameSettings` 类，管理游戏的各种设置选项
+  - 文本显示速度（即时、快速、正常、慢速、很慢）
+  - 自动存档设置（可设置每N步自动存档）
+  - 事件提示详细程度（简单、标准、详细）
+  - 战斗动画效果（开启/关闭）
+  - 战斗日志详细程度（无、简要、详细）
+- 在主菜单添加"设置"选项
+- 实现设置界面，允许用户修改各种选项
+- 将设置数据集成到存档系统
+- 添加多语言支持（中英文）
+- 创建 `tests/test_settings.py`，9个测试用例全部通过
 
-### Task 4.2: 实现游戏日志系统
-**状态**: ⬜ 待开始
+**验证**: 
+- 设置可以正确保存和加载
+- 修改设置后立即生效
+- 设置界面支持中英双语
+
+### ✅ Task 4.2: 实现游戏日志系统
+**状态**: 已完成
+**完成日期**: 2026-01-14
+**文件**: `src/hero/game_log.py`, `src/hero/main.py`, `src/hero/language.py`, `src/hero/save_data.py`, `tests/test_game_log.py`
+**内容**:
+- 创建 `GameLog` 类，实现完整的游戏日志记录和显示功能
+- 支持6种日志类型：战斗（combat）、事件（event）、物品（item）、升级（level）、移动（movement）、成就（achievement）
+- 实现日志统计功能，包括按类型统计和总体统计
+- 实现日志筛选功能：显示所有日志、显示最近日志、按类型筛选日志
+- 实现日志清空功能
+- 集成到主游戏菜单中（action 5 - 查看游戏日志）
+- 支持多语言显示（中英文）
+- 集成到存档系统，支持保存和加载游戏日志
+- 创建完整的测试套件 `tests/test_game_log.py`
+
+**核心功能**:
+- `log_event(event_type, description, details)` - 记录日志事件
+- `get_statistics()` - 获取日志统计信息
+- `get_recent_logs(count, event_type)` - 获取最近日志
+- `get_logs_by_type(event_type)` - 按类型获取日志
+- `show_all_logs()` - 显示所有日志
+- `show_recent_logs(count)` - 显示最近日志
+- `show_logs_by_type(event_type)` - 按类型显示日志
+- `clear_log()` - 清空日志
+- `to_dict()` / `from_dict(data)` - 序列化和反序列化
+
+**验证**: 
+- 创建了 `tests/test_game_log.py`，包含完整的测试用例
+- 验证日志记录、统计、筛选、显示、清空功能正常
+- 验证序列化和反序列化功能正确
+- 验证多语言支持完整
+- 验证与存档系统集成正常
 
 ### Task 4.3: 添加游戏平衡调整工具
 **状态**: ⬜ 待开始

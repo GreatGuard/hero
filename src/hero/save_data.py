@@ -110,6 +110,18 @@ class SaveData:
                     'completed_quests': [],
                     'quest_counter': 0
                 }
+                
+        # 游戏设置
+        if hasattr(game, 'settings') and game.settings is not None:
+            self.settings_data = game.settings.to_dict()
+        else:
+            self.settings_data = {}
+            
+        # 游戏日志
+        if hasattr(game, 'game_log') and game.game_log is not None:
+            self.game_log_data = game.game_log.to_dict()
+        else:
+            self.game_log_data = {}
 
     def to_dict(self):
         """
@@ -186,7 +198,13 @@ class SaveData:
             "focus_active": self.focus_active,
             
             # 任务系统
-            "quest_data": self.quest_data
+            "quest_data": self.quest_data,
+            
+            # 游戏设置
+            "settings_data": getattr(self, 'settings_data', {}),
+            
+            # 游戏日志
+            "game_log_data": getattr(self, 'game_log_data', {})
         }
 
     @classmethod
@@ -281,6 +299,9 @@ class SaveData:
             'completed_quests': [],
             'quest_counter': 0
         })
+        
+        # 游戏日志
+        save_data.game_log_data = data.get("game_log_data", {})
 
         return save_data
 

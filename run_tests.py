@@ -114,6 +114,57 @@ def save_report_to_file(report, filename="test_report.txt"):
     print(f"测试报告已保存到 {filename}")
 
 
+def run_balance_test(runs=100, fast=True, max_steps=1000, difficulty='normal', 
+                    map_type='plains', hero_class='warrior', compare_difficulty=False,
+                    compare_maps=False, compare_classes=False, lang='zh', output=None):
+    """运行平衡性测试"""
+    try:
+        import sys
+        # 保存原始参数
+        original_argv = sys.argv.copy()
+        
+        # 构建新的参数列表
+        new_argv = ['balance_test.py']
+        
+        if runs:
+            new_argv.extend(['--runs', str(runs)])
+        if fast:
+            new_argv.append('--fast')
+        if max_steps != 1000:
+            new_argv.extend(['--max-steps', str(max_steps)])
+        if difficulty != 'normal':
+            new_argv.extend(['--difficulty', difficulty])
+        if map_type != 'plains':
+            new_argv.extend(['--map', map_type])
+        if hero_class != 'warrior':
+            new_argv.extend(['--class', hero_class])
+        if compare_difficulty:
+            new_argv.append('--compare-difficulty')
+        if compare_maps:
+            new_argv.append('--compare-maps')
+        if compare_classes:
+            new_argv.append('--compare-classes')
+        if lang != 'zh':
+            new_argv.extend(['--lang', lang])
+        if output:
+            new_argv.extend(['--output', output])
+        
+        # 设置新的参数
+        sys.argv = new_argv
+        
+        from tests.balance_test import run_balance_test_cli
+        # 调用平衡测试命令行接口
+        run_balance_test_cli()
+        
+        # 恢复原始参数
+        sys.argv = original_argv
+        
+        return True, None
+    except Exception as e:
+        print(f"运行平衡测试时出错: {e}")
+        return False, str(e)
+
+
 def main():
     """主函数"""
     # 解析命令行参数
@@ -125,6 +176,7 @@ def main():
     parser.add_argument('--verbose', '-v', action='store_true', help='详细输出')
     parser.add_argument('--report', '-r', action='store_true', help='生成测试报告')
     parser.add_argument('--output', '-o', default='test_report.txt', help='报告输出文件')
+    parser.add_argument('--balance', '-b', action='store_true', help='运行平衡性测试')
     
     args = parser.parse_args()
     
@@ -133,7 +185,12 @@ def main():
     
     # 运行测试
     try:
-        if args.module:
+        if args.balance:
+            # 运行平衡性测试
+            success, result = run_balance_test()
+            sys.exit(0 if success else 1)
+        
+        elif args.module:
             # 导入模块
             module_name = f"tests.{args.module}"
             if args.class_name:

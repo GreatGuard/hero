@@ -1,5 +1,5 @@
 {
-  "save_time": "2026-01-13 17:54:54",
+  "save_time": "2026-01-14 09:06:38",
   "version": "3.0",
   "hero_name": "1",
   "hero_class": "assassin",
@@ -12,11 +12,41 @@
   "base_attack": 76,
   "base_defense": 24,
   "base_max_hp": 270,
-  "hero_position": 0,
+  "hero_position": 1,
   "game_over": false,
   "victory": false,
   "hero_gold": 562140,
   "hero_potions": 91,
+  "skill_points": 59,
+  "skill_tree_data": {
+    "hero_class": "assassin",
+    "learned_skills": {
+      "backstab": {
+        "skill_id": "backstab",
+        "current_level": 5
+      },
+      "shadow_strike": {
+        "skill_id": "shadow_strike",
+        "current_level": 5
+      },
+      "poison_blade": {
+        "skill_id": "poison_blade",
+        "current_level": 3
+      },
+      "evasion": {
+        "skill_id": "evasion",
+        "current_level": 5
+      },
+      "stealth": {
+        "skill_id": "stealth",
+        "current_level": 3
+      },
+      "shadow_clone": {
+        "skill_id": "shadow_clone",
+        "current_level": 3
+      }
+    }
+  },
   "equipment": {
     "weapon": {
       "name": "Legendary Sword",
@@ -100,7 +130,6 @@
     "stealth",
     "shadow_clone"
   ],
-  "skill_points": 100,
   "class_mana": 0,
   "class_max_mana": 0,
   "difficulty": "nightmare",
@@ -118,7 +147,8 @@
     "Used potion, restored 39 HP",
     "Used potion, restored 23 HP",
     "Used potion, restored 36 HP",
-    "Used potion, restored 33 HP"
+    "Used potion, restored 33 HP",
+    "Safe move, nothing happened"
   ],
   "visited_positions": [
     false,
@@ -324,7 +354,7 @@
   ],
   "statistics_data": {
     "total_play_time": 0,
-    "total_steps": 0,
+    "total_steps": 1,
     "total_battles": 0,
     "battles_won": 0,
     "battles_lost": 0,
@@ -336,8 +366,10 @@
     "total_gold_earned": 0,
     "total_gold_spent": 36870,
     "total_exp_earned": 0,
-    "total_events_triggered": 0,
-    "events_by_type": {},
+    "total_events_triggered": 1,
+    "events_by_type": {
+      "safe_move": 1
+    },
     "equipment_found": 0,
     "equipment_by_rarity": {
       "common": 0,

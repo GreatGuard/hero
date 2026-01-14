@@ -42,6 +42,78 @@ DIFFICULTY_SETTINGS = {
     }
 }
 
+# 装备附魔类型配置
+ENCHANTMENT_TYPES = {
+    "flame_enchantment": {
+        "name_key": "enchantment_flame",
+        "description_key": "enchantment_flame_desc",
+        "cost": 300,
+        "success_rate": 0.7,
+        "effects": {
+            "fire_damage_percent": 0.1,  # 附加10%火焰伤害
+            "special_effects": ["fire_damage"]
+        }
+    },
+    "frost_enchantment": {
+        "name_key": "enchantment_frost",
+        "description_key": "enchantment_frost_desc",
+        "cost": 250,
+        "success_rate": 0.75,
+        "effects": {
+            "enemy_attack_reduction": 0.1,  # 降低敌人10%攻击力
+            "special_effects": ["ice_damage"]
+        }
+    },
+    "poison_enchantment": {
+        "name_key": "enchantment_poison",
+        "description_key": "enchantment_poison_desc",
+        "cost": 350,
+        "success_rate": 0.65,
+        "effects": {
+            "poison_damage_per_turn": 0.05,  # 每回合5%毒伤害
+            "special_effects": ["poison"]
+        }
+    },
+    "holy_enchantment": {
+        "name_key": "enchantment_holy",
+        "description_key": "enchantment_holy_desc",
+        "cost": 400,
+        "success_rate": 0.6,
+        "effects": {
+            "undead_damage_bonus": 0.2,  # 对亡灵额外20%伤害
+            "healing_bonus": 0.15,  # 治疗效果提升15%
+            "special_effects": ["healing", "light_damage"]
+        }
+    },
+    "shadow_enchantment": {
+        "name_key": "enchantment_shadow",
+        "description_key": "enchantment_shadow_desc",
+        "cost": 320,
+        "success_rate": 0.7,
+        "effects": {
+            "crit_rate_bonus": 0.1,  # 暴击率+10%
+            "dodge_chance_bonus": 0.08,  # 闪避率+8%
+            "special_effects": ["backstab", "shadow_power"]
+        }
+    }
+}
+
+# 附魔限制配置（哪些装备类型可以附魔哪些类型）
+ENCHANTMENT_RESTRICTIONS = {
+    "weapon": ["flame_enchantment", "frost_enchantment", "poison_enchantment", "holy_enchantment", "shadow_enchantment"],
+    "armor": ["frost_enchantment", "holy_enchantment"],
+    "accessory": ["holy_enchantment", "shadow_enchantment"]
+}
+
+# 附魔成功率加成（基于装备稀有度）
+ENCHANTMENT_RARITY_BONUS = {
+    "common": 0.0,
+    "uncommon": 0.05,
+    "rare": 0.1,
+    "epic": 0.15,
+    "legendary": 0.2
+}
+
 # 技能树配置
 SKILL_TREES = {
     "warrior": {
@@ -188,7 +260,7 @@ SKILL_TREES = {
             "category": "combat",
             "max_level": 5,
             "cost_per_level": 1,
-            "effects_per_level": [0.5, 1],  # 每次攻击伤害倍率，额外攻击次数
+            "effects_per_level": [1.0, 1],  # 每次攻击伤害倍率，额外攻击次数
             "prerequisites": [("backstab", 2)],
             "class_requirement": "assassin"
         },
@@ -245,7 +317,7 @@ LEGENDARY_EQUIPMENT = {
             "hp": 10,
             "special_effects": ["crit_rate", "lifesteal"],
             "crit_rate": 0.15,
-            "lifesteal_rate": 0.2
+            "lifesteal": 0.2
         },
         {
             "name_key": "legendary_staff_frost",
@@ -262,8 +334,8 @@ LEGENDARY_EQUIPMENT = {
             "defense": 0,
             "hp": 0,
             "special_effects": ["backstab", "dodge"],
-            "backstab_damage": 0.3,
-            "dodge_rate": 0.15
+            "backstab": 0.3,
+            "dodge": 0.15
         }
     ],
     "armor": [
@@ -283,7 +355,7 @@ LEGENDARY_EQUIPMENT = {
             "hp": 25,
             "special_effects": ["fire_resistance", "counter_attack"],
             "fire_resistance": 0.4,
-            "counter_attack_rate": 0.25
+            "counter_attack": 0.25
         },
         {
             "name_key": "legendary_cloak_shadow",
@@ -357,7 +429,7 @@ EQUIPMENT_SETS = {
             "2_piece": {
                 "name_key": "set_bonus_shadow_assault",
                 "crit_rate": 0.1,
-                "dodge_rate": 0.1
+                "dodge": 0.1
             }
         }
     }
@@ -633,8 +705,6 @@ MONSTER_TEMPLATES = {
     }
 }
 
-
-
 # 职业定义配置
 CLASS_DEFINITIONS = {
     "warrior": {
@@ -685,7 +755,7 @@ CLASS_DEFINITIONS = {
         "class_skills": ["frost_armor", "mana_burn", "meditation", "arcane_power", "meteor"],  # 职业专属技能
         "passive_effects": {
             "spell_power": 0.2,  # 法术伤害提升20%
-            "mana_regen": 5,  # 每回合恢复5点法力值
+            "mana_regeneration": 5,  # 每回合恢复5点法力值
             "elemental_resistance": 0.15  # 元素抗性15%
         },
         "mana_system": True  # 启用法力值系统
@@ -784,5 +854,3 @@ BOSS_TEMPLATES = {
         "skills": ["blizzard", "ice_prison"]
     }
 }
-
-

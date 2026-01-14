@@ -155,7 +155,7 @@ class SkillTree:
         
         # 获取当前职业的技能树配置
         if self.hero_class not in SKILL_TREES:
-            raise ValueError(f"未找到职业 {self.hero_class} 的技能树配置")
+            raise ValueError(f"Skill tree configuration not found for class {self.hero_class}")
         
         skill_tree_config = SKILL_TREES[self.hero_class]
         

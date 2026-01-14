@@ -42,7 +42,8 @@ class EventSystem:
 
         print(f"1. {self.game.lang.get_text('buy_potion')} - {potions_price} {self.game.lang.get_text('gold')}")
         print(f"2. {self.game.lang.get_text('buy_equipment_short')} - {self.game.lang.get_text('equipment_shop')}")
-        print(f"3. {self.game.lang.get_text('leave_merchant')}")
+        print(f"3. {self.game.lang.get_text('enhance_equipment_short')} - {self.game.lang.get_text('enhance_equipment')}")
+        print(f"4. {self.game.lang.get_text('leave_merchant')}")
 
         while True:
             choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
@@ -72,6 +73,9 @@ class EventSystem:
                 equip_system.equipment_shop(gold_multiplier)
                 break
             elif choice == "3":
+                equip_system.enhance_equipment_menu()
+                break
+            elif choice == "4":
                 break
             else:
                 print(self.game.lang.get_text("invalid_choice"))
@@ -244,7 +248,8 @@ class EventSystem:
         self.game.statistics.record_shop_visit()
 
         print(f"1. {self.game.lang.get_text('buy_equipment_short')}")
-        print(f"2. {self.game.lang.get_text('leave_merchant')}")
+        print(f"2. {self.game.lang.get_text('enhance_equipment_short')}")
+        print(f"3. {self.game.lang.get_text('leave_merchant')}")
 
         while True:
             choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
@@ -253,6 +258,9 @@ class EventSystem:
                 equip_system.equipment_shop(gold_multiplier * 1.5)  # 神秘商人价格更高
                 break
             elif choice == "2":
+                equip_system.enhance_equipment_menu()
+                break
+            elif choice == "3":
                 break
             else:
                 print(self.game.lang.get_text("invalid_choice"))
@@ -309,7 +317,7 @@ class EventSystem:
 
         self.game.clear_screen()
         print(self.game.lang.get_text("block_separator"))
-        print(f"          {self.game.lang.get_text('swamp_merchant_encounter')}")
+        print(f"          {self.game.lang.get_text('swamp_merchant')}")
         print(self.game.lang.get_text("block_separator"))
         print()
 
@@ -323,11 +331,11 @@ class EventSystem:
 
         # 商店商品 - 沼泽商人有特殊折扣
         potions_price = int(8 / gold_multiplier)  # 比普通商人便宜
-        skill_teach_price = int(40 / gold_multiplier)
 
         print(f"1. {self.game.lang.get_text('buy_potion')} - {potions_price} {self.game.lang.get_text('gold')}")
         print(f"2. {self.game.lang.get_text('buy_equipment_short')} - {self.game.lang.get_text('equipment_shop')}")
-        print(f"3. {self.game.lang.get_text('leave_merchant')}")
+        print(f"3. {self.game.lang.get_text('enhance_equipment_short')} - {self.game.lang.get_text('enhance_equipment')}")
+        print(f"4. {self.game.lang.get_text('leave_merchant')}")
 
         while True:
             choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
@@ -357,6 +365,9 @@ class EventSystem:
                 equip_system.equipment_shop(gold_multiplier * 1.2)  # 装备有折扣但不如神秘商人
                 break
             elif choice == "3":
+                equip_system.enhance_equipment_menu()
+                break
+            elif choice == "4":
                 break
             else:
                 print(self.game.lang.get_text("invalid_choice"))

@@ -147,6 +147,10 @@ class SaveData:
             # 资源
             "hero_gold": self.hero_gold,
             "hero_potions": self.hero_potions,
+            
+            # 技能系统
+            "skill_points": self.skill_points,
+            "skill_tree_data": self.skill_tree_data,
 
             # 装备和背包
             "equipment": self.equipment,
@@ -225,6 +229,10 @@ class SaveData:
         # 资源
         save_data.hero_gold = data.get("hero_gold", 0)
         save_data.hero_potions = data.get("hero_potions", 0)
+        
+        # 技能系统
+        save_data.skill_points = data.get("skill_points", 0)
+        save_data.skill_tree_data = data.get("skill_tree_data", None)
 
         # 装备和背包
         save_data.equipment = data.get("equipment", {

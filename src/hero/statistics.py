@@ -52,6 +52,12 @@ class GameStatistics:
             "epic": 0,
             "legendary": 0
         }
+        
+        # 附魔统计
+        self.enchantments_attempted = 0  # 附魔尝试次数
+        self.enchantments_successful = 0  # 附魔成功次数
+        self.enchantments_failed = 0  # 附魔失败次数
+        self.enchantments_by_type = {}  # 各类型附魔次数
 
         # 药剂使用统计
         self.potions_used = 0  # 使用的药剂总数
@@ -175,6 +181,23 @@ class GameStatistics:
         """
         self.items_purchased += count
 
+    def record_enchantment_success(self, enchantment_type=None):
+        """
+        记录附魔成功
+
+        Args:
+            enchantment_type: 附魔类型
+        """
+        self.enchantments_attempted += 1
+        self.enchantments_successful += 1
+        if enchantment_type:
+            self.enchantments_by_type[enchantment_type] = self.enchantments_by_type.get(enchantment_type, 0) + 1
+
+    def record_enchantment_failed(self):
+        """记录附魔失败"""
+        self.enchantments_attempted += 1
+        self.enchantments_failed += 1
+
     def update_play_time(self):
         """更新总游戏时长"""
         current_session = time.time() - self.session_start_time
@@ -247,7 +270,11 @@ class GameStatistics:
             "skills_learned": self.skills_learned,
             "skill_uses": self.skill_uses,
             "shop_visits": self.shop_visits,
-            "items_purchased": self.items_purchased
+            "items_purchased": self.items_purchased,
+            "enchantments_attempted": self.enchantments_attempted,
+            "enchantments_successful": self.enchantments_successful,
+            "enchantments_failed": self.enchantments_failed,
+            "enchantments_by_type": self.enchantments_by_type
         }
 
     @classmethod
@@ -291,6 +318,10 @@ class GameStatistics:
         stats.skill_uses = data.get("skill_uses", {})
         stats.shop_visits = data.get("shop_visits", 0)
         stats.items_purchased = data.get("items_purchased", 0)
+        stats.enchantments_attempted = data.get("enchantments_attempted", 0)
+        stats.enchantments_successful = data.get("enchantments_successful", 0)
+        stats.enchantments_failed = data.get("enchantments_failed", 0)
+        stats.enchantments_by_type = data.get("enchantments_by_type", {})
 
         return stats
 

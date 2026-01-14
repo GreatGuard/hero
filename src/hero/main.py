@@ -92,25 +92,27 @@ class HeroGame:
         # 初始化特殊效果属性
         self.special_effects = {
             "crit_rate": 0.0,      # 暴击率
-            "lifesteal_rate": 0.0, # 吸血率
-            "dodge_rate": 0.0,     # 闪避率
-            "counter_attack_rate": 0.0, # 反击率
-            "ice_damage": 0,       # 冰霜伤害
-            "fire_damage": 0,      # 火焰伤害
-            "healing_rate": 0.0,   # 治疗效果
-            "mana_boost": 0,       # 法力提升
-            "backstab_damage": 0.0, # 背刺伤害
-            "luck_bonus": 0.0,     # 幸运加成
-            "wisdom_bonus": 0.0,   # 智慧加成
-            "immortality_chance": 0.0, # 不死概率
-            "health_regeneration": 0, # 生命恢复
+            "lifesteal": 0.0,      # 吸血率
+            "dodge": 0.0,          # 闪避率
+            "counter_attack": 0.0,   # 反击率
+            "ice_damage": 0,        # 冰霜伤害
+            "fire_damage": 0,       # 火焰伤害
+            "light_damage": 0,       # 光之伤害
+            "poison": 0,            # 中毒
+            "shadow_power": 0.0,     # 暗影之力
+            "fire_resistance": 0.0,  # 火焰抗性
+            "holy_resistance": 0.0,  # 神圣抗性
+            "stealth": 0.0,         # 潜行
+            "evasion": 0.0,         # 闪避
+            "wisdom": 0.0,          # 智慧
             "mana_regeneration": 0,   # 法力恢复
-            "holy_resistance": 0.0,   # 神圣抗性
-            "fire_resistance": 0.0,   # 火焰抗性
-            "stealth_chance": 0.0,    # 潜行概率
-            "evasion_rate": 0.0,      # 闪避率
-            "spell_power": 0.0,       # 法术强度
-            "crit_damage": 0.0        # 暴击伤害
+            "luck": 0.0,            # 幸运
+            "crit_damage": 0.0,      # 暴击伤害
+            "immortality": 0.0,      # 不死之身
+            "health_regeneration": 0,  # 生命恢复
+            "healing": 0.0,         # 治疗
+            "mana_boost": 0,         # 法力提升
+            "backstab": 0.0         # 背刺
         }
 
         # 初始化子系统
@@ -408,14 +410,74 @@ class HeroGame:
         position_text = self.lang.format_text("position_format", self.hero_position+1, self.map_length)
         print(f"📍  {self.lang.get_text('position')}{self.lang.get_text('item_separator')}{position_text}")
 
-        # 显示装备信息
-        weapon_name = self.equipment["weapon"]["name"] if self.equipment["weapon"] else self.lang.get_text("none")
-        armor_name = self.equipment["armor"]["name"] if self.equipment["armor"] else self.lang.get_text("none")
-        accessory_name = self.equipment["accessory"]["name"] if self.equipment["accessory"] else self.lang.get_text("none")
-
-        print(f"🗡️  {self.lang.get_text('weapon')}{self.lang.get_text('item_separator')}{weapon_name}")
-        print(f"🛡️  {self.lang.get_text('armor')}{self.lang.get_text('item_separator')}{armor_name}")
-        print(f"💍  {self.lang.get_text('accessory')}{self.lang.get_text('item_separator')}{accessory_name}")
+        # 显示装备信息（包括属性和附魔）
+        from hero.equipment import EquipmentSystem
+        equip_system = EquipmentSystem(self)
+        
+        # 装备颜色代码
+        def get_rarity_color(rarity):
+            colors = {
+                "common": "\033[37m",      # 白色
+                "uncommon": "\033[32m",    # 绿色
+                "rare": "\033[34m",        # 蓝色
+                "epic": "\033[35m",        # 紫色
+                "legendary": "\033[33m"    # 金色
+            }
+            return colors.get(rarity, "\033[37m")
+        
+        def get_equipment_display(item):
+            if item is None:
+                return self.lang.get_text("none"), ""
+                
+            # 获取稀有度名称和颜色
+            rarity_name = self.lang.get_text(f"rarity_{item['rarity']}")
+            color = get_rarity_color(item["rarity"])
+            reset_color = "\033[0m"
+            
+            # 获取装备名称（包括强化和传说属性）
+            display_name = equip_system.get_enhanced_equipment_display(item)
+            
+            # 获取附魔显示（如果有）
+            enchantment_display = equip_system.get_enchantment_display(item)
+            if enchantment_display != display_name:  # 如果附魔显示不同于装备名称，则包含附魔
+                display_name = enchantment_display
+            
+            # 获取装备属性
+            stats = []
+            if item["attack"] > 0:
+                stats.append(f"⚔️+{item['attack']}")
+            if item["defense"] > 0:
+                stats.append(f"🛡️+{item['defense']}")
+            if item["hp"] > 0:
+                stats.append(f"❤️+{item['hp']}")
+            
+            # 获取特殊效果
+            special_effects = []
+            if item.get("special_effects"):
+                for effect in item["special_effects"]:
+                    effect_name = self.lang.get_text(f"{effect}_skill")
+                    special_effects.append(effect_name)
+            
+            # 构建完整显示文本
+            full_display = f"{color}{display_name} {reset_color}[{rarity_name}]"
+            if stats:
+                full_display += f" {', '.join(stats)}"
+            if special_effects:
+                full_display += f" ({', '.join(special_effects)})"
+                
+            return full_display, color
+        
+        # 显示武器
+        weapon_display, _ = get_equipment_display(self.equipment["weapon"])
+        print(f"🗡️  {self.lang.get_text('weapon')}{self.lang.get_text('item_separator')}{weapon_display}")
+        
+        # 显示护甲
+        armor_display, _ = get_equipment_display(self.equipment["armor"])
+        print(f"🛡️  {self.lang.get_text('armor')}{self.lang.get_text('item_separator')}{armor_display}")
+        
+        # 显示饰品
+        accessory_display, _ = get_equipment_display(self.equipment["accessory"])
+        print(f"💍  {self.lang.get_text('accessory')}{self.lang.get_text('item_separator')}{accessory_display}")
 
         # 显示技能（使用 skill_id 从 hero_skills 获取技能名称和等级）
         if self.hero_skills:
@@ -1361,14 +1423,14 @@ class HeroGame:
         # 重置特殊效果属性
         self.special_effects = {
             "crit_rate": 0.0,      # 暴击率
-            "lifesteal_rate": 0.0, # 吸血率
-            "dodge_rate": 0.0,     # 闪避率
-            "counter_attack_rate": 0.0, # 反击率
+            "lifesteal": 0.0,     # 吸血率
+            "dodge": 0.0,          # 闪避率
+            "counter_attack": 0.0,   # 反击率
             "ice_damage": 0,       # 冰霜伤害
             "fire_damage": 0,      # 火焰伤害
             "healing_rate": 0.0,   # 治疗效果
             "mana_boost": 0,       # 法力提升
-            "backstab_damage": 0.0, # 背刺伤害
+            "backstab": 0.0,        # 背刺伤害
             "luck_bonus": 0.0,     # 幸运加成
             "wisdom_bonus": 0.0,   # 智慧加成
             "immortality_chance": 0.0, # 不死概率
@@ -1402,25 +1464,27 @@ class HeroGame:
                         # 默认效果值
                         default_values = {
                             "crit_rate": 0.05,
-                            "lifesteal_rate": 0.1,
-                            "dodge_rate": 0.05,
-                            "counter_attack_rate": 0.1,
+                            "lifesteal": 0.1,
+                            "dodge": 0.05,
+                            "counter_attack": 0.1,
                             "ice_damage": 5,
                             "fire_damage": 5,
-                            "healing_rate": 0.02,
-                            "mana_boost": 10,
-                            "backstab_damage": 0.2,
-                            "luck_bonus": 0.05,
-                            "wisdom_bonus": 0.05,
-                            "immortality_chance": 0.02,
-                            "health_regeneration": 2,
-                            "mana_regeneration": 2,
-                            "holy_resistance": 0.1,
+                            "light_damage": 5,
+                            "poison": 3,
+                            "shadow_power": 0.1,
                             "fire_resistance": 0.1,
-                            "stealth_chance": 0.1,
-                            "evasion_rate": 0.05,
-                            "spell_power": 0.1,
-                            "crit_damage": 0.2
+                            "holy_resistance": 0.1,
+                            "stealth": 0.1,
+                            "evasion": 0.05,
+                            "wisdom": 0.05,
+                            "mana_regeneration": 2,
+                            "luck": 0.05,
+                            "crit_damage": 0.2,
+                            "immortality": 0.02,
+                            "health_regeneration": 2,
+                            "healing": 0.02,
+                            "mana_boost": 10,
+                            "backstab": 0.2
                         }
                         if effect in default_values:
                             self.special_effects[effect] += default_values[effect]
@@ -1464,8 +1528,8 @@ class HeroGame:
                         self.special_effects["spell_power"] += effect.get("spell_power", 0)
                     if "crit_rate" in effect:
                         self.special_effects["crit_rate"] += effect.get("crit_rate", 0)
-                    if "dodge_rate" in effect:
-                        self.special_effects["dodge_rate"] += effect.get("dodge_rate", 0)
+                    if "dodge" in effect:
+                        self.special_effects["dodge"] += effect.get("dodge", 0)
                     
                     # 显示套装激活信息
                     set_name_key = set_info["name_key"]
@@ -1588,18 +1652,19 @@ class HeroGame:
         self.hero_potions = save_data.hero_potions
 
         # 技能系统
-        self.skill_points = save_data.skill_points
+        self.skill_points = getattr(save_data, 'skill_points', 0)
         
         # 装备和背包
         self.equipment = save_data.equipment
         self.inventory = save_data.inventory
 
         # 技能
-        self.hero_skills = save_data.hero_skills
+        self.hero_skills = getattr(save_data, 'hero_skills', [])
         
         # 恢复技能树
-        if save_data.skill_tree_data:
-            self.skill_tree = SkillTree.from_dict(save_data.skill_tree_data, self.lang)
+        skill_tree_data = getattr(save_data, 'skill_tree_data', None)
+        if skill_tree_data:
+            self.skill_tree = SkillTree.from_dict(skill_tree_data, self.lang)
         else:
             self.skill_tree = SkillTree(self.hero_class, self.lang)
 

@@ -196,4 +196,4 @@ if __name__ == "__main__":
         if quest:
             quest_system.add_quest(quest)
     
-    print("任务系统测试完成")
+    print("Quest system test completed")

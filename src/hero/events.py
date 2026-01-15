@@ -50,21 +50,25 @@ class EventSystem:
 
             if choice == "1":
                 if self.game.hero_gold >= potions_price:
-                    num = input(f"{self.game.lang.get_text('how_many')}: ").strip()
+                    from hero.safe_input import safe_input
+                    from hero.error_handler import handle_error
+                    num = safe_input(f"{self.game.lang.get_text('how_many')}: ")
                     try:
-                        num = int(num)
-                        if num > 0 and num * potions_price <= self.game.hero_gold:
-                            self.game.hero_gold -= num * potions_price
-                            self.game.hero_potions += num
-                            print(f"{self.game.lang.get_text('buy_success')} {num} {self.game.lang.get_text('potions')}!")
-                            # 记录购买和花费
-                            self.game.statistics.record_item_purchased(num)
-                            self.game.statistics.record_gold_spent(num * potions_price)
-                            self.game.statistics.record_potion_found()  # 购买的药剂也计入获得
-                        else:
-                            print(self.game.lang.get_text("not_enough_gold"))
-                    except ValueError:
-                        print(self.game.lang.get_text("invalid_choice"))
+                        if num is not None:
+                            num = int(num)
+                            if num > 0 and num * potions_price <= self.game.hero_gold:
+                                self.game.hero_gold -= num * potions_price
+                                self.game.hero_potions += num
+                                print(f"{self.game.lang.get_text('buy_success')} {num} {self.game.lang.get_text('potions')}!")
+                                # 记录购买和花费
+                                self.game.statistics.record_item_purchased(num)
+                                self.game.statistics.record_gold_spent(num * potions_price)
+                                self.game.statistics.record_potion_found()  # 购买的药剂也计入获得
+                            else:
+                                print(self.game.lang.get_text("not_enough_gold"))
+                    except Exception as e:
+                        error_msg = handle_error(e, "购买药剂", "购买药剂时发生错误。")
+                        print(error_msg)
                 else:
                     print(self.game.lang.get_text("not_enough_gold"))
                 input(f"{self.game.lang.get_text('continue_prompt')}")
@@ -342,21 +346,25 @@ class EventSystem:
 
             if choice == "1":
                 if self.game.hero_gold >= potions_price:
-                    num = input(f"{self.game.lang.get_text('how_many')}: ").strip()
+                    from hero.safe_input import safe_input
+                    from hero.error_handler import handle_error
+                    num = safe_input(f"{self.game.lang.get_text('how_many')}: ")
                     try:
-                        num = int(num)
-                        if num > 0 and num * potions_price <= self.game.hero_gold:
-                            self.game.hero_gold -= num * potions_price
-                            self.game.hero_potions += num
-                            print(f"{self.game.lang.get_text('buy_success')} {num} {self.game.lang.get_text('potions')}!")
-                            # 记录购买和花费
-                            self.game.statistics.record_item_purchased(num)
-                            self.game.statistics.record_gold_spent(num * potions_price)
-                            self.game.statistics.record_potion_found()  # 购买的药剂也计入获得
-                        else:
-                            print(self.game.lang.get_text("not_enough_gold"))
-                    except ValueError:
-                        print(self.game.lang.get_text("invalid_choice"))
+                        if num is not None:
+                            num = int(num)
+                            if num > 0 and num * potions_price <= self.game.hero_gold:
+                                self.game.hero_gold -= num * potions_price
+                                self.game.hero_potions += num
+                                print(f"{self.game.lang.get_text('buy_success')} {num} {self.game.lang.get_text('potions')}!")
+                                # 记录购买和花费
+                                self.game.statistics.record_item_purchased(num)
+                                self.game.statistics.record_gold_spent(num * potions_price)
+                                self.game.statistics.record_potion_found()  # 购买的药剂也计入获得
+                            else:
+                                print(self.game.lang.get_text("not_enough_gold"))
+                    except Exception as e:
+                        error_msg = handle_error(e, "购买药剂", "购买药剂时发生错误。")
+                        print(error_msg)
                 else:
                     print(self.game.lang.get_text("not_enough_gold"))
                 input(f"{self.game.lang.get_text('continue_prompt')}")

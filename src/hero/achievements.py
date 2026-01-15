@@ -292,7 +292,27 @@ class AchievementSystem:
                 with open(self.achievement_data_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self.unlocked_achievements = data.get("unlocked_achievements", [])
-        except:
+        except json.JSONDecodeError as e:
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(e, "加载成就数据", "成就数据文件已损坏。")
+            print(error_msg)
+            log_debug(f"成就数据JSON解析错误: {str(e)}")
+            self.unlocked_achievements = []
+        except FileNotFoundError:
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(FileNotFoundError(), "加载成就数据", "成就数据文件不存在。")
+            print(error_msg)
+            self.unlocked_achievements = []
+        except PermissionError:
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(PermissionError(), "加载成就数据", "没有权限读取成就数据文件。")
+            print(error_msg)
+            self.unlocked_achievements = []
+        except Exception as e:
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(e, "加载成就数据", "加载成就数据时发生未知错误。")
+            print(error_msg)
+            log_debug(f"加载成就数据未知错误: {str(e)}")
             self.unlocked_achievements = []
 
     def _save_unlocked_achievements(self):
@@ -304,8 +324,16 @@ class AchievementSystem:
             }
             with open(self.achievement_data_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-        except:
-            pass
+        except PermissionError as e:
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(e, "保存成就数据", "没有权限写入成就数据文件。")
+            print(error_msg)
+            log_debug(f"保存成就数据权限错误: {str(e)}")
+        except Exception as e:
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(e, "保存成就数据", "保存成就数据时发生未知错误。")
+            print(error_msg)
+            log_debug(f"保存成就数据未知错误: {str(e)}")
 
     def check_achievements(self):
         """检查并解锁符合条件的成就"""

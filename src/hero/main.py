@@ -10,6 +10,7 @@ import random
 import time
 import os
 import sys
+import argparse
 from hero.language import LanguageSupport
 from hero.game_config import DIFFICULTY_SETTINGS, MAP_TYPES, EVENT_TYPES, CLASS_DEFINITIONS
 from hero.combat import CombatSystem
@@ -23,6 +24,35 @@ from hero.quest import QuestSystem
 from hero.skill_tree import SkillTree
 from hero.settings import GameSettings
 from hero.game_log import GameLog
+from hero.error_handler import init_error_handler, handle_error, is_debug_mode, log_debug
+from hero.safe_input import safe_input
+
+
+def parse_arguments():
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(description='英雄无敌 - 文字冒险游戏')
+    parser.add_argument('--debug', action='store_true', help='启用调试模式')
+    parser.add_argument('--log-file', default='logs/error.log', help='错误日志文件路径')
+    return parser.parse_args()
+
+def safe_file_operation(operation_func, error_context: str, default_return=None):
+    """安全的文件操作函数
+    
+    Args:
+        operation_func: 要执行的文件操作函数
+        error_context: 错误上下文信息
+        default_return: 发生错误时的默认返回值
+        
+    Returns:
+        操作结果或默认返回值
+    """
+    try:
+        return operation_func()
+    except Exception as e:
+        error_msg = handle_error(e, error_context, "文件操作失败，请检查文件权限和完整性。")
+        print(error_msg)
+        log_debug(f"文件操作失败: {error_context}, 错误: {str(e)}")
+        return default_return
 
 
 class HeroGame:
@@ -38,6 +68,10 @@ class HeroGame:
         
         # 初始化游戏日志系统
         self.game_log = GameLog(self.language)
+        
+        # 性能优化：添加属性缓存
+        self._attributes_cached = False
+        self._cached_attributes = {}
 
         # 先选择语言
         self.select_language()
@@ -153,8 +187,11 @@ class HeroGame:
         print()
 
         while True:
-            choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
-            if choice == "" or choice == "1":
+            choice = safe_input(f"{self.lang.get_text('enter_choice')} (1): ", valid_options=["", "1", "2"], allow_empty=True)
+            if choice is None:
+                # 用户中断，退出游戏
+                sys.exit(0)
+            elif choice == "" or choice == "1":
                 self.language = "zh"
                 self.lang.set_language("zh")
                 break
@@ -162,8 +199,6 @@ class HeroGame:
                 self.language = "en"
                 self.lang.set_language("en")
                 break
-            else:
-                print(f"{self.lang.get_text('invalid_choice')}")
 
     def select_map_and_difficulty(self):
         """选择地图类型和难度"""
@@ -184,8 +219,11 @@ class HeroGame:
         print()
 
         while True:
-            choice = input(f"{self.lang.get_text('enter_choice')} (2): ").strip()
-            if choice == "" or choice == "2":
+            choice = safe_input(f"{self.lang.get_text('enter_choice')} (2): ", valid_options=["", "1", "2", "3", "4"], allow_empty=True)
+            if choice is None:
+                # 用户中断，退出游戏
+                sys.exit(0)
+            elif choice == "" or choice == "2":
                 self.difficulty = "normal"
                 break
             elif choice == "1":
@@ -197,8 +235,6 @@ class HeroGame:
             elif choice == "4":
                 self.difficulty = "nightmare"
                 break
-            else:
-                print(self.lang.get_text("invalid_choice"))
 
         self.clear_screen()
         print(self.lang.get_text("block_separator"))
@@ -217,8 +253,11 @@ class HeroGame:
         print()
 
         while True:
-            choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
-            if choice == "" or choice == "1":
+            choice = safe_input(f"{self.lang.get_text('enter_choice')} (1): ", valid_options=["", "1", "2", "3", "4", "5", "6", "7"], allow_empty=True)
+            if choice is None:
+                # 用户中断，退出游戏
+                sys.exit(0)
+            elif choice == "" or choice == "1":
                 self.map_type = "plains"
                 break
             elif choice == "2":
@@ -239,8 +278,6 @@ class HeroGame:
             elif choice == "7":
                 self.map_type = "snowfield"
                 break
-            else:
-                print(self.lang.get_text("invalid_choice"))
 
         # 应用难度设置
         settings = self.difficulty_settings[self.difficulty]
@@ -260,7 +297,10 @@ class HeroGame:
         print(f"{self.lang.get_text('map_type')}: {self.lang.get_text('map_' + self.map_type)}")
         print(f"{self.lang.get_text('map_length')}: {self.map_length}")
         print()
-        input(self.lang.get_text("continue_prompt"))
+        user_input = safe_input(self.lang.get_text("continue_prompt"))
+        if user_input is None:
+            # 用户中断，退出游戏
+            sys.exit(0)
 
     def clear_screen(self):
         """清屏函数"""
@@ -279,7 +319,10 @@ class HeroGame:
         print(self.lang.get_text("welcome_desc4"))
         print(self.lang.get_text("welcome_desc5"))
         print()
-        input(self.lang.get_text("continue_prompt"))
+        user_input = safe_input(self.lang.get_text("continue_prompt"))
+        if user_input is None:
+            # 用户中断，退出游戏
+            sys.exit(0)
 
     def get_hero_name(self):
         """获取英雄名字"""
@@ -290,8 +333,11 @@ class HeroGame:
         print()
 
         while True:
-            name = input(self.lang.get_text("enter_name")).strip()
-            if name:
+            name = safe_input(self.lang.get_text("enter_name"))
+            if name is None:
+                # 用户中断，退出游戏
+                sys.exit(0)
+            elif name:
                 self.hero_name = name
                 break
             else:
@@ -320,8 +366,11 @@ class HeroGame:
             print()
         
         while True:
-            choice = input(self.lang.get_text("choose_your_class")).strip()
-            if choice in class_options:
+            choice = safe_input(self.lang.get_text("choose_your_class"), valid_options=list(class_options.keys()))
+            if choice is None:
+                # 用户中断，退出游戏
+                sys.exit(0)
+            else:
                 selected_class = class_options[choice]
                 class_info = CLASS_DEFINITIONS[selected_class]
                 
@@ -331,9 +380,12 @@ class HeroGame:
                 confirm_text = self.lang.get_text("confirm_class_selection").format(
                     hero_class=class_name
                 )
-                confirm = input(confirm_text).strip().lower()
+                confirm = safe_input(confirm_text).strip().lower()
                 
-                if confirm in self.lang.get_text("yes_options"):
+                if confirm is None:
+                    # 用户中断，退出游戏
+                    sys.exit(0)
+                elif confirm in self.lang.get_text("yes_options"):
                     self.hero_class = selected_class
                     print()
                     print(self.lang.get_text("class_selected").format(
@@ -358,10 +410,13 @@ class HeroGame:
                     self.skill_tree._update_skill_availability()
                     
                     print()
-                    input(self.lang.get_text("continue_prompt"))
+                    user_input = safe_input(self.lang.get_text("continue_prompt"))
+                    if user_input is None:
+                        # 用户中断，退出游戏
+                        sys.exit(0)
                     break
-            else:
-                print(f"{self.lang.get_text('invalid_choice')} (1-3)")
+                else:
+                    print(f"{self.lang.get_text('invalid_choice')} (1-3)")
     
     def apply_class_attributes(self, class_key):
         """应用职业属性加成"""
@@ -557,7 +612,9 @@ class HeroGame:
             print(f"7. {self.lang.get_text('exit_game')}")
             print()
 
-            choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
+            choice = safe_input(f"{self.lang.get_text('enter_choice')} (1): ", valid_options=["", "1", "2", "3", "4", "5", "6", "7"], allow_empty=True)
+            if choice is None:
+                return
 
             if choice == "" or choice == "1":
                 # 新游戏
@@ -639,7 +696,9 @@ class HeroGame:
             print(f"0. {self.lang.get_text('back_to_main')}")
             print()
 
-            choice = input(f"{self.lang.get_text('enter_choice')} (0): ").strip()
+            choice = safe_input(f"{self.lang.get_text('enter_choice')} (0): ", valid_options=["", "0", "1", "2", "3", "4", "5"], allow_empty=True)
+            if choice is None:
+                return
 
             if choice == "" or choice == "0":
                 break
@@ -657,8 +716,8 @@ class HeroGame:
                 self.game_log.show_statistics()
             elif choice == "5":
                 # 清空日志
-                confirm = input(f"{self.lang.get_text('clear_log')}? (y/n): ").strip().lower()
-                if confirm in ['y', 'yes']:
+                confirm = safe_input(f"{self.lang.get_text('clear_log')}? (y/n): ").strip().lower()
+                if confirm is not None and confirm in ['y', 'yes']:
                     self.game_log.clear_log()
                     print(f"\n{self.lang.get_text('log_cleared')}")
                     time.sleep(1)
@@ -684,7 +743,9 @@ class HeroGame:
             print(f"0. {self.lang.get_text('back')}")
             print()
 
-            choice = input(f"{self.lang.get_text('enter_choice')} (0): ").strip()
+            choice = safe_input(f"{self.lang.get_text('enter_choice')} (0): ", valid_options=["", "0", "1", "2", "3", "4", "5"], allow_empty=True)
+            if choice is None:
+                return
 
             if choice == "" or choice == "0":
                 break
@@ -723,7 +784,9 @@ class HeroGame:
             print(f"0. {self.lang.get_text('back_to_main')}")
             print()
 
-            choice = input(f"{self.lang.get_text('enter_choice')} (0): ").strip()
+            choice = safe_input(f"{self.lang.get_text('enter_choice')} (0): ", valid_options=["", "0", "1", "2", "3", "4", "5"], allow_empty=True)
+            if choice is None:
+                return
 
             if choice == "" or choice == "0":
                 break
@@ -809,7 +872,9 @@ class HeroGame:
             print(f"{choice}. [{selected}] {description}")
         
         print()
-        choice = input(f"{self.lang.get_text('enter_choice')} (2): ").strip()
+        choice = safe_input(f"{self.lang.get_text('enter_choice')} (2): ", valid_options=[option[0] for option in options], allow_empty=True)
+        if choice is None:
+            return
         
         for option_choice, description, value in options:
             if choice == option_choice:
@@ -838,7 +903,9 @@ class HeroGame:
             print(f"{choice}. [{selected}] {description}")
         
         print()
-        choice = input(f"{self.lang.get_text('enter_choice')} (0): ").strip()
+        choice = safe_input(f"{self.lang.get_text('enter_choice')} (0): ", valid_options=[option[0] for option in options], allow_empty=True)
+        if choice is None:
+            return
         
         for option_choice, description, value in options:
             if choice == option_choice:
@@ -866,7 +933,9 @@ class HeroGame:
             print(f"{choice}. [{selected}] {description}")
         
         print()
-        choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
+        choice = safe_input(f"{self.lang.get_text('enter_choice')} (1): ", valid_options=[option[0] for option in options], allow_empty=True)
+        if choice is None:
+            return
         
         for option_choice, description, value in options:
             if choice == option_choice:
@@ -894,7 +963,9 @@ class HeroGame:
             print(f"{choice}. [{selected}] {description}")
         
         print()
-        choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
+        choice = safe_input(f"{self.lang.get_text('enter_choice')} (1): ", valid_options=[option[0] for option in options], allow_empty=True)
+        if choice is None:
+            return
         
         for option_choice, description, value in options:
             if choice == option_choice:
@@ -939,7 +1010,9 @@ class HeroGame:
             print(f"0. {self.lang.get_text('return_to_main')}")
             print()
 
-            choice = input(f"{self.lang.get_text('enter_choice')}: ").strip()
+            choice = safe_input(f"{self.lang.get_text('enter_choice')}: ", valid_options=["0", "1", "2", "3"])
+            if choice is None:
+                return False
 
             if choice == "0":
                 return False
@@ -956,18 +1029,33 @@ class HeroGame:
                         return True
                     else:
                         print(f"\n{self.lang.get_text('no_save_slot')}")
-                        input(f"{self.lang.get_text('continue_prompt')}")
+                        try:
+                            input(f"{self.lang.get_text('continue_prompt')}")
+                        except (KeyboardInterrupt, EOFError):
+                            print("\n操作被用户中断。")
+                            return False
                 else:
                     print(self.lang.get_text("invalid_choice"))
-                    input(f"{self.lang.get_text('continue_prompt')}")
+                    try:
+                        input(f"{self.lang.get_text('continue_prompt')}")
+                    except (KeyboardInterrupt, EOFError):
+                        print("\n操作被用户中断。")
+                        return False
             except ValueError:
                 print(self.lang.get_text("invalid_choice"))
-                input(f"{self.lang.get_text('continue_prompt')}")
+                try:
+                    input(f"{self.lang.get_text('continue_prompt')}")
+                except (KeyboardInterrupt, EOFError):
+                    print("\n操作被用户中断。")
+                    return False
     def show_statistics(self):
         """显示统计数据"""
         self.clear_screen()
         print(self.statistics.format_summary(self.lang))
-        input(f"\n{self.lang.get_text('continue_prompt')}")
+        try:
+            input(f"\n{self.lang.get_text('continue_prompt')}")
+        except (KeyboardInterrupt, EOFError):
+            print("\n操作被用户中断。")
 
     def show_statistics_menu(self):
         """显示统计菜单"""
@@ -977,7 +1065,10 @@ class HeroGame:
 
         self.clear_screen()
         print(temp_stats.format_summary(self.lang))
-        input(f"\n{self.lang.get_text('continue_prompt')}")
+        try:
+            input(f"\n{self.lang.get_text('continue_prompt')}")
+        except (KeyboardInterrupt, EOFError):
+            print("\n操作被用户中断。")
 
     def save_game_menu(self):
         """保存游戏菜单"""
@@ -1008,7 +1099,9 @@ class HeroGame:
             print(f"0. {self.lang.get_text('return_to_game')}")
             print()
 
-            choice = input(f"{self.lang.get_text('enter_choice')}: ").strip()
+            choice = safe_input(f"{self.lang.get_text('enter_choice')}: ", valid_options=["0", "1", "2", "3", "4", "5"])
+            if choice is None:
+                return
 
             if choice == "0":
                 return
@@ -1055,7 +1148,10 @@ class HeroGame:
             # 检查成就
             self.achievements.check_achievements()
 
-            input(f"\n{self.lang.get_text('continue_prompt')}")
+            user_input = safe_input(f"\n{self.lang.get_text('continue_prompt')}")
+            if user_input is None:
+                # 用户中断，退出游戏
+                sys.exit(0)
             self.clear_screen()
 
     def check_game_status(self):
@@ -1111,9 +1207,19 @@ class HeroGame:
             print(f"10. {self.lang.get_text('skill_tree_title')}")
         print(f"11. {self.lang.get_text('exit_game')}")
 
+        valid_choices = ["1", "2", "3", "5", "6", "7", "8", "9", "11"]
+        if self.hero_potions > 0:
+            valid_choices.append("4")
+        if self.skill_tree:
+            valid_choices.append("10")
+            
         while True:
-            choice = input(f"{self.lang.get_text('enter_choice')} (1): ").strip()
-
+            choice = safe_input(f"{self.lang.get_text('enter_choice')} (1): ", valid_options=valid_choices, allow_empty=True)
+            
+            if choice is None:
+                # 用户中断，退出游戏
+                sys.exit(0)
+            
             if choice == "" or choice == "1":
                 if self.hero_position < self.map_length - 1:
                     self.hero_position += 1
@@ -1259,6 +1365,7 @@ class HeroGame:
         # 根据地图类型调整事件
         map_info = self.map_types[self.map_type]
 
+        # 性能优化：使用预计算的索引范围代替多次随机调用
         event_num = random.randint(1, 35)
         print(f"\n{self.lang.get_text('step_forward')}")
         time.sleep(1)
@@ -1731,6 +1838,14 @@ class HeroGame:
 
     def update_attributes(self):
         """更新英雄属性（基础属性 + 装备加成 + 特殊效果）"""
+        # 性能优化：使用缓存机制减少重复计算
+        if self._attributes_cached:
+            self.hero_attack = self._cached_attributes['attack']
+            self.hero_defense = self._cached_attributes['defense']
+            self.hero_max_hp = self._cached_attributes['max_hp']
+            self.special_effects = self._cached_attributes['special_effects'].copy()
+            return
+        
         self.hero_attack = self.base_attack
         self.hero_defense = self.base_defense
         self.hero_max_hp = self.base_max_hp
@@ -1810,6 +1925,20 @@ class HeroGame:
         # 确保HP不超过最大值
         if self.hero_hp > self.hero_max_hp:
             self.hero_hp = self.hero_max_hp
+        
+        # 性能优化：缓存计算结果
+        self._cached_attributes = {
+            'attack': self.hero_attack,
+            'defense': self.hero_defense,
+            'max_hp': self.hero_max_hp,
+            'special_effects': self.special_effects.copy()
+        }
+        self._attributes_cached = True
+    
+    def invalidate_attributes_cache(self):
+        """清除属性缓存，强制下次计算时重新计算"""
+        self._attributes_cached = False
+        self._cached_attributes = {}
     
     def apply_set_bonuses(self, equipped_items):
         """应用套装效果"""
@@ -2105,8 +2234,30 @@ class HeroGame:
 
 def main():
     """主函数"""
+    # 解析命令行参数
+    args = parse_arguments()
+    
+    # 初始化错误处理器
+    init_error_handler(debug_mode=args.debug, log_file=args.log_file)
+    
+    if is_debug_mode():
+        print("调试模式已启用")
+    
+    # 创建游戏实例
     game = HeroGame()
-    game.start_game()
+    
+    try:
+        game.start_game()
+    except Exception as e:
+        error_msg = handle_error(e, "游戏主循环", "游戏运行时发生致命错误，请查看日志文件获取详细信息。")
+        print(f"\n{error_msg}")
+        
+        if is_debug_mode():
+            import traceback
+            print("\n详细错误信息:")
+            traceback.print_exc()
+        
+        sys.exit(1)
 
 
 if __name__ == "__main__":

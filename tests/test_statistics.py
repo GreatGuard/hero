@@ -11,8 +11,8 @@ import os
 # 添加src目录到路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'hero'))
 
-from statistics import GameStatistics
-from language import LanguageSupport
+from hero.statistics import GameStatistics
+from hero.language import LanguageSupport
 
 
 class TestGameStatistics(unittest.TestCase):

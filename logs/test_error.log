@@ -1,0 +1,7 @@
+2026-01-15 09:11:00 - ERROR - 测试上下文: 测试文件不存在
+Traceback (most recent call last):
+  File "C:\Users\keving.yang\source\repos\hero\test_error_handling.py", line 32, in test_error_handling
+    raise FileNotFoundError("测试文件不存在")
+FileNotFoundError: 测试文件不存在
+
+2026-01-15 09:11:00 - DEBUG - DEBUG: 这是一条测试调试信息

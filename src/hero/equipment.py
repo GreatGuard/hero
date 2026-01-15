@@ -104,6 +104,8 @@ class EquipmentSystem:
 
     def __init__(self, game):
         self.game = game
+        # 性能优化：添加装备缓存
+        self._equipment_cache = {}
         self.equipment_database = self.create_equipment_database()
 
     def create_equipment_database(self):
@@ -184,6 +186,15 @@ class EquipmentSystem:
             rarity_bonus (float): 稀有度提升值
             is_legendary (bool): 是否为传奇装备
         """
+        # 性能优化：生成缓存键
+        cache_key = f"{item_type}_{rarity_bonus}_{is_legendary}"
+        
+        # 检查缓存（仅对基础装备进行缓存，不含随机属性）
+        if cache_key in self._equipment_cache and not is_legendary:
+            base_equipment = self._equipment_cache[cache_key].copy()
+            # 重新生成随机属性
+            return self._generate_random_attributes(base_equipment)
+        
         if item_type is None:
             item_type = random.choice(["weapon", "armor", "accessory"])
 
@@ -207,10 +218,33 @@ class EquipmentSystem:
             rarity = "epic"
         else:
             rarity = "legendary"
-        rarity = "legendary"
 
-        # 使用统一的多语言格式化函数获取装备名称
-        name = self.game.lang.format_text("equipment_name", self.equipment_database, item_type, rarity)
+        # 创建基础装备对象（延迟计算详细属性）
+        base_equipment = {
+            "type": item_type,
+            "rarity": rarity,
+            "enhancement_level": 0,
+            "is_legendary": False,
+            "_cached_name": None  # 延迟计算名称
+        }
+        
+        # 缓存基础装备对象
+        self._equipment_cache[cache_key] = base_equipment.copy()
+        
+        # 生成随机属性并返回
+        return self._generate_random_attributes(base_equipment)
+    
+    def _generate_random_attributes(self, equipment):
+        """延迟计算装备的随机属性"""
+        item_type = equipment["type"]
+        rarity = equipment["rarity"]
+        
+        # 性能优化：延迟计算名称
+        if equipment["_cached_name"] is None:
+            equipment["name"] = self.game.lang.format_text("equipment_name", self.equipment_database, item_type, rarity)
+            equipment["_cached_name"] = equipment["name"]
+        else:
+            equipment["name"] = equipment["_cached_name"]
 
         # 根据稀有度和类型生成属性
         rarity_multiplier = {"common": 1, "uncommon": 1.5, "rare": 2, "epic": 3, "legendary": 5}
@@ -250,21 +284,19 @@ class EquipmentSystem:
             if random.random() < set_probability.get(rarity, 0):
                 set_bonus = random.choice(possible_sets)
 
-        return {
-            "name": name,
-            "type": item_type,
-            "rarity": rarity,
+        # 更新装备属性
+        equipment.update({
             "attack": attack_bonus,
             "defense": defense_bonus,
             "hp": hp_bonus,
             "special_effects": special_effects,
             "set_bonus": set_bonus,  # 套装效果
-            "enhancement_level": 0,  # 强化等级，初始为0
             "base_attack": attack_bonus,  # 基础攻击力，用于强化计算
             "base_defense": defense_bonus,  # 基础防御力，用于强化计算
             "base_hp": hp_bonus,  # 基础生命值，用于强化计算
-            "is_legendary": False
-        }
+        })
+        
+        return equipment
 
     def create_legendary_equipment(self, item_type):
         """创建传奇装备"""
@@ -368,6 +400,8 @@ class EquipmentSystem:
         self.game.equipment[item_type] = item
         self.game.inventory.pop(item_index)
 
+        # 性能优化：清除属性缓存
+        self.game.invalidate_attributes_cache()
         self.game.update_attributes()
         print(f"{self.game.lang.get_text('equip_success')} {item['name']}!")
 
@@ -381,6 +415,8 @@ class EquipmentSystem:
         self.game.inventory.append(item)
         self.game.equipment[item_type] = None
 
+        # 性能优化：清除属性缓存
+        self.game.invalidate_attributes_cache()
         self.game.update_attributes()
         print(f"{self.game.lang.get_text('unequip_success')} {item['name']}")
 
@@ -444,10 +480,16 @@ class EquipmentSystem:
                 self.show_inventory()
                 if self.game.inventory:
                     try:
-                        item_index = int(input(f"{self.game.lang.get_text('enter_item_number')}: ")) - 1
-                        self.equip_item(item_index)
-                    except ValueError:
-                        print(self.game.lang.get_text("invalid_choice"))
+                        from hero.safe_input import safe_input
+                        from hero.error_handler import handle_error
+                        user_input = safe_input(f"{self.game.lang.get_text('enter_item_number')}: ")
+                        if user_input is not None:
+                            item_index = int(user_input) - 1
+                            self.equip_item(item_index)
+                    except Exception as e:
+                        from hero.error_handler import handle_error
+                        error_msg = handle_error(e, "装备物品", "装备物品时发生错误。")
+                        print(error_msg)
                     input(f"{self.game.lang.get_text('continue_prompt')}")
             elif choice == "2":
                 print()
@@ -792,22 +834,28 @@ class EquipmentSystem:
 
             if choice == "1":
                 try:
-                    item_index = int(input(f"{self.game.lang.get_text('enter_item_number')}: ")) - 1
-                    if 0 <= item_index < len(shop_items):
-                        item = shop_items[item_index]
-                        if self.game.hero_gold >= item["price"]:
-                            self.game.hero_gold -= item["price"]
-                            self.game.inventory.append(item)
-                            print(f"{self.game.lang.get_text('buy_success')} {item['name']}!")
-                            # 记录购买装备和花费
-                            self.game.statistics.record_item_purchased()
-                            self.game.statistics.record_gold_spent(item["price"])
+                    from hero.safe_input import safe_input
+                    from hero.error_handler import handle_error
+                    user_input = safe_input(f"{self.game.lang.get_text('enter_item_number')}: ")
+                    if user_input is not None:
+                        item_index = int(user_input) - 1
+                        if 0 <= item_index < len(shop_items):
+                            item = shop_items[item_index]
+                            if self.game.hero_gold >= item["price"]:
+                                self.game.hero_gold -= item["price"]
+                                self.game.inventory.append(item)
+                                print(f"{self.game.lang.get_text('buy_success')} {item['name']}!")
+                                # 记录购买装备和花费
+                                self.game.statistics.record_item_purchased()
+                                self.game.statistics.record_gold_spent(item["price"])
+                            else:
+                                print(self.game.lang.get_text("not_enough_gold"))
                         else:
-                            print(self.game.lang.get_text("not_enough_gold"))
-                    else:
-                        print(self.game.lang.get_text("invalid_choice"))
-                except ValueError:
-                    print(self.game.lang.get_text("invalid_choice"))
+                            print(self.game.lang.get_text("invalid_choice"))
+                except Exception as e:
+                    from hero.error_handler import handle_error
+                    error_msg = handle_error(e, "购买装备", "购买装备时发生错误。")
+                    print(error_msg)
                 input(f"{self.game.lang.get_text('continue_prompt')}")
             elif choice == "2":
                 self.enhance_equipment_menu()

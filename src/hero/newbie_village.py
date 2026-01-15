@@ -5,6 +5,7 @@
 
 import random
 import time
+from .safe_input import safe_input
 
 
 class NewbieVillage:
@@ -31,7 +32,9 @@ class NewbieVillage:
             print(f"4. {self.game.lang.get_text('elder_advice_short')}")
             print(f"5. {self.game.lang.get_text('start_adventure')}")
 
-            choice = input(f"{self.game.lang.get_text('enter_choice')} (5): ").strip()
+            choice = safe_input(f"{self.game.lang.get_text('enter_choice')} (5): ", valid_options=["", "1", "2", "3", "4", "5"], allow_empty=True)
+            if choice is None:
+                return
 
             if choice == "" or choice == "5":
                 self.game.hero_hp = self.game.hero_max_hp
@@ -64,7 +67,9 @@ class NewbieVillage:
         print(f"2. {self.game.lang.get_text('return_to_village')}")
 
         while True:
-            choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
+            choice = safe_input(f"{self.game.lang.get_text('enter_choice')}: ", valid_options=["1", "2"])
+            if choice is None:
+                return
 
             if choice == "1":
                 self.practice_combat()
@@ -202,7 +207,11 @@ class NewbieVillage:
                 combat_system = CombatSystem(self.game)
                 combat_system.check_level_up()
 
-                input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                try:
+                    input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                except (KeyboardInterrupt, EOFError):
+                    print("\n操作被用户中断。")
+                    return
                 break
 
             self.game.show_hero_info()
@@ -267,7 +276,8 @@ class NewbieVillage:
                     print(f"{option_index}. {skill_name}")
                 option_index += 1
 
-        return input(f"{self.game.lang.get_text('enter_choice')} (1): ").strip()
+        choice = safe_input(f"{self.game.lang.get_text('enter_choice')} (1): ", allow_empty=True)
+        return choice if choice is not None else "1"
 
     def village_shop(self):
         """村庄商店"""
@@ -287,24 +297,33 @@ class NewbieVillage:
         print(f"2. {self.game.lang.get_text('exit_shop')}")
 
         while True:
-            choice = input(f"{self.game.lang.get_text('enter_choice')}: ").strip()
+            choice = safe_input(f"{self.game.lang.get_text('enter_choice')}: ", valid_options=["1", "2"])
+            if choice is None:
+                return
 
             if choice == "1":
                 if self.game.hero_gold >= 10:
-                    num = input(f"{self.game.lang.get_text('how_many')}: ").strip()
+                    num = safe_input(f"{self.game.lang.get_text('how_many')}: ")
                     try:
-                        num = int(num)
-                        if num > 0 and num * 10 <= self.game.hero_gold:
-                            self.game.hero_gold -= num * 10
-                            self.game.hero_potions += num
-                            print(f"{self.game.lang.get_text('buy_success')} {num} {self.game.lang.get_text('potions')}!")
-                        else:
-                            print(self.game.lang.get_text("not_enough_gold"))
-                    except ValueError:
-                        print(self.game.lang.get_text("invalid_choice"))
+                        if num is not None:
+                            num = int(num)
+                            if num > 0 and num * 10 <= self.game.hero_gold:
+                                self.game.hero_gold -= num * 10
+                                self.game.hero_potions += num
+                                print(f"{self.game.lang.get_text('buy_success')} {num} {self.game.lang.get_text('potions')}!")
+                            else:
+                                print(self.game.lang.get_text("not_enough_gold"))
+                    except Exception as e:
+                        from hero.error_handler import handle_error
+                        error_msg = handle_error(e, "购买药剂", "购买药剂时发生错误。")
+                        print(error_msg)
                 else:
                     print(self.game.lang.get_text("not_enough_gold"))
-                input(f"{self.game.lang.get_text('continue_prompt')}")
+                try:
+                    input(f"{self.game.lang.get_text('continue_prompt')}")
+                except (KeyboardInterrupt, EOFError):
+                    print("\n操作被用户中断。")
+                    return
                 break
             elif choice == "2":
                 break
@@ -328,7 +347,9 @@ class NewbieVillage:
             print(f"{self.game.lang.get_text('clinic_cost')} {cost} {self.game.lang.get_text('gold')}")
 
             if self.game.hero_gold >= cost:
-                choice = input(f"{self.game.lang.get_text('confirm_treatment')}: ").strip()
+                choice = safe_input(f"{self.game.lang.get_text('confirm_treatment')}: ")
+                if choice is None:
+                    return
                 # 使用统一的多语言确认选项
                 yes_options = self.game.lang.get_text("yes_options")
                 confirm = choice in yes_options
@@ -342,7 +363,11 @@ class NewbieVillage:
             else:
                 print(self.game.lang.get_text("not_enough_gold"))
 
-        input(f"\n{self.game.lang.get_text('continue_prompt')}")
+        try:
+            input(f"\n{self.game.lang.get_text('continue_prompt')}")
+        except (KeyboardInterrupt, EOFError):
+            print("\n操作被用户中断。")
+            return
 
     def elder_advice(self):
         """长老建议"""
@@ -370,4 +395,7 @@ class NewbieVillage:
         for i, advice in enumerate(selected_advices, 1):
             print(f"{i}. {advice}")
 
-        input(f"\n{self.game.lang.get_text('continue_prompt')}")
+        try:
+            input(f"\n{self.game.lang.get_text('continue_prompt')}")
+        except (KeyboardInterrupt, EOFError):
+            print("\n操作被用户中断。")

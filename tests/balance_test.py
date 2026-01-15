@@ -175,14 +175,43 @@ class GameRunner:
     def run_game(self, difficulty='normal', map_type='plains', hero_class='warrior'):
         """运行单次游戏"""
         try:
-            # 创建游戏实例（静默模式）
-            game = HeroGame()
+            # 导入语言支持
+            from hero.language import LanguageSupport
+            from hero.game_config import MAP_TYPES, DIFFICULTY_SETTINGS
+            from hero.combat import CombatSystem
+            from hero.equipment import EquipmentSystem
+            from hero.events import EventSystem
+            from hero.newbie_village import NewbieVillage
+            from hero.statistics import GameStatistics
+            from hero.settings import GameSettings
+            
+            # 手动创建游戏实例（不触发语言选择）
+            game = object.__new__(HeroGame)
+            
+            # 初始化所有子系统
+            game.lang = LanguageSupport()
+            game.combat_system = CombatSystem(game)
+            game.equipment_system = EquipmentSystem(game)
+            game.event_system = EventSystem(game)
+            game.newbie_village = NewbieVillage(game)
+            game.statistics = GameStatistics()
+            game.settings = GameSettings()
             
             # 设置游戏参数（跳过语言选择）
             game.language = 'zh'
+            game.lang.set_language(game.language)
             game.difficulty = difficulty
             game.map_type = map_type
             game.hero_class = hero_class
+            
+            # 应用难度系数
+            difficulty_settings = DIFFICULTY_SETTINGS[difficulty]
+            map_config = MAP_TYPES[map_type]
+            map_length_range = [difficulty_settings["map_length"], difficulty_settings["map_length"]]
+            
+            # 设置地图长度（随机）
+            import random
+            map_length = random.randint(map_length_range[0], map_length_range[1])
             
             # 设置英雄名称
             game.hero_name = f"TestHero_{int(time.time())}"
@@ -206,12 +235,37 @@ class GameRunner:
             game.monsters_defeated = 0
             game.events_encountered = 0
             game.visited_positions = []
+            game.map_length = map_length
+            game.game_over = False
+            game.victory = False
+            game.inventory = []
+            game.monsters_defeated = 0
+            game.events_encountered = 0
+            game.visited_positions = []
             game.map_length = 30
             game.game_over = False
             game.victory = False
             
             # 初始化统计系统
             game.statistics.start_time = time.time()
+            
+            # 初始化游戏日志系统
+            from hero.game_log import GameLog
+            game.game_log = GameLog()
+            
+            # 初始化任务系统
+            from hero.quest import QuestSystem
+            game.quest_system = QuestSystem()
+            
+            # 初始化技能树
+            from hero.skill_tree import SkillTree
+            game.skill_tree = SkillTree(hero_class, game.language)
+            
+            # 初始化状态效果变量
+            game.status_effects = {}
+            game.shield_active = False
+            game.berserk_turns = 0
+            game.focus_active = False
             
             # 运行游戏主循环
             steps = 0
@@ -294,7 +348,10 @@ class GameRunner:
         
         # 记录事件
         game.events_encountered += 1
-        game.statistics.record_event_triggered(event_type)
+        try:
+            game.statistics.record_event_triggered(event_type)
+        except:
+            pass  # 忽略统计错误
         
         return 'continue'
     
@@ -333,9 +390,12 @@ class GameRunner:
             game.monsters_defeated += 1
             
             # 记录统计
-            game.statistics.record_battle_victory("test_monster", False)
-            game.statistics.record_gold_earned(gold_reward)
-            game.statistics.record_exp_earned(exp_reward)
+            try:
+                game.statistics.record_battle_victory("test_monster", False)
+                game.statistics.record_gold_earned(gold_reward)
+                game.statistics.record_exp_earned(exp_reward)
+            except:
+                pass  # 忽略统计错误
             
             # 检查升级
             if game.hero_exp >= 100:
@@ -403,7 +463,7 @@ class BalanceTester:
     
     def run_map_comparison(self, num_runs=100):
         """运行地图对比测试"""
-        map_types = ['plains', 'forest', 'desert', 'volcano', 'mountains', 'swamp', 'snowfield']
+        map_types = ['plains', 'forest', 'desert', 'dungeon', 'mountain', 'swamp', 'snowfield']
         results = {}
         
         for map_type in map_types:

@@ -1,0 +1,84 @@
+2026-01-15 09:11:51 - ERROR - 加载存档: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+Traceback (most recent call last):
+  File "C:\Users\keving.yang\source\repos\hero\src\hero\save_data.py", line 402, in load_game
+    data_dict = json.load(f)
+  File "C:\Python314\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Python314\Lib\json\__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "C:\Python314\Lib\json\decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\json\decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+
+2026-01-15 09:11:51 - DEBUG - DEBUG: 存档文件JSON解析错误: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+2026-01-15 09:11:51 - ERROR - 保存存档: Object of type MagicMock is not JSON serializable
+Traceback (most recent call last):
+  File "C:\Users\keving.yang\source\repos\hero\src\hero\save_data.py", line 361, in save_game
+    json.dump(data_dict, f, ensure_ascii=False, indent=2)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\json\__init__.py", line 181, in dump
+    for chunk in iterable:
+                 ^^^^^^^^
+  File "C:\Python314\Lib\json\encoder.py", line 444, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "C:\Python314\Lib\json\encoder.py", line 413, in _iterencode_dict
+    yield from chunks
+  File "C:\Python314\Lib\json\encoder.py", line 451, in _iterencode
+    newobj = _default(o)
+  File "C:\Python314\Lib\json\encoder.py", line 182, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+                    f'is not JSON serializable')
+TypeError: Object of type MagicMock is not JSON serializable
+when serializing dict item 'base_attack'
+
+2026-01-15 09:11:51 - DEBUG - DEBUG: 保存存档未知错误: Object of type MagicMock is not JSON serializable
+2026-01-15 09:12:00 - ERROR - 加载存档: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+Traceback (most recent call last):
+  File "C:\Users\keving.yang\source\repos\hero\src\hero\save_data.py", line 402, in load_game
+    data_dict = json.load(f)
+  File "C:\Python314\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Python314\Lib\json\__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "C:\Python314\Lib\json\decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\json\decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+
+2026-01-15 09:12:00 - DEBUG - DEBUG: 存档文件JSON解析错误: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+2026-01-15 09:12:00 - ERROR - 保存存档: Object of type MagicMock is not JSON serializable
+Traceback (most recent call last):
+  File "C:\Users\keving.yang\source\repos\hero\src\hero\save_data.py", line 361, in save_game
+    json.dump(data_dict, f, ensure_ascii=False, indent=2)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\json\__init__.py", line 181, in dump
+    for chunk in iterable:
+                 ^^^^^^^^
+  File "C:\Python314\Lib\json\encoder.py", line 444, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "C:\Python314\Lib\json\encoder.py", line 413, in _iterencode_dict
+    yield from chunks
+  File "C:\Python314\Lib\json\encoder.py", line 451, in _iterencode
+    newobj = _default(o)
+  File "C:\Python314\Lib\json\encoder.py", line 182, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+                    f'is not JSON serializable')
+TypeError: Object of type MagicMock is not JSON serializable
+when serializing dict item 'base_attack'
+
+2026-01-15 09:12:00 - DEBUG - DEBUG: 保存存档未知错误: Object of type MagicMock is not JSON serializable

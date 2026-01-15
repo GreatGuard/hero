@@ -10,11 +10,15 @@ class LanguageSupport:
     
     def __init__(self, language="zh"):
         self.language = language
+        # 性能优化：添加文本缓存
+        self._text_cache = {}
         self.set_language(language)
     
     def set_language(self, language):
         """设置当前语言"""
         self.language = language
+        # 清空缓存，因为语言已更改
+        self._text_cache = {}
         if language == "en":
             self.texts = self._get_english_texts()
         else:
@@ -1844,13 +1848,28 @@ class LanguageSupport:
     
     def get_text(self, key, **kwargs):
         """获取指定键的文本，支持参数替换"""
+        # 性能优化：使用缓存
+        if not kwargs:
+            # 无参数时使用缓存
+            if key in self._text_cache:
+                return self._text_cache[key]
+            
+            text = self.texts.get(key, key)
+            self._text_cache[key] = text
+            return text
+        
+        # 有参数时，生成缓存键
+        cache_key = f"{key}:{hash(frozenset(kwargs.items()))}"
+        if cache_key in self._text_cache:
+            return self._text_cache[cache_key]
+        
         text = self.texts.get(key, key)
-        if kwargs:
-            try:
-                return text.format(**kwargs)
-            except (KeyError, ValueError):
-                return text
-        return text
+        try:
+            formatted_text = text.format(**kwargs)
+            self._text_cache[cache_key] = formatted_text
+            return formatted_text
+        except (KeyError, ValueError):
+            return text
     
     # 格式化函数集合
     def _get_position_format(self, position, total):

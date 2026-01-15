@@ -52,7 +52,7 @@ python run_tests.py --report -o test_report.txt
 python run_tests.py -p "test_*.py"
 ```
 
-**Test Coverage**: 49 tests across 5 core modules with 100% pass rate.
+**Test Coverage**: 65+ tests across 15+ core modules with 100% pass rate.
 
 ### Git Workflow
 
@@ -74,7 +74,15 @@ src/hero/
 ├── combat.py            # Turn-based combat system
 ├── equipment.py         # Equipment and inventory management
 ├── events.py            # Random event generation and handling
-└── newbie_village.py    # Tutorial/pre-adventure area
+├── newbie_village.py    # Tutorial/pre-adventure area
+├── save_data.py         # Save data and save/load system
+├── statistics.py        # Game statistics tracking
+├── quest.py            # Random quest system
+├── achievements.py     # Achievement system
+├── skill_tree.py       # Skill tree system
+├── settings.py         # Game settings system
+├── game_log.py         # Game log system
+└── error_handler.py    # Error handling system
 ```
 
 ### Key Architectural Patterns
@@ -123,7 +131,15 @@ HeroGame (Main Controller)
     ├─> CombatSystem ── Handles battles, damage calculations, skill usage
     ├─> EquipmentSystem ── Generates items, manages inventory, calculates stat bonuses
     ├─> EventSystem ── Triggers random encounters based on map type probabilities
-    └─> NewbieVillage ── Tutorial area with training, shop, clinic, elder
+    ├─> NewbieVillage ── Tutorial area with training, shop, clinic, elder
+    ├─> SaveManager ── Handles game save/load operations
+    ├─> GameStatistics ── Tracks game data and player performance
+    ├─> QuestSystem ── Manages random quests and rewards
+    ├─> AchievementSystem ── Manages achievements and unlocks
+    ├─> SkillTree ── Handles skill progression and upgrades
+    ├─> GameSettings ── Manages player preferences
+    ├─> GameLog ── Records game history and events
+    └─> ErrorHandler ── Provides unified error handling
 ```
 
 **Flow**:
@@ -137,9 +153,16 @@ HeroGame (Main Controller)
 All game balance is centralized in `game_config.py`:
 
 - **DIFFICULTY_SETTINGS**: Dict defining 4 difficulty levels with multipliers
-- **MAP_TYPES**: Dict defining 5 map types with unique event profiles
+- **MAP_TYPES**: Dict defining 7 map types with unique event profiles
+- **MONSTER_TEMPLATES**: Dict defining various monster types with stats
+- **BOSS_TEMPLATES**: Dict defining boss types with special skills
 - **EQUIPMENT rarities**: 5 tiers (common/exceptional/rare/epic/legendary)
-- **Skills**: 5 skills with damage formulas and mechanics
+- **Skills**: Multiple skills with damage formulas and mechanics
+- **CLASS_DEFINITIONS**: Dict defining 3 classes with unique attributes
+- **SKILL_TREES**: Dict defining skill trees for each class
+- **ACHIEVEMENT_DEFINITIONS**: Dict defining achievements with conditions
+- **ENCHANTMENT_TYPES**: Dict defining equipment enchantments
+- **EVENT_TYPES**: Dict defining various random event types
 
 **Important**: When adding new content, update these configs rather than hardcoding values in game logic.
 
@@ -186,11 +209,29 @@ The `LanguageSupport` class provides bilingual support:
 ### Adding New Skill
 1. Add to `SKILL_DESCRIPTIONS` in `language.py`
 2. Implement in `CombatSystem.use_skill()`
-3. Add to random skill learning in `EventSystem`
+3. Add to appropriate skill tree in `game_config.py`
 4. Update `update_attributes()` if skill affects base stats
 
 ### Adding New Event
-1. Add event type to event probability calculations
+1. Add event type to `EVENT_TYPES` in `game_config.py`
 2. Implement handler in `EventSystem.trigger_event()`
 3. Add all text to both languages in `language.py`
 4. Update event history tracking if significant
+
+### Adding New Class
+1. Add class definition to `CLASS_DEFINITIONS` in `game_config.py`
+2. Add class-specific skill tree to `SKILL_TREES`
+3. Add class-related text to both languages in `language.py`
+4. Update save/load system to handle class data
+
+### Adding New Achievement
+1. Add achievement definition to `ACHIEVEMENT_DEFINITIONS` in `game_config.py`
+2. Add achievement text to both languages in `language.py`
+3. Implement condition check in `AchievementSystem`
+4. Add achievement unlock notification
+
+### Adding New Map Type
+1. Add map type to `MAP_TYPES` in `game_config.py`
+2. Define unique events and monsters for the map
+3. Add map-related text to both languages in `language.py`
+4. Update achievement conditions if needed

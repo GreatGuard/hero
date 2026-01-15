@@ -1,0 +1,4 @@
+2026-01-15 09:43:17 - ERROR - 游戏主循环: cannot import name 'safe_input' from 'hero.error_handler' (C:\Users\keving.yang\source\repos\hero\src\hero\error_handler.py)
+2026-01-15 10:04:53 - ERROR - 游戏主循环: name 'safe_input' is not defined
+2026-01-15 10:06:47 - ERROR - 游戏主循环: safe_input() got an unexpected keyword argument 'valid_options'
+2026-01-15 10:10:45 - ERROR - 游戏主循环: cannot access local variable 'safe_input' where it is not associated with a value

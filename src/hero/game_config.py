@@ -471,6 +471,9 @@ EVENT_TYPES = {
     }
 }
 
+# 性能优化：预计算的事件类型键列表
+EVENT_TYPE_KEYS = list(EVENT_TYPES.keys())
+
 MAP_TYPES = {
     "plains": {
         "name": "plains",

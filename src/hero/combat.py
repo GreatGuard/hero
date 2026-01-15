@@ -709,7 +709,11 @@ class CombatSystem:
                 # 检查升级
                 self.check_level_up()
 
-                input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                try:
+                    input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                except (KeyboardInterrupt, EOFError):
+                    print("\n操作被用户中断。")
+                    return
 
                 break
 
@@ -1118,7 +1122,11 @@ class CombatSystem:
                     print(self.game.lang.get_text("lifesteal_advantage"))
 
                 self.game.events_encountered.append(f"{self.game.lang.get_text('defeat_boss_event')} {boss_name}, {self.game.lang.get_text('got_exp')} {exp_gain}")
-                input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                try:
+                    input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                except (KeyboardInterrupt, EOFError):
+                    print("\n操作被用户中断。")
+                    return
                 break
 
             # Boss反击和技能系统
@@ -1355,7 +1363,11 @@ class CombatSystem:
                     print(f"\n👻 {self.game.lang.get_text('ghost_leave_equipment')}")
                     equip_system.find_equipment()
 
-                input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                try:
+                    input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                except (KeyboardInterrupt, EOFError):
+                    print("\n操作被用户中断。")
+                    return
                 break
 
             # 怪物反击
@@ -1460,6 +1472,11 @@ class CombatSystem:
                 self.game.base_max_hp += hp_growth
                 self.game.hero_max_hp = self.game.base_max_hp
                 self.game.hero_hp = self.game.hero_max_hp
+                
+                # 清除属性缓存以确保更新生效
+                if hasattr(self.game, '_attributes_cached'):
+                    self.game._attributes_cached = False
+                
                 self.game.update_attributes()
 
                 print(f"{self.game.lang.get_text('attack')} {self.game.hero_attack}, {self.game.lang.get_text('defense')} {self.game.hero_defense}, {self.game.lang.get_text('max_hp')} {self.game.hero_max_hp}")
@@ -1469,4 +1486,8 @@ class CombatSystem:
                 self.game.skill_points += skill_points_gained
                 print(f"{self.game.lang.get_text('skill_points_earned').format(points=skill_points_gained)}")
                 
-                input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                try:
+                    input(f"\n{self.game.lang.get_text('continue_prompt')}")
+                except (KeyboardInterrupt, EOFError):
+                    print("\n操作被用户中断。")
+                    return

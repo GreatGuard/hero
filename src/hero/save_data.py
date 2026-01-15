@@ -365,8 +365,19 @@ class SaveManager:
         except ValueError:
             # 重新抛出ValueError（槽位号无效等）
             raise
+        except PermissionError as e:
+            # 使用错误处理模块
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(e, "保存存档", "没有权限写入存档文件。")
+            print(error_msg)
+            log_debug(f"保存存档权限错误: {str(e)}")
+            return False
         except Exception as e:
-            print(f"Error saving game: {e}")
+            # 使用错误处理模块
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(e, "保存存档", "保存存档时发生未知错误。")
+            print(error_msg)
+            log_debug(f"保存存档未知错误: {str(e)}")
             return False
 
     def load_game(self, slot_number):
@@ -397,11 +408,28 @@ class SaveManager:
             # 创建SaveData实例
             return SaveData.from_dict(data_dict)
 
-        except json.JSONDecodeError:
-            print("Error: Save file is corrupted")
+        except json.JSONDecodeError as e:
+            # 使用错误处理模块
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(e, "加载存档", "存档文件已损坏，无法加载。")
+            print(error_msg)
+            log_debug(f"存档文件JSON解析错误: {str(e)}")
+            return None
+        except FileNotFoundError:
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(FileNotFoundError(), "加载存档", "存档文件不存在。")
+            print(error_msg)
+            return None
+        except PermissionError:
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(PermissionError(), "加载存档", "没有权限读取存档文件。")
+            print(error_msg)
             return None
         except Exception as e:
-            print(f"Error loading game: {e}")
+            from hero.error_handler import handle_error, log_debug
+            error_msg = handle_error(e, "加载存档", "加载存档时发生未知错误。")
+            print(error_msg)
+            log_debug(f"加载存档未知错误: {str(e)}")
             return None
 
     def _validate_save_data(self, data):
